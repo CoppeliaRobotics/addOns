@@ -13,6 +13,7 @@ function sysCall_init()
     config.fileDlg=true
     config.renderMode='opengl'
     config.povray={}
+    config.povray.available=false
     config.povray.focalBlur=false
     config.povray.focalDistance=2
     config.povray.aperture=0.05
