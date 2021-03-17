@@ -87,6 +87,11 @@ function sysCall_init()
     file:write(finalTxt)
     io.close(file)
     sim.addLog(sim.verbosity_msgs,"Wrote 'langs.xml'")
+    
+    sim.addLog(sim.verbosity_msgs,"1.  Place 'lua.xml' into 'C:/Programs (x86)/Notepad++/plugins/APIs' (or similar)")
+    sim.addLog(sim.verbosity_msgs,"2.  Place 'langs.xml' into 'C:/user/<userName>/AppData/Roaming/Notepad++' (or similar).")
+    sim.addLog(sim.verbosity_msgs,"Alternatively, you may also only replace the Lua section in the original langs.xml file.")
+    
     return {cmd='cleanup'}
 end
 
