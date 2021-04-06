@@ -59,8 +59,10 @@ end
 
 function clean()
     -- Remove the containers:
-    sim.removeDrawingObject(lineContainer)
-    lineContainer=nil
-    sim.removeDrawingObject(sphereContainer)
-    sphereContainer=nil
+    if lineContainer then
+        sim.removeDrawingObject(lineContainer)
+        lineContainer=nil
+        sim.removeDrawingObject(sphereContainer)
+        sphereContainer=nil
+    end
 end
