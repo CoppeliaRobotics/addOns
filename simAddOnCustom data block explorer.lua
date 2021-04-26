@@ -46,11 +46,15 @@ function showDlg()
             xml = '<ui title="Custom Data Block Reader" closeable="true" on-close="onCloseClicked" resizable="false" '..pos..'>'
             xml=xml..'<label text="'..title..'" style="* {margin-right: 100px;}"/>'
             xml=xml..'<group layout="form" flat="true">'
-            for i=1,#tags,1 do
+            for i=1,#sizes,1 do
                 xml=xml..'<label text="'..tags[i]..'  ('..sizes[i]..' bytes)"/>'
                 xml=xml..'<button text="Clear" checked="false" on-click="clearClick_callback" id="'..i..'" />'
             end
-            xml=xml..'</group></ui>'
+            xml=xml..'</group>'
+            if #sizes<#tags then
+                xml=xml..'<label text="('..(#tags-#sizes)..' more)" />'
+            end
+            xml=xml..'</ui>'
 
             ui=simUI.create(xml)
         end
@@ -89,11 +93,8 @@ function sysCall_nonSimulation()
         hideDlg()
     end
     if tags then
-        while #tags>10 do
-            table.remove(tags,#tags)
-        end
         sizes={}
-        for i=1,#tags,1 do
+        for i=1,math.min(#tags,10),1 do
             sizes[i]=#sim.readCustomDataBlock(object,tags[i])
         end
         showDlg()
