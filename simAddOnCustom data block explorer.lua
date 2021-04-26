@@ -75,9 +75,9 @@ function sysCall_nonSimulation()
         return {cmd='cleanup'}
     end
     local s=sim.getObjectSelection()
+    local previousObject,previousTags,previousSizes=object,tags,sizes
     tags=nil
     sizes=nil
-    local previousObject=object
     object=-1
     if s then
         if #s>=1 then
@@ -96,6 +96,10 @@ function sysCall_nonSimulation()
         sizes={}
         for i=1,math.min(#tags,10),1 do
             sizes[i]=#sim.readCustomDataBlock(object,tags[i])
+        end
+        local _=function(x) return x~=nil and sim.packTable(x) or nil end
+        if _(tags)~=_(previousTags) or _(sizes)~=_(previousSizes) then
+            hideDlg()
         end
         showDlg()
     else
