@@ -10,7 +10,7 @@ function sysCall_init()
         name,version=sim.getModuleName(i)
         if (name) then
             str='-'..name..' (version: '..version
-            if sim.getInt32Parameter(sim.intparam_program_version)>=30500 then
+            if sim.getInt32Param(sim.intparam_program_version)>=30500 then
                 local extVer=sim.getModuleInfo(name,0)
                 if #extVer>0 then
                     str=str..', extended version string: '..extVer

@@ -29,7 +29,7 @@ function sysCall_nonSimulation()
         if #selectedObjects>0 then
             colorNames={}
             for i=1,#selectedObjects,1 do
-                local s=sim.getObjectStringParameter(selectedObjects[i],sim.shapestringparam_color_name)
+                local s=sim.getObjectStringParam(selectedObjects[i],sim.shapestringparam_color_name)
                 if s and s~='' then
                     for token in string.gmatch(s,"[^%s]+") do
                         colorNames[token]=token

@@ -10,7 +10,7 @@ function sysCall_init()
         local meshFormat=4 -- 0=OBJ, 1=DXF, 4=binary STL
         local exportIndividualShapeComponents=true
 
-        local appPath=sim.getStringParameter(sim.stringparam_application_path)
+        local appPath=sim.getStringParam(sim.stringparam_application_path)
         local exportDir=appPath.."/"..directoryName
         local extension
         if meshFormat==0 then
@@ -22,7 +22,7 @@ function sysCall_init()
         if meshFormat==4 then
             extension="stl"
         end
-        if sim.getInt32Parameter(sim.intparam_platform)==0 then
+        if sim.getInt32Param(sim.intparam_platform)==0 then
             local expDir=string.gsub(exportDir, "/", "\\")
             os.execute("rmdir /S /Q "..'"'..expDir..'"')
             os.execute("mkdir "..'"'..expDir..'"')
@@ -78,7 +78,7 @@ function sysCall_init()
             allObjects=sim.getObjectsInTree(selectedObjects[1])
         end
         local allIndividualShapesToRemove={}
-        local visibleLayers=sim.getInt32Parameter(sim.intparam_visible_layers)
+        local visibleLayers=sim.getInt32Param(sim.intparam_visible_layers)
         for obji=1,#allObjects,1 do
             local objType=sim.getObjectType(allObjects[obji])
             local objName=sim.getObjectName(allObjects[obji])
@@ -88,7 +88,7 @@ function sysCall_init()
             if parentHandle~=-1 then
                 parentName=sim.getObjectName(parentHandle)
             end
-            local res,layers=sim.getObjectInt32Parameter(allObjects[obji],10)
+            local layers=sim.getObjectInt32Param(allObjects[obji],10)
             file:write("name{"..objName.."}")
             file:write(" ref{")
             for i=1,12,1 do
@@ -99,7 +99,7 @@ function sysCall_init()
             file:write(" visibility{"..sim.boolAnd32(visibleLayers,layers).."}")
             file:write(" type{")
             if objType==sim.object_shape_type then
-                local res,param=sim.getObjectInt32Parameter(allObjects[obji],3016)
+                local param=sim.getObjectInt32Param(allObjects[obji],3016)
                 if exportIndividualShapeComponents and (param~=0) then
                     file:write("multishape}")
                     local tobj=sim.copyPasteObjects({allObjects[obji]},0)

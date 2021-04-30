@@ -20,7 +20,7 @@ function sysCall_init()
         commentTag=8
         visibilityTag=9
 
-        local appPath=sim.getStringParameter(sim.stringparam_application_path)
+        local appPath=sim.getStringParam(sim.stringparam_application_path)
         local importDir=appPath.."/"..directoryName
         local file=io.open(importDir.."/"..fileName,"r")
 
@@ -138,15 +138,12 @@ function sysCall_init()
                         sim.setObjectMatrix(objHandle,-1,objMatr)
                     end
                     if visible==0 then
-                        sim.setObjectInt32Parameter(objHandle,10,256)
+                        sim.setObjectInt32Param(objHandle,10,256)
                     end
-                    local saved=sim.getInt32Parameter(sim.intparam_error_report_mode)
-                    sim.setInt32Parameter(sim.intparam_error_report_mode,0)
                     local nm=objName
-                    while sim.setObjectName(objHandle,nm)==-1 do
+                    while sim.setObjectName(objHandle+sim.handleflag_silenterror,nm)==-1 do
                         nm="_"..nm
                     end
-                    sim.setInt32Parameter(sim.intparam_error_report_mode,saved)
                     newHandlesAndNames[#newHandlesAndNames+1]=objHandle
                     newHandlesAndNames[#newHandlesAndNames+1]=objName
                     newHandlesAndNames[#newHandlesAndNames+1]=objParent

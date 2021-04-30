@@ -266,34 +266,34 @@ function render_callback(ui,id,v)
     end
     local visSens=sim.createVisionSensor(opt,{config.res[1],config.res[2],0,0},{config.nearClipping,config.farClipping,a,0.1,0.1,0.1,0,0,0,0,0})
     sim.setObjectPose(visSens,-1,pose)
---    sim.setObjectInt32Parameter(visSens,sim.visionintparam_resolution_x,config.res[1])
---    sim.setObjectInt32Parameter(visSens,sim.visionintparam_resolution_y,config.res[2])
---    sim.setObjectFloatParameter(visSens,sim.visionfloatparam_perspective_angle,config.viewAngle)
---    sim.setObjectFloatParameter(visSens,sim.visionfloatparam_ortho_size,config.viewSize)
---    sim.setObjectInt32Parameter(visSens,sim.visionintparam_perspective_operation,config.perspective and 1 or 0)
-    sim.setObjectInt32Parameter(visSens,sim.visionintparam_pov_focal_blur,config.povray.focalBlur and 1 or 0)
-    sim.setObjectFloatParameter(visSens,sim.visionfloatparam_pov_blur_distance,config.povray.focalDistance)
-    sim.setObjectFloatParameter(visSens,sim.visionfloatparam_pov_aperture,config.povray.aperture)
-    sim.setObjectInt32Parameter(visSens,sim.visionintparam_pov_blur_sampled,config.povray.blurSamples)
+--    sim.setObjectInt32Param(visSens,sim.visionintparam_resolution_x,config.res[1])
+--    sim.setObjectInt32Param(visSens,sim.visionintparam_resolution_y,config.res[2])
+--    sim.setObjectFloatParam(visSens,sim.visionfloatparam_perspective_angle,config.viewAngle)
+--    sim.setObjectFloatParam(visSens,sim.visionfloatparam_ortho_size,config.viewSize)
+--    sim.setObjectInt32Param(visSens,sim.visionintparam_perspective_operation,config.perspective and 1 or 0)
+    sim.setObjectInt32Param(visSens,sim.visionintparam_pov_focal_blur,config.povray.focalBlur and 1 or 0)
+    sim.setObjectFloatParam(visSens,sim.visionfloatparam_pov_blur_distance,config.povray.focalDistance)
+    sim.setObjectFloatParam(visSens,sim.visionfloatparam_pov_aperture,config.povray.aperture)
+    sim.setObjectInt32Param(visSens,sim.visionintparam_pov_blur_sampled,config.povray.blurSamples)
     if config.renderMode=='opengl' then
-        sim.setObjectInt32Parameter(visSens,sim.visionintparam_render_mode,0)
+        sim.setObjectInt32Param(visSens,sim.visionintparam_render_mode,0)
     end
     if config.renderMode=='opengl3' then
-        sim.setObjectInt32Parameter(visSens,sim.visionintparam_render_mode,7)
+        sim.setObjectInt32Param(visSens,sim.visionintparam_render_mode,7)
     end
     if config.renderMode=='povray' then
-        sim.setObjectInt32Parameter(visSens,sim.visionintparam_render_mode,3)
+        sim.setObjectInt32Param(visSens,sim.visionintparam_render_mode,3)
     end
 
     local savedVisibilityMask=0
-    local r,savedVisibilityMask=sim.getObjectInt32Parameter(cam,sim.objintparam_visibility_layer)
-    sim.setObjectInt32Parameter(cam,sim.objintparam_visibility_layer,0)
+    local savedVisibilityMask=sim.getObjectInt32Param(cam,sim.objintparam_visibility_layer)
+    sim.setObjectInt32Param(cam,sim.objintparam_visibility_layer,0)
     local newAttr=sim.displayattribute_renderpass
     newAttr=newAttr+sim.displayattribute_forvisionsensor
     newAttr=newAttr+sim.displayattribute_ignorerenderableflag
-    sim.setObjectInt32Parameter(visSens,sim.visionintparam_rendering_attributes,newAttr)
+    sim.setObjectInt32Param(visSens,sim.visionintparam_rendering_attributes,newAttr)
     sim.handleVisionSensor(visSens)
-    sim.setObjectInt32Parameter(cam,sim.objintparam_visibility_layer,savedVisibilityMask)
+    sim.setObjectInt32Param(cam,sim.objintparam_visibility_layer,savedVisibilityMask)
     showImage()
     local img,x,y=sim.getVisionSensorCharImage(visSens)
     local rxy={}
@@ -316,7 +316,7 @@ function save_callback(ui,id,v)
     if config.fileDlg then
         filenameAndPath=sim.fileDialog(sim.filedlg_type_save,'title','','screenshot.png','image file','*')
     else
-        local theOs=sim.getInt32Parameter(sim.intparam_platform)
+        local theOs=sim.getInt32Param(sim.intparam_platform)
         if theOs==1 then
             -- MacOS, special: executable is inside of a bundle:
             filenameAndPath='../../../coppeliaSim_screenshot_'..os.date("%Y_%m_%d-%H_%M_%S",os.time())..'.png'
