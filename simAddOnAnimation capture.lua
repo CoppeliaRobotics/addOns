@@ -122,56 +122,57 @@ function sysCall_beforeSimulation()
 end
 
 function sysCall_afterSimulation()
-    local map={}
-    local invMap={}
-    local dummy
-    for i=1,#modelData.objects,1 do
-        local obj=modelData.objects[i].h
-        local copy
-        if i==1 then -- base
-            if modelData.modelBaseExists then
+    if modelData then
+        local map={}
+        local invMap={}
+        local dummy
+        for i=1,#modelData.objects,1 do
+            local obj=modelData.objects[i].h
+            local copy
+            if i==1 then -- base
+                if modelData.modelBaseExists then
+                    copy=sim.copyPasteObjects({obj},2+4+8+32)[1]
+                    dummy=sim.createDummy(0.001)
+                else
+                    copy=sim.createDummy(0.001)
+                    dummy=copy
+                end
+            else
                 copy=sim.copyPasteObjects({obj},2+4+8)[1]
-                dummy=sim.createDummy(0.001)
-            else
-                copy=sim.createDummy(0.001)
-                dummy=copy
             end
-        else
-            copy=sim.copyPasteObjects({obj},2+4+8)[1]
+            if copy~=dummy then
+                sim.setObjectProperty(copy,sim.objectproperty_collapsed|sim.objectproperty_selectable|sim.objectproperty_selectmodelbaseinstead)
+            end
+            map[copy]=obj
+            invMap[obj]=copy
         end
-        if copy~=dummy then
-            sim.setObjectProperty(copy,sim.objectproperty_collapsed|sim.objectproperty_selectable|sim.objectproperty_selectmodelbaseinstead)
-        end
-        map[copy]=obj
-        invMap[obj]=copy
-    end
-    
-    for i=1,#modelData.objects,1 do
-        local data=modelData.objects[i]
-        local orig=data.h
-        local obj=invMap[orig]
         
-        sim.setModelProperty(obj,sim.modelproperty_not_model)
-        if i==1 then
-            if modelData.modelBaseExists then
-                sim.setObjectParent(obj,dummy,true)
-                sim.setObjectPose(obj,sim.handle_parent,{0,0,0,0,0,0,1})
-                sim.setObjectPose(dummy,-1,data.initLocalPose)
+        for i=1,#modelData.objects,1 do
+            local data=modelData.objects[i]
+            local orig=data.h
+            local obj=invMap[orig]
+            
+            sim.setModelProperty(obj,sim.modelproperty_not_model)
+            if i==1 then
+                if modelData.modelBaseExists then
+                    sim.setObjectParent(obj,dummy,true)
+                    sim.setObjectPose(obj,sim.handle_parent,{0,0,0,0,0,0,1})
+                    sim.setObjectPose(dummy,-1,data.initLocalPose)
+                else
+                    sim.setObjectPose(obj,sim.handle_parent,data.initLocalPose)
+                end
             else
+                local parent=invMap[data.parent]
+                sim.setObjectParent(obj,parent,true)
                 sim.setObjectPose(obj,sim.handle_parent,data.initLocalPose)
             end
-        else
-            local parent=invMap[data.parent]
-            sim.setObjectParent(obj,parent,true)
-            sim.setObjectPose(obj,sim.handle_parent,data.initLocalPose)
+            
         end
-        
-    end
 
-    sim.setModelProperty(dummy,sim.modelproperty_not_collidable|sim.modelproperty_not_detectable|sim.modelproperty_not_dynamic|sim.modelproperty_not_measurable|sim.modelproperty_not_respondable)
-    sim.setObjectProperty(dummy,sim.objectproperty_collapsed|sim.objectproperty_selectable|sim.objectproperty_canupdatedna)
-    local s=sim.addScript(sim.scripttype_childscript)
-    local txt=[[animator=require('animator')
+        sim.setModelProperty(dummy,sim.modelproperty_not_collidable|sim.modelproperty_not_detectable|sim.modelproperty_not_dynamic|sim.modelproperty_not_measurable|sim.modelproperty_not_respondable)
+        sim.setObjectProperty(dummy,sim.objectproperty_collapsed|sim.objectproperty_selectable|sim.objectproperty_canupdatedna)
+        local s=sim.addScript(sim.scripttype_childscript)
+        local txt=[[animator=require('animator')
 
 function sysCall_init()
     local config={}
@@ -189,60 +190,64 @@ function sysCall_init()
     animator.init(config)
 end
 ]]
-    sim.setScriptText(s,txt)
-    sim.associateScriptWithObject(s,dummy)
-    local animationData={times=modelData.times,poses={modelData.objects[1].poses},initPoses={modelData.objects[1].initLocalPose}}
-    local handles={dummy}
-    for i=2,#modelData.objects,1 do
-        if modelData.objects[i].posesAreChanging then
-            handles[#handles+1]=invMap[modelData.objects[i].h]
-            animationData.poses[#animationData.poses+1]=modelData.objects[i].poses
-            animationData.initPoses[#animationData.initPoses+1]=modelData.objects[i].initLocalPose
+        sim.setScriptText(s,txt)
+        sim.associateScriptWithObject(s,dummy)
+        local animationData={times=modelData.times,poses={modelData.objects[1].poses},initPoses={modelData.objects[1].initLocalPose}}
+        local handles={dummy}
+        for i=2,#modelData.objects,1 do
+            if modelData.objects[i].posesAreChanging then
+                handles[#handles+1]=invMap[modelData.objects[i].h]
+                animationData.poses[#animationData.poses+1]=modelData.objects[i].poses
+                animationData.initPoses[#animationData.initPoses+1]=modelData.objects[i].initLocalPose
+            end
         end
-    end
-    
-    sim.writeCustomDataBlock(dummy,'animationData',sim.packTable(animationData))
-    sim.setReferencedHandles(dummy,handles)
-    local nm='animatedModel'
-    local suff=''
-    while true do
-        if sim.setObjectName(dummy|sim.handleflag_silenterror,nm..suff)>=0 then
-            break
+        modelData=nil
+        
+        sim.writeCustomDataBlock(dummy,'animationData',sim.packTable(animationData))
+        sim.setReferencedHandles(dummy,handles)
+        local nm='animatedModel'
+        local suff=''
+        while true do
+            if sim.setObjectName(dummy|sim.handleflag_silenterror,nm..suff)>=0 then
+                break
+            end
+            if suff=='' then
+                suff=0
+            else
+                suff=suff+1
+            end
         end
-        if suff=='' then
-            suff=0
-        else
-            suff=suff+1
+        local s=sim.getModelBB(dummy)
+        s=math.floor(0.1*20*(s[1]+s[2]*s[3])/3)/20 -- in 5cm steps
+        if s==0 then
+            s=0.05
         end
+        local p=sim.getObjectPosition(dummy,-1)
+        p[1]=p[1]+s
+        p[2]=p[2]+s
+        sim.setObjectPosition(dummy,-1,p)
+        sim.removeObjectFromSelection(sim.handle_all,-1)
+        sim.addObjectToSelection(sim.handle_single,dummy)
+        local txt="Animation model '"..sim.getObjectName(dummy).."' was created!"
+        sim.addLog(sim.verbosity_scriptinfos,txt)
+        sim.msgBox(sim.dlgstyle_message,sim.msgbox_buttons_ok,'Animation model',txt)
     end
-    local s=sim.getModelBB(dummy)
-    s=math.floor(0.1*20*(s[1]+s[2]*s[3])/3)/20 -- in 5cm steps
-    if s==0 then
-        s=0.05
-    end
-    local p=sim.getObjectPosition(dummy,-1)
-    p[1]=p[1]+s
-    p[2]=p[2]+s
-    sim.setObjectPosition(dummy,-1,p)
-    sim.removeObjectFromSelection(sim.handle_all,-1)
-    sim.addObjectToSelection(sim.handle_single,dummy)
-    local txt="Animation model '"..sim.getObjectName(dummy).."' was created!"
-    sim.addLog(sim.verbosity_scriptinfos,txt)
-    sim.msgBox(sim.dlgstyle_message,sim.msgbox_buttons_ok,'Animation model',txt)
 end
 
 function sysCall_sensing()
-    modelData.times[#modelData.times+1]=sim.getSimulationTime()
-    for i=1,#modelData.objects,1 do
-        local data=modelData.objects[i]
-        local p=sim.getObjectPose(data.h,data.parent)
-        local pp=sim.packTable(p)
-        if pp~=data.previousLocalPose then
-            data.posesAreChanging=true
+    if modelData then
+        modelData.times[#modelData.times+1]=sim.getSimulationTime()
+        for i=1,#modelData.objects,1 do
+            local data=modelData.objects[i]
+            local p=sim.getObjectPose(data.h,data.parent)
+            local pp=sim.packTable(p)
+            if pp~=data.previousLocalPose then
+                data.posesAreChanging=true
+            end
+            for j=1,7,1 do
+                data.poses[#data.poses+1]=p[j]
+            end
+            data.previousLocalPose=pp
         end
-        for j=1,7,1 do
-            data.poses[#data.poses+1]=p[j]
-        end
-        data.previousLocalPose=pp
     end
 end
