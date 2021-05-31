@@ -19,7 +19,7 @@ function showDlg()
         end
         local xml ='<ui title="Animation model capture" activate="false" closeable="true" on-close="close_callback" layout="vbox" '..pos..[[>
                 <label text="On simulation start, an animation model will be recorded for object/model ']]..sim.getObjectName(selectedObject)..[['" />
-                <label text="i.e. movement of above object (and all of its hierarchy) will be captured and backed into a self-sufficient model." />
+                <label text="i.e. movement of above object (and all of its hierarchy) will be captured and baked into a self-sufficient model." />
         </ui>]]
         ui=simUI.create(xml)
     end
@@ -42,15 +42,18 @@ function sysCall_nonSimulation()
     local s=sim.getObjectSelection()
     local show=false
     if s and #s==1 then
-        local tmp=sim.getObjectsInTree(s[1])
-        local cnt=0
-        for i=1,#tmp,1 do
-            local obj=tmp[i]
-            if sim.getObjectInt32Param(obj,sim.objintparam_visible)~=0 and sim.getObjectType(obj)==sim.object_shape_type then
-                cnt=cnt+1
+        local inf=sim.readCustomDataBlock(s[1],'__info__')
+        if inf==nil or sim.unpackTable(inf).type~='animation' then
+            local tmp=sim.getObjectsInTree(s[1])
+            local cnt=0
+            for i=1,#tmp,1 do
+                local obj=tmp[i]
+                if sim.getObjectInt32Param(obj,sim.objintparam_visible)~=0 and sim.getObjectType(obj)==sim.object_shape_type then
+                    cnt=cnt+1
+                end
             end
+            show=(cnt>0)
         end
-        show=(cnt>0)
     end
     if show then
         if selectedObject~=s[1] then
@@ -91,7 +94,7 @@ function sysCall_beforeSimulation()
             end
         end
         
-        if cnt>1 then
+        if cnt>0 then
             modelData={}
             modelData.modelBaseExists=map[modelBase]
             map[modelBase]=true
@@ -204,6 +207,7 @@ end
         modelData=nil
         
         sim.writeCustomDataBlock(dummy,'animationData',sim.packTable(animationData))
+        sim.writeCustomDataBlock(dummy,'__info__',sim.packTable({type='animation'}))
         sim.setReferencedHandles(dummy,handles)
         local nm='animatedModel'
         local suff=''
