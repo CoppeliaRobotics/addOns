@@ -5,7 +5,7 @@ end
 function sysCall_init()
     sim.addLog(sim.verbosity_scriptinfos,"This tool will display the custom data blocks attached to the selected object, or the custom data blocks attached to the scene, if no object is selected. Custom data blocks can be written and read with simWriteCustomDataBlock and simReadCustomDataBlock.")
     object=-1
-    selectedDecoder=100
+    selectedDecoder=999
 end
 
 function sysCall_addOnScriptSuspend()
@@ -82,22 +82,39 @@ decoders={
         end,
     },
     {
-        id=199,
+        id=999,
         name='auto',
         f=function(tag,data)
-            local hint=tag:match("^.+(%..+)$")
-            for i,decoder in ipairs(decoders) do
-                if decoder.name~='auto' then
-                    local h='.'..decoder.name
-                    if h==hint then
-                        return decoder.f(tag,data)
-                    end
+            -- standard tags that have known types:
+            if tag=='__info__' or tag=='__config__' then
+                return getDecoderForType('table').f(tag,data)
+            end
+
+            local t=nil
+            if info and info.blocks and info.blocks[tag] then
+                t=info.blocks[tag]['type']
+            end
+            if t then
+                local d=getDecoderForType(t)
+                if d then
+                    return d.f(tag,data)
+                else
+                    error('unknown type: '..t)
                 end
             end
-            return '<font color=#b75501>For automatic selection of decoder, the tag name must end with a dot followed by the decoder name, e.g.: myTagName.table</font>'
+
+            return '<font color=#b75501>For automatic selection of decoder, there must be an \'__info__\' block with type information, e.g.: {myTagName={type=\'table\'}}</font>'
         end,
     },
 }
+
+function getDecoderForType(t)
+    for i,decoder in ipairs(decoders) do
+        if decoder.name~='auto' and decoder.name==t then
+            return decoder
+        end
+    end
+end
 
 function sysCall_cleanup()
     hideDlg()
@@ -157,7 +174,7 @@ function showDlg()
             pos='position="'..uiPos[1]..','..uiPos[2]..'" placement="absolute"'
         end
         local title="Custom data blocks in scene:"
-        if object>=0 then
+        if object~=sim.handle_scene then
             title="Custom data blocks in object '<b>"..sim.getObjectName(object).."</b>':"
         end
         if not ui then
@@ -207,16 +224,21 @@ function sysCall_nonSimulation()
     local previousObject,previousContent=object,content
     content=nil
     object=-1
+    info=nil
     local tags={}
     if s then
         if #s>=1 then
             if s[#s]>=0 then
                 object=s[#s]
-                tags=sim.readCustomDataBlockTags(object)
             end
         end
     else
-        tags=sim.readCustomDataBlockTags(sim.handle_scene)
+        object=sim.handle_scene
+    end
+    if object~=-1 then
+        tags=sim.readCustomDataBlockTags(object)
+        info=sim.readCustomDataBlock(object,'__info__')
+        if info then info=sim.unpackTable(info) end
     end
     if previousObject~=object then
         hideDlg()
