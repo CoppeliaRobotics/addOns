@@ -5,7 +5,7 @@ end
 function sysCall_init()
     sim.addLog(sim.verbosity_scriptinfos,"This tool will display the custom data blocks attached to the selected object, or the custom data blocks attached to the scene, if no object is selected. Custom data blocks can be written and read with simWriteCustomDataBlock and simReadCustomDataBlock.")
     object=-1
-    selectedDecoder=999
+    selectedDecoder=1
 end
 
 function sysCall_addOnScriptSuspend()
@@ -14,7 +14,21 @@ end
 
 decoders={
     {
-        id=100,
+        name='auto',
+        f=function(tag,data)
+            local t=getTagType(tag)
+            if t then
+                local d=getDecoderForType(t)
+                if d then
+                    return d.f(tag,data)
+                else
+                    error('unknown type: '..t)
+                end
+            end
+            return '<font color=#b75501>For automatic selection of decoder, there must be an \'__info__\' block with type information, e.g.: {myTagName={type=\'table\'}}</font>'
+        end,
+    },
+    {
         name='binary',
         f=function(tag,data)
             return '<tt>'..data:gsub('(.)',function(y)
@@ -23,14 +37,12 @@ decoders={
         end,
     },
     {
-        id=108,
         name='string',
         f=function(tag,data)
             return data
         end,
     },
     {
-        id=101,
         name='table',
         f=function(tag,data)
             local status,data=pcall(function() return sim.unpackTable(data) end)
@@ -40,73 +52,53 @@ decoders={
         end,
     },
     {
-        id=102,
         name='float[]',
         f=function(tag,data)
             return getAsString(sim.unpackFloatTable(data))
         end,
     },
     {
-        id=103,
         name='double[]',
         f=function(tag,data)
             return getAsString(sim.unpackDoubleTable(data))
         end,
     },
     {
-        id=104,
         name='int32[]',
         f=function(tag,data)
             return getAsString(sim.unpackInt32Table(data))
         end,
     },
     {
-        id=105,
         name='uint8[]',
         f=function(tag,data)
             return getAsString(sim.unpackUInt8Table(data))
         end,
     },
     {
-        id=106,
         name='uint16[]',
         f=function(tag,data)
             return getAsString(sim.unpackUInt16Table(data))
         end,
     },
     {
-        id=107,
         name='uint32[]',
         f=function(tag,data)
             return getAsString(sim.unpackUInt32Table(data))
         end,
     },
-    {
-        id=999,
-        name='auto',
-        f=function(tag,data)
-            -- standard tags that have known types:
-            if tag=='__info__' or tag=='__config__' then
-                return getDecoderForType('table').f(tag,data)
-            end
-
-            local t=nil
-            if info and info.blocks and info.blocks[tag] then
-                t=info.blocks[tag]['type']
-            end
-            if t then
-                local d=getDecoderForType(t)
-                if d then
-                    return d.f(tag,data)
-                else
-                    error('unknown type: '..t)
-                end
-            end
-
-            return '<font color=#b75501>For automatic selection of decoder, there must be an \'__info__\' block with type information, e.g.: {myTagName={type=\'table\'}}</font>'
-        end,
-    },
 }
+
+function getTagType(tag)
+    -- standard tags that have known types:
+    if tag=='__info__' or tag=='__config__' then
+        return 'table'
+    end
+
+    if info and info.blocks and info.blocks[tag] then
+        return info.blocks[tag]['type']
+    end
+end
 
 function getDecoderForType(t)
     for i,decoder in ipairs(decoders) do
@@ -129,9 +121,11 @@ function sysCall_beforeInstanceSwitch()
 end
 
 function onDecoderChanged()
-    for _,decoder in ipairs(decoders) do
-        if selectedTag and simUI.getRadiobuttonValue(ui,decoder.id)>0 then
-            selectedDecoder=decoder.id
+    local index=simUI.getComboboxSelectedIndex(ui,700)
+    selectedDecoder=index+1
+    if selectedDecoder>0 then
+        local decoder=decoders[selectedDecoder]
+        if selectedTag then
             local html=decoder.f(selectedTag,content[selectedTag])
             if html then
                 simUI.setText(ui,800,html)
@@ -139,6 +133,8 @@ function onDecoderChanged()
                 simUI.setText(ui,800,string.format('<font color=red>Not %s data</font>',decoder.name))
             end
         end
+    else
+        simUI.setText(ui,800,'')
     end
 end
 
@@ -150,9 +146,7 @@ function onSelectionChange(ui,id,row,column)
     end
     local e=selectedTag and true or false
     simUI.setEnabled(ui,20,e)
-    for _,decoder in ipairs(decoders) do
-        simUI.setEnabled(ui,decoder.id,e)
-    end
+    simUI.setEnabled(ui,700,e)
     onDecoderChanged()
 end
 
@@ -181,20 +175,26 @@ function showDlg()
             xml='<ui title="Custom Data Block Explorer" activate="false" closeable="true" on-close="onCloseClicked" resizable="false" '..pos..'>'
             xml=xml..'<group flat="true"><label text="'..title..'" /></group>'
             xml=xml..'<table id="600" selection-mode="row" editable="false" on-selection-change="onSelectionChange">'
-            xml=xml..'<header><item>Tag name</item><item>Size (bytes)</item></header>'
+            xml=xml..'<header><item>Tag name</item><item>Size (bytes)</item><item>Type</item></header>'
             local selectedIndex,i=-1,0
             for tag,data in pairs(content) do
                 if tag==selectedTag then selectedIndex=i end
-                xml=xml..'<row><item>'..tag..'</item><item>'..#data..'</item></row>'
+                xml=xml..'<row>'
+                xml=xml..'<item>'..tag..'</item>'
+                xml=xml..'<item>'..#data..'</item>'
+                local t=getTagType(tag)
+                if t then xml=xml..'<item>'..t..'</item>' end
+                xml=xml..'</row>'
                 i=i+1
             end
             xml=xml..'</table>'
             xml=xml..'<group flat="true" layout="grid">'
             xml=xml..'<label text="Decode as:" />'
+            xml=xml..'<combobox id="700" on-change="onDecoderChanged">'
             for i,decoder in ipairs(decoders) do
-                if i>1 and (i-1)%3==0 then xml=xml..'<br/><label text="" />' end
-                xml=xml..'<radiobutton id="'..decoder.id..'" enabled="false" text="'..decoder.name..'" checked="'..(selectedDecoder==decoder.id and 'true' or 'false')..'" on-click="onDecoderChanged" />'
+                xml=xml..'<item>'..decoder.name..'</item>'
             end
+            xml=xml..'</combobox>'
             xml=xml..'</group>'
             xml=xml..'<text-browser id="800" read-only="true" />'
             xml=xml..'<button id="20" enabled="false" text="Clear selected tag" on-click="onClearClicked" />'
@@ -203,6 +203,7 @@ function showDlg()
             if selectedIndex~=-1 then
                 simUI.setTableSelection(ui,600,selectedIndex,0,false)
             end
+            simUI.setComboboxSelectedIndex(ui,700,selectedDecoder-1)
         end
     end
 end
