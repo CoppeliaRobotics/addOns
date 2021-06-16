@@ -35,12 +35,12 @@ function showDlg()
         end
         if not ui then
             xml='<ui title="Referenced Handles Explorer" closeable="true" on-close="onCloseClicked" resizable="false" '..pos..'>'
-            xml=xml..'<group flat="true"><label text="Referenced handles in object &quot;<b>'..sim.getObjectName(object)..'</b>&quot;:" /></group>'
+            xml=xml..'<group flat="true"><label text="Referenced handles in object &quot;<b>'..sim.getObjectAlias(object,1)..'</b>&quot;:" /></group>'
             xml=xml..'<table id="600" selection-mode="row" editable="false" on-selection-change="onSelectionChange">'
             xml=xml..'<header><item>Handle</item><item>Name</item></header>'
             for i,handle in ipairs(content) do
                 local name=''
-                if handle~=-1 then name=sim.getObjectName(handle) end
+                if handle~=-1 then name=sim.getObjectAlias(handle,1) end
                 xml=xml..'<row><item>'..handle..'</item><item>'..name..'</item></row>'
             end
             xml=xml..'</table>'

@@ -37,12 +37,12 @@ function sysCall_init()
         file:write("// Data format:\n")
         file:write("//\n")
         file:write("// For each scene object:\n")
-        file:write("//    name{<SCENE_OBJECT_NAME>} ref{<ABS_OBJECT_REFERENCE_FRAME_MATRIX>} parent{PARENT_OBJECT_NAME} visibility{<0_OR_1>} type{<OBJECT_TYPE>} \n")
+        file:write("//    id{<SCENE_OBJECT_ID>} alias{<SCENE_OBJECT_ALIAS>} ref{<ABS_OBJECT_REFERENCE_FRAME_MATRIX>} parent{PARENT_OBJECT_ID} visibility{<0_OR_1>} type{<OBJECT_TYPE>} \n")
         file:write("//\n")
         file:write("//\n")
         file:write("// Where:\n")
         file:write("//  <ABS_OBJECT_REFERENCE_FRAME_MATRIX> is: Xx Yx Zx POSx Xy Yy Zy POSy Xz Yz Zz POSz 0 0 0 1\n")
-        file:write("//  <PARENT_OBJECT_NAME> is: * if the object has no parent\n")
+        file:write("//  <PARENT_OBJECT_ID> is: * if the object has no parent\n")
         file:write("//  <OBJECT_TYPE> is: object, joint, shape or multishape\n")
         file:write("//\n")
         file:write("//\n")
@@ -81,21 +81,23 @@ function sysCall_init()
         local visibleLayers=sim.getInt32Param(sim.intparam_visible_layers)
         for obji=1,#allObjects,1 do
             local objType=sim.getObjectType(allObjects[obji])
-            local objName=sim.getObjectName(allObjects[obji])
+            local objId=sim.getObjectAlias(allObjects[obji],4)
+            local objAlias=sim.getObjectAlias(allObjects[obji])
             local matr=sim.getObjectMatrix(allObjects[obji],-1)
-            local parentName="*"
+            local parentId="*"
             local parentHandle=sim.getObjectParent(allObjects[obji])
             if parentHandle~=-1 then
-                parentName=sim.getObjectName(parentHandle)
+                parentId=sim.getObjectAlias(parentHandle,4)
             end
             local layers=sim.getObjectInt32Param(allObjects[obji],10)
-            file:write("name{"..objName.."}")
+            file:write("id{"..objId.."}")
+            file:write(" alias{"..objAlias.."}")
             file:write(" ref{")
             for i=1,12,1 do
                 file:write(string.format("%e ",matr[i]))
             end
             file:write(string.format("%e %e %e %e}",0,0,0,1))
-            file:write(" parent{"..parentName.."}")
+            file:write(" parent{"..parentId.."}")
             file:write(" visibility{"..sim.boolAnd32(visibleLayers,layers).."}")
             file:write(" type{")
             if objType==sim.object_shape_type then
@@ -106,7 +108,7 @@ function sysCall_init()
                     local individualShapes=sim.ungroupShape(tobj[1])
                     for j=1,#individualShapes,1 do
                         allIndividualShapesToRemove[#allIndividualShapesToRemove+1]=individualShapes[j]
-                        local indivName=sim.getObjectName(individualShapes[j])
+                        local indivName=sim.getObjectAlias(individualShapes[j],4)
                         local indivMatr=sim.getObjectMatrix(individualShapes[j],-1)
                         local totIndivMatrix=sim.getObjectMatrix(allObjects[obji],-1)
                         sim.invertMatrix(totIndivMatrix)
@@ -129,13 +131,13 @@ function sysCall_init()
                     end
                 else
                     file:write("shape}")
-                    file:write("\n    file{"..objName.."."..extension.."}")
+                    file:write("\n    file{"..objId.."."..extension.."}")
                     local result,col1=sim.getShapeColor(allObjects[obji],nil,sim.colorcomponent_ambient_diffuse)
                     local result,col2=sim.getShapeColor(allObjects[obji],nil,sim.colorcomponent_specular)
                     file:write(string.format(" color{%.2f %.2f %.2f %.2f %.2f %.2f}",col1[1],col1[2],col1[3],col2[1],col2[2],col2[3]))
                     local vertices,indices=sim.getShapeMesh(allObjects[obji])
                     if vertices then
-                        sim.exportMesh(meshFormat,exportDir.."/"..objName.."."..extension,0,1,{vertices},{indices},nil,{objName})
+                        sim.exportMesh(meshFormat,exportDir.."/"..objId.."."..extension,0,1,{vertices},{indices},nil,{objId})
                     end
                 end
             else

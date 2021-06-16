@@ -9,7 +9,7 @@ function sysCall_init()
         local directoryName="exportedContent"
         local fileName="sceneObjects.txt"
 
-        nameTag=0
+        idTag=0
         refTag=1
         parentTag=2
         typeTag=3
@@ -19,6 +19,7 @@ function sysCall_init()
         limitsTag=7
         commentTag=8
         visibilityTag=9
+        aliasTag=10
 
         local appPath=sim.getStringParam(sim.stringparam_application_path)
         local importDir=appPath.."/"..directoryName
@@ -32,13 +33,14 @@ function sysCall_init()
         end
 
         local l=1
-        local newHandlesAndNames={}
+        local newHandlesAndIds={}
         while l<=#lines do
             local value=getValue(lines[l],commentTag)
             if value==nil then
-                value=getValue(lines[l],nameTag)
+                value=getValue(lines[l],idTag)
                 if value then
-                    local objName=value
+                    local objId=value
+                    local objAlias=getValue(lines[l],aliasTag)
                     value=getValue(lines[l],refTag)
                     local objMatr=getNumberTable(value)
                     value=getValue(lines[l],parentTag)
@@ -140,23 +142,20 @@ function sysCall_init()
                     if visible==0 then
                         sim.setObjectInt32Param(objHandle,10,256)
                     end
-                    local nm=objName
-                    while sim.setObjectName(objHandle+sim.handleflag_silenterror,nm)==-1 do
-                        nm="_"..nm
-                    end
-                    newHandlesAndNames[#newHandlesAndNames+1]=objHandle
-                    newHandlesAndNames[#newHandlesAndNames+1]=objName
-                    newHandlesAndNames[#newHandlesAndNames+1]=objParent
+                    sim.setObjectAlias(objHandle,objAlias)
+                    newHandlesAndIds[#newHandlesAndIds+1]=objHandle
+                    newHandlesAndIds[#newHandlesAndIds+1]=objId
+                    newHandlesAndIds[#newHandlesAndIds+1]=objParent
                 end
             end
             l=l+1
         end
-        for i=1,#newHandlesAndNames/3,1 do
-            local objHandle=newHandlesAndNames[3*(i-1)+1]
-            local parentName=newHandlesAndNames[3*(i-1)+3]
-            for j=1,#newHandlesAndNames/3,1 do
-                local objHandle2=newHandlesAndNames[3*(j-1)+1]
-                local objName2=newHandlesAndNames[3*(j-1)+2]
+        for i=1,#newHandlesAndIds/3,1 do
+            local objHandle=newHandlesAndIds[3*(i-1)+1]
+            local parentName=newHandlesAndIds[3*(i-1)+3]
+            for j=1,#newHandlesAndIds/3,1 do
+                local objHandle2=newHandlesAndIds[3*(j-1)+1]
+                local objName2=newHandlesAndIds[3*(j-1)+2]
                 if objName2==parentName then
                     sim.setObjectParent(objHandle,objHandle2,true)
                     break
@@ -164,8 +163,8 @@ function sysCall_init()
             end
         end
         sim.removeObjectFromSelection(sim.handle_all,-1)
-        for i=1,#newHandlesAndNames/3,1 do
-            sim.addObjectToSelection(sim.handle_single,newHandlesAndNames[3*(i-1)+1])
+        for i=1,#newHandlesAndIds/3,1 do
+            sim.addObjectToSelection(sim.handle_single,newHandlesAndIds[3*(i-1)+1])
         end
     end
     return {cmd='cleanup'}
@@ -173,7 +172,8 @@ end
 
 getValue=function(str,tg)
 	local s=nil
-	if tg==nameTag then s="name" end
+	if tg==idTag then s="id" end
+	if tg==aliasTag then s="alias" end
 	if tg==refTag then s="ref" end
 	if tg==parentTag then s="parent" end
 	if tg==typeTag then s="type" end

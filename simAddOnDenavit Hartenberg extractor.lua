@@ -176,7 +176,7 @@ displayDhParams=function(firstJoint)
     local toExplore_prevName={}
     for i=1,#toExplore_objs,1 do
         toExplore_prevMatrix[#toExplore_prevMatrix+1]=sim.getObjectMatrix(firstJoint,-1)
-        toExplore_prevName[#toExplore_prevName+1]=sim.getObjectName(firstJoint)
+        toExplore_prevName[#toExplore_prevName+1]=sim.getObjectAlias(firstJoint,1)
     end
     local somethingWasDisplayed=false
 
@@ -201,7 +201,7 @@ displayDhParams=function(firstJoint)
         for i=1,#attachedJoints,1 do
             somethingWasDisplayed=true
             local d,theta,r,alpha,lastJointMatrix=computeDhParams(prevMatr,attachedJoints[i])
-            local txt="Between '"..prevName.."' and '"..sim.getObjectName(attachedJoints[i]).."':\n"
+            local txt="Between '"..prevName.."' and '"..sim.getObjectAlias(attachedJoints[i],1).."':\n"
             txt=txt.."    d="..string.format("%.4f\n",d)
             txt=txt.."    theta="..string.format("%03.1f\n",theta*180/math.pi)
             txt=txt.."    a="..string.format("%.4f\n",r)
@@ -215,7 +215,7 @@ displayDhParams=function(firstJoint)
                     matr[k]=lastJointMatrix[k]
                 end
                 toExplore_prevMatrix[#toExplore_prevMatrix+1]=matr
-                toExplore_prevName[#toExplore_prevName+1]=sim.getObjectName(attachedJoints[i])
+                toExplore_prevName[#toExplore_prevName+1]=sim.getObjectAlias(attachedJoints[i],1)
             end
         end
     end

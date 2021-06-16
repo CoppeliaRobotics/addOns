@@ -7,7 +7,7 @@ function sysCall_addOnScriptSuspend()
 end
 
 function sysCall_init()
-    sim.addLog(sim.verbosity_scriptinfos,"This tool allows to replace/change names of selected objects.")
+    sim.addLog(sim.verbosity_scriptinfos,"This tool allows to replace/change aliases of selected objects.")
     strings={"originalString","replacementString"}
 end
 
@@ -41,7 +41,7 @@ function showDlg()
         if uiPos then
             pos='position="'..uiPos[1]..','..uiPos[2]..'" placement="absolute"'
         end
-        local xml ='<ui title="Name change tool" activate="false" closeable="true" on-close="close_callback" '..pos..[[>
+        local xml ='<ui title="Alias change tool" activate="false" closeable="true" on-close="close_callback" '..pos..[[>
             <group layout="form" flat="true">
             <label text="replace occurences of"/>
             <edit on-editing-finished="editFinished_callback" id="1" />
@@ -72,18 +72,12 @@ end
 function replace_callback(ui,id,v)
     local selectedObjects=sim.getObjectSelection()
     if #strings[1]>0 then
-        local err=false
         for i=1,#selectedObjects,1 do
-            local name=sim.getObjectName(selectedObjects[i])
+            local name=sim.getObjectAlias(selectedObjects[i])
             local newName,r=string.gsub(name,strings[1],strings[2])
             if (r>0) then
-                if sim.setObjectName(selectedObjects[i]|sim.handleflag_silenterror,newName)<0 then
-                    err=true
-                end
+                sim.setObjectAlias(selectedObjects[i],newName)
             end
-        end
-        if err then
-            sim.msgBox(sim.msgbox_type_warning,sim.msgbox_buttons_ok,"Name change","Some objects could not be renamed. Make sure the resulting names are valid scene object names.")
         end
     end
 end

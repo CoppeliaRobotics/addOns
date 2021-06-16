@@ -18,7 +18,7 @@ function showDlg()
             pos='position="'..uiPos[1]..','..uiPos[2]..'" placement="absolute"'
         end
         local xml ='<ui title="Animation model capture" activate="false" closeable="true" on-close="close_callback" layout="vbox" '..pos..[[>
-                <label text="On simulation start, an animation model will be recorded for object/model ']]..sim.getObjectName(selectedObject)..[['" />
+                <label text="On simulation start, an animation model will be recorded for object/model ']]..sim.getObjectAlias(selectedObject,1)..[['" />
                 <label text="i.e. movement of above object (and all of its hierarchy) will be captured and baked into a self-sufficient model." />
         </ui>]]
         ui=simUI.create(xml)
@@ -174,26 +174,8 @@ function sysCall_afterSimulation()
 
         sim.setModelProperty(dummy,sim.modelproperty_not_collidable|sim.modelproperty_not_detectable|sim.modelproperty_not_dynamic|sim.modelproperty_not_measurable|sim.modelproperty_not_respondable)
         sim.setObjectProperty(dummy,sim.objectproperty_collapsed|sim.objectproperty_selectable|sim.objectproperty_canupdatedna)
-        local s=sim.addScript(sim.scripttype_childscript)
-        local txt=[[animator=require('animator')
-
-function sysCall_init()
-    local config={}
-    
-    -- Modify following to customize your animation:
-    -----------------------------------------------
-    config.loop=false
-    config.backAndForth=false
-    config.dirAndSpeed=1
-    config.initPos=0 -- in %
-    config.immobile=false
-    -- config.color={1,0,0}
-    -----------------------------------------------
-    
-    animator.init(config)
-end
-]]
-        sim.setScriptText(s,txt)
+        local s=sim.addScript(sim.scripttype_customizationscript)
+        sim.setScriptText(s,"require('animator_customization')")
         sim.associateScriptWithObject(s,dummy)
         local animationData={times=modelData.times,poses={modelData.objects[1].poses},initPoses={modelData.objects[1].initLocalPose}}
         local handles={dummy}
@@ -209,18 +191,7 @@ end
         sim.writeCustomDataBlock(dummy,'animationData',sim.packTable(animationData))
         sim.writeCustomDataBlock(dummy,'__info__',sim.packTable({type='animation'}))
         sim.setReferencedHandles(dummy,handles)
-        local nm='animatedModel'
-        local suff=''
-        while true do
-            if sim.setObjectName(dummy|sim.handleflag_silenterror,nm..suff)>=0 then
-                break
-            end
-            if suff=='' then
-                suff=0
-            else
-                suff=suff+1
-            end
-        end
+        sim.setObjectAlias(dummy,"animatedModel")
         local s=sim.getModelBB(dummy)
         s=math.floor(0.1*20*(s[1]+s[2]*s[3])/3)/20 -- in 5cm steps
         if s==0 then
@@ -232,7 +203,7 @@ end
         sim.setObjectPosition(dummy,-1,p)
         sim.removeObjectFromSelection(sim.handle_all,-1)
         sim.addObjectToSelection(sim.handle_single,dummy)
-        local txt="Animation model '"..sim.getObjectName(dummy).."' was created!"
+        local txt="Animation model '"..sim.getObjectAlias(dummy,1).."' was created!"
         sim.addLog(sim.verbosity_scriptinfos,txt)
         sim.msgBox(sim.dlgstyle_message,sim.msgbox_buttons_ok,'Animation model',txt)
     end
