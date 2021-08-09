@@ -57,16 +57,6 @@ function sysCall_init()
     colorCSS=function(c) return string.format('rgb(%d,%d,%d)',math.floor(255*c[1]),math.floor(255*c[2]),math.floor(255*c[3])) end
     path=sim.getStringParam(sim.stringparam_scene_path)
     imageFile=sim.fileDialog(sim.filedlg_type_load,'Open image...',path,'','Image files','jpg;png;gif;pgm;pnm')
-    imageFileExt=imageFile:match("^.+(%..+)$")
-    if imageFileExt=='pnm' or imageFileExt=='pgm' then
-        local rc,pngData=simSubprocess.exec('pnmtopng',{imageFile})
-        if rc~=0 then
-            simUI.msgBox(simUI.msgbox_type.critical,simUI.msgbox_buttons.ok,'The program "pnmtopng" is not installed, or it returned an error','Error')
-            imageFile=nil
-        else
-            imageFile='@mem'..pngData
-        end
-    end
     addCuboid=function(classTbl,x1,y1,x2,y2)
         local handles={}
         for j,classTbl1 in ipairs(classTbl.zSet) do
