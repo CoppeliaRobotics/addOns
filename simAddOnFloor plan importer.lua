@@ -56,7 +56,8 @@ function sysCall_init()
     color={0.95,0.95,0.95}
     colorCSS=function(c) return string.format('rgb(%d,%d,%d)',math.floor(255*c[1]),math.floor(255*c[2]),math.floor(255*c[3])) end
     path=sim.getStringParam(sim.stringparam_scene_path)
-    imageFile=sim.fileDialog(sim.filedlg_type_load,'Open image...',path,'','Image files','jpg;png;gif;pgm;pnm')
+    fmts,fmtss=simUI.supportedImageFormats(';')
+    imageFile=sim.fileDialog(sim.filedlg_type_load,'Open image...',path,'','Image files',fmtss)
     addCuboid=function(classTbl,x1,y1,x2,y2)
         local handles={}
         for j,classTbl1 in ipairs(classTbl.zSet) do
