@@ -157,7 +157,7 @@ function sysCall_init()
         ui=simUI.create([[<ui title="Import floorplan..." closeable="true" on-close="closeUi" resizable="true" modal="true" layout="vbox">
             <group layout="form">
                 <label text="Pixel size:" />
-                <spinbox id="101" float="true" minimum="0.001" maximum="10.000" step="0.001" value="0.200" decimals="3" suffix=" [m]" />
+                <spinbox id="101" float="true" minimum="0.001" maximum="10.000" step="0.001" value="0.200" decimals="6" suffix=" [m]" />
 
                 <label text="Walls:" />
                 <group layout="form">
