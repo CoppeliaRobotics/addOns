@@ -233,7 +233,7 @@ function showDlg()
             else
                 txt1=txt1.."object "
             end
-            txt1=txt1..sim.getObjectAlias(obj1,5).."and "
+            txt1=txt1..sim.getObjectAlias(obj1,5).." and "
             if obj2IsModel then
                 txt1=txt1.."model "
             else
@@ -284,7 +284,15 @@ function restoreScene(selfCollEntity)
     end
 end
 
+function sysCall_sensing()
+    update()
+end
+
 function sysCall_nonSimulation()
+    update()
+end
+
+function update()
     if leaveNow then
         return {cmd='cleanup'}
     end
@@ -330,8 +338,6 @@ end
 
 function sysCall_beforeInstanceSwitch()
     hideDlg()
+    obj1=-99
 end
 
-function sysCall_beforeSimulation()
-    hideDlg()
-end

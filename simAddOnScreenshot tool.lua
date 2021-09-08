@@ -327,14 +327,14 @@ function save_callback(ui,id,v)
     if filenameAndPath then
         if sim.saveImage(image,{resX,resY},options,filenameAndPath,-1)~=-1 then
             sim.addLog(sim.verbosity_msgs,"Screenshot was saved to "..filenameAndPath)
-            sim.displayDialog('Screenshot',"Screenshot was saved to "..filenameAndPath,sim.dlgstyle_ok,false,'')
+            simUI.msgBox(simUI.msgbox_type.info,simUI.msgbox_buttons.ok,'Screenshot',"Screenshot was saved to "..filenameAndPath)
         else
             sim.addLog(sim.verbosity_scripterrors,"Failed saving the screenshot. Did you specify a supported image extension?")
-            sim.displayDialog('Screenshot',"Failed saving the screenshot. Did you specify a supported image extension?",sim.dlgstyle_ok,false,'')
+            simUI.msgBox(simUI.msgbox_type.warning,simUI.msgbox_buttons.ok,'Screenshot',"Failed saving the screenshot. Did you specify a supported image extension?")
         end
     else
         sim.addLog(sim.verbosity_scripterrors,"Failed saving the screenshot. Bad filename or action canceled.")
-        sim.displayDialog('Screenshot',"Failed saving the screenshot. Bad filename or action canceled.",sim.dlgstyle_ok,false,'')
+        simUI.msgBox(simUI.msgbox_type.warning,simUI.msgbox_buttons.ok,'Screenshot',"Failed saving the screenshot. Bad filename or action canceled.")
     end
     simUI.destroy(imUi)
     imUi=nil
