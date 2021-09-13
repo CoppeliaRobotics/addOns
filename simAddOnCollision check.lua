@@ -285,15 +285,16 @@ function restoreScene(selfCollEntity)
 end
 
 function sysCall_sensing()
-    update()
+    return update()
 end
 
 function sysCall_nonSimulation()
-    update()
+    return update()
 end
 
 function update()
     if leaveNow then
+        hideDlg()
         return {cmd='cleanup'}
     end
     local s=sim.getObjectSelection()
