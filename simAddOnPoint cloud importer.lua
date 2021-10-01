@@ -1,5 +1,5 @@
 function sysCall_info()
-    return {autoStart=false}
+    return {autoStart=false,menu='Importers//Point cloud importer'}
 end
 
 function sysCall_addOnScriptSuspend()

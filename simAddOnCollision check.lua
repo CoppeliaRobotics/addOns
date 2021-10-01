@@ -207,7 +207,7 @@ function coll(ui,id)
 end
 
 function sysCall_init()
-    sim.addLog(sim.verbosity_scriptinfos,"This model allows to quickly verify the collision state of one or two entities.")
+    sim.addLog(sim.verbosity_scriptinfos,"This add-on allows to quickly verify the collision state of one or two entities. Just select one or two entities.")
     obj1=-1
     obj2=-1
 end

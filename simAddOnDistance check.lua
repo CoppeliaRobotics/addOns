@@ -51,7 +51,7 @@ function dist(ui,id)
 end
 
 function sysCall_init()
-    sim.addLog(sim.verbosity_scriptinfos,"This model allows to quickly measure the distance between two entities, or between one entity and the environment.")
+    sim.addLog(sim.verbosity_scriptinfos,"This add-on allows to quickly measure the distance between two entities, or between one entity and the environment. Just select one or two entities.")
     obj1=-1
     obj2=-1
 end

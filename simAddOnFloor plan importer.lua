@@ -1,5 +1,5 @@
 function sysCall_info()
-    return {autoStart=false}
+    return {autoStart=false,menu='Importers//Floor plan importer'}
 end
 
 function optimize(grid)
