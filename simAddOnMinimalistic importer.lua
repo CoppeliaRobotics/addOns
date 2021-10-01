@@ -1,6 +1,6 @@
 -- this add-on function is a minimalistic scene content importer, meant as an example.
 function sysCall_info()
-    return {autoStart=false,menu='Importers//Minimalistic importer'}
+    return {autoStart=false,menu='Importers\nMinimalistic importer'}
 end
 
 function sysCall_init()

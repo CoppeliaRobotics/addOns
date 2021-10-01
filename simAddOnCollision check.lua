@@ -300,7 +300,7 @@ function update()
     local s=sim.getObjectSelection()
     local o1=-1
     local o2=-1
-    if s and #s<3 then
+    if s and #s<3 and #s>0 then
         obj1IsModel=(sim.getModelProperty(s[1])&sim.modelproperty_not_model)==0
         local t=sim.getObjectType(s[1])
         if t==sim.object_shape_type or t==sim.object_dummy_type or t==sim.object_octree_type or t==sim.object_pointcloud_type or obj1IsModel then

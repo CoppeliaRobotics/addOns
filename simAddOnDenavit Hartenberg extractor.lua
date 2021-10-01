@@ -1,5 +1,5 @@
 function sysCall_info()
-    return {autoStart=false,menu='Denavit-Hartenberg//Extractor'}
+    return {autoStart=false,menu='Denavit-Hartenberg\nExtractor'}
 end
 
 function sysCall_addOnScriptSuspend()
