@@ -171,12 +171,12 @@ THREE.Object3D.DefaultUp = new THREE.Vector3(0,0,1);
 
 const scene = new THREE.Scene();
 
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.1);
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
 scene.add(ambientLight);
 
-const light = new THREE.PointLight(0xffffff, 1);
+const light = new THREE.PointLight(0xffffff, 0.7);
 
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
 camera.add(light);
 scene.add(camera); // required because the camera has a child
 
@@ -186,9 +186,17 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
 const controls = new THREE.OrbitControls(camera, renderer.domElement);
-controls.addEventListener( 'change', render );
+controls.addEventListener('change', render);
 
-camera.position.z = 5;
+camera.position.x = 1.12;
+camera.position.y = -1.9;
+camera.position.z = 1.08;
+camera.rotation.x = 1.08;
+camera.rotation.y = 0.64;
+camera.rotation.z = 0.31;
+camera.up.x = 0;
+camera.up.y = 0;
+camera.up.z = 1;
 
 function render() {
 	renderer.render(scene, camera);
@@ -196,6 +204,7 @@ function render() {
 
 function animate() {
 	requestAnimationFrame(animate);
+    controls.update();
     render();
 }
 animate();
@@ -286,6 +295,18 @@ function onObjectAdded(e) {
             meshes[e.handle] = makeMesh(e.meshData[0]);
         }
         scene.add(meshes[e.handle]);
+    } else if(e.type == "camera" && e.absolutePose !== undefined) {
+        var p = e.absolutePose.slice(0, 3);
+        var q = e.absolutePose.slice(3);
+        camera.position.x = p[0];
+        camera.position.y = p[1];
+        camera.position.z = p[2];
+        camera.quaternion.x = q[0];
+        camera.quaternion.y = q[1];
+        camera.quaternion.z = q[2];
+        camera.quaternion.w = q[3];
+        //camera.updateProjectionMatrix();
+        controls.update();
     }
 }
 
@@ -405,7 +426,8 @@ function objectAdded(handle)
             [sim.object_forcesensor_type]="forcesensor",
         })[sim.getObjectType(handle)]
     }
-    if sim.getObjectType(handle)==sim.object_shape_type then
+    local t=sim.getObjectType(handle)
+    if t==sim.object_shape_type then
         data.meshData={}
         for i=0,1000 do
             local meshData=sim.getShapeViz(handle,i)
@@ -418,6 +440,8 @@ function objectAdded(handle)
             end
             table.insert(data.meshData,meshData)
         end
+    elseif t==sim.object_camera_type then
+        data.absolutePose=sim.getObjectPose(handle,-1)
     end
     return data
 end
