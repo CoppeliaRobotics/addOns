@@ -469,7 +469,8 @@ function sendEvent(d,conn)
     if verbose()>0 then
         print('Visualization stream:',d)
     end
-    d=encode(d)
+    --d=encode(d)
+    d=sim.packTable(d,1)
     if zmqPUBSocket then
         simZMQ.send(zmqPUBSocket,d,0)
     end
