@@ -294,6 +294,7 @@ function onObjectAdded(e) {
         } else if(e.meshData.length == 1) {
             meshes[e.handle] = makeMesh(e.meshData[0]);
         }
+        meshes[e.handle].userData = {handle: e.handle};
         scene.add(meshes[e.handle]);
     } else if(e.type == "camera" && e.absolutePose !== undefined) {
         var p = e.absolutePose.slice(0, 3);
@@ -311,17 +312,34 @@ function onObjectAdded(e) {
 }
 
 function onObjectChanged(e) {
-    if(meshes[e.handle] === undefined) return;
-    var p = e.absolutePose.slice(0, 3);
-    var q = e.absolutePose.slice(3);
-    meshes[e.handle].position.x = p[0];
-    meshes[e.handle].position.y = p[1];
-    meshes[e.handle].position.z = p[2];
-    meshes[e.handle].quaternion.x = q[0];
-    meshes[e.handle].quaternion.y = q[1];
-    meshes[e.handle].quaternion.z = q[2];
-    meshes[e.handle].quaternion.w = q[3];
-    meshes[e.handle].visible = e.visible;
+    var o = meshes[e.handle];
+    if(o === undefined) return;
+
+    if(e.name !== undefined) {
+        o.name = e.name;
+    }
+    if(e.pose !== undefined) {
+        o.position.x = e.pose[0];
+        o.position.y = e.pose[1];
+        o.position.z = e.pose[2];
+        o.quaternion.x = e.pose[3];
+        o.quaternion.y = e.pose[4];
+        o.quaternion.z = e.pose[5];
+        o.quaternion.w = e.pose[6];
+    }
+    if(e.visible !== undefined) {
+        // can't change object visibility, as that would affect children too:
+        //o.visible = e.visible;
+        if(o.material !== undefined)
+            o.material.visible = e.visible;
+    }
+    if(e.parent !== undefined) {
+        if(meshes[e.parent] !== undefined) {
+            meshes[e.parent].attach(o);
+        } else /*if(e.parent === -1)*/ {
+            scene.attach(o);
+        }
+    }
 }
 
 function onObjectRemoved(e) {
@@ -352,20 +370,42 @@ end
 
 function getObjectData(handle)
     local data={}
-    --data.name=sim.getObjectAlias(handle,0)
-    --data.parent=sim.getObjectParent(handle)
-    --data.pose=sim.getObjectPose(handle,data.parent)
+    data.name=sim.getObjectAlias(handle,0)
+    data.parent=sim.getObjectParent(handle)
+    data.pose=sim.getObjectPose(handle,data.parent)
     data.absolutePose=sim.getObjectPose(handle,-1)
-    --if sim.getObjectType(handle)==sim.object_joint_type then
-    --    data.jointPosition=sim.getJointPosition(handle)
-    --end
     data.visible=sim.getObjectInt32Param(handle,sim.objintparam_visible)>0
-    --if sim.getObjectType(handle)==sim.object_shape_type then
-    --    local _,o=sim.getShapeColor(handle,'',sim.colorcomponent_transparency)
-    --    -- XXX: opacity of compounds is always 0.5
-    --    -- XXX: sim.getShapeViz doesn't return opacity... maybe it should?
-    --    data.opacity=o
-    --end
+    -- fetch type-specific data:
+    local t=sim.getObjectType(handle)
+    if t==sim.object_shape_type then
+        --local _,o=sim.getShapeColor(handle,'',sim.colorcomponent_transparency)
+        ---- XXX: opacity of compounds is always 0.5
+        ---- XXX: sim.getShapeViz doesn't return opacity... maybe it should?
+        --data.opacity=o
+    elseif t==sim.object_joint_type then
+        local st=sim.getJointType(handle)
+        if st==sim_joint_revolute_subtype then
+            data.subtype='revolute'
+        elseif st==sim_joint_prismatic_subtype then
+            data.subtype='prismatic'
+        elseif st==sim_joint_spherical_subtype then
+            data.subtype='spherical'
+        end
+        if st~=sim_joint_spherical_subtype then
+            data.jointPosition=sim.getJointPosition(handle)
+        else
+            data.jointMatrix=sim.getJointMatrix(handle)
+        end
+    elseif t==sim.object_graph_type then
+    elseif t==sim.object_camera_type then
+    elseif t==sim.object_light_type then
+    elseif t==sim.object_dummy_type then
+    elseif t==sim.object_proximitysensor_type then
+    elseif t==sim.object_octree_type then
+    elseif t==sim.object_pointcloud_type then
+    elseif t==sim.object_visionsensor_type then
+    elseif t==sim.object_forcesensor_type then
+    end
     return data
 end
 
@@ -399,9 +439,11 @@ function scan()
     for handle,data in pairs(localData) do
         if remoteData[handle]==nil then
             sendEvent(objectAdded(handle))
-            sendEvent(objectChanged(handle))
-            remoteData[handle]=data
-        elseif objectDataChanged(localData[handle],remoteData[handle]) then
+        end
+    end
+
+    for handle,data in pairs(localData) do
+        if remoteData[handle]==nil or objectDataChanged(localData[handle],remoteData[handle]) then
             sendEvent(objectChanged(handle))
             remoteData[handle]=data
         end
@@ -412,22 +454,10 @@ function objectAdded(handle)
     local data={
         event='objectAdded',
         handle=handle,
-        type=({
-            [sim.object_shape_type]="shape",
-            [sim.object_joint_type]="joint",
-            [sim.object_graph_type]="graph",
-            [sim.object_camera_type]="camera",
-            [sim.object_light_type]="light",
-            [sim.object_dummy_type]="dummy",
-            [sim.object_proximitysensor_type]="proximitysensor",
-            [sim.object_octree_type]="octree",
-            [sim.object_pointcloud_type]="pointcloud",
-            [sim.object_visionsensor_type]="visionsensor",
-            [sim.object_forcesensor_type]="forcesensor",
-        })[sim.getObjectType(handle)]
     }
     local t=sim.getObjectType(handle)
     if t==sim.object_shape_type then
+        data.type="shape"
         data.meshData={}
         for i=0,1000 do
             local meshData=sim.getShapeViz(handle,i)
@@ -440,8 +470,29 @@ function objectAdded(handle)
             end
             table.insert(data.meshData,meshData)
         end
+    elseif t== sim.object_joint_type then
+        data.type="joint"
+    elseif t==sim.object_graph_type then
+        data.type="graph"
     elseif t==sim.object_camera_type then
+        data.type="camera"
+        -- XXX: trick for giving an initial position for the default frontend camera
         data.absolutePose=sim.getObjectPose(handle,-1)
+    elseif t==sim.object_light_type then
+        data.type="light"
+    elseif t==sim.object_dummy_type then
+        data.type="dummy"
+    elseif t==sim.object_proximitysensor_type then
+        data.type="proximitysensor"
+    elseif t==sim.object_octree_type then
+        data.type="octree"
+    elseif t==sim.object_pointcloud_type then
+        data.type="pointcloud"
+        data.points=sim.getPointCloudPoints(handle)
+    elseif t==sim.object_visionsensor_type then
+        data.type="visionsensor"
+    elseif t==sim.object_forcesensor_type then
+        data.type="forcesensor"
     end
     return data
 end
