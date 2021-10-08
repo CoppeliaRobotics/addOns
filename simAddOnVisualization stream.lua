@@ -1,5 +1,7 @@
 function sysCall_info()
-    return {autoStart=false,menu='Connectivity\nVisualization stream'}
+    autoStart=sim.getNamedBoolParam('visualizationStream.autoStart')
+    if autoStart==nil then autoStart=false end
+    return {autoStart=autoStart,menu='Connectivity\nVisualization stream'}
 end
 
 function sysCall_init()
