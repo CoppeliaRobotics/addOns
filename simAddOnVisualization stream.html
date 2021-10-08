@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>CoppeliaSim remote view</title>
+        <style>
+            body {
+                margin: 0;
+                height: 100%;
+                background-image: linear-gradient(rgb(204,222,235), rgb(13,13,26));
+                user-select: none;
+            }
+            #c {
+                width: 100%;
+                height: 100%;
+                display: block;
+            }
+            #logo {
+                position: absolute;
+                right: 10px;
+                top: 5px;
+                z-index: 100;
+                pointer-events: none;
+                width: 400px;
+                height: auto;
+            }
+		</style>
+    </head>
+    <body>
+        <img id="logo" src="data:image/png;base64,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" alt="Brought to you by Coppelia Robotics" />
+        <ul id="objtree"></ul>
+        <canvas id="c"></canvas>
+        <div id="toolbar">
+            <div id="toggle-object-tree" class="button"><i title="Toggle object tree (H)" class="fas fa-folder-tree"></i></div>
+            <div class="spacer"></div>
+            <div id="tool-select" class="tool-group-1 button selected"><i title="Select (Esc)" class="fas fa-mouse-pointer"></i></div>
+            <div id="tool-translate" class="tool-group-1 button"><i title="Translate (T)" class="fas fa-arrows-alt"></i></div>
+            <div id="tool-rotate" class="tool-group-1 button"><i title="Rotate (R)" class="fas fa-redo"></i></div>
+            <div id="tool-scale" class="tool-group-1 button disabled"><i title="Scale (S)" class="fas fa-expand-alt"></i></div>
+            <div id="tool-select-point" class="tool-group-1 button"><i title="Select point... (P)" class="far fa-dot-circle"></i> Select point</div>
+        </div>
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+        <script src="https://cdn.jsdelivr.net/gh/spaceify/cbor-js@master/cbor.js" integrity="sha512-0ABB8mRQj73e8+aaUzonPYnP34/YsUCf6SGUJp/pj5BUXttDonDIvCI7XuC7C27Qem6yRpzIzTlq8kJSlUNjoQ==" crossorigin="anonymous"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.js" integrity="sha512-NLtnLBS9Q2w7GKK9rKxdtgL7rA7CAS85uC/0xd9im4J/yOL4F9ZVlv634NAM7run8hz3wI2GabaA6vv8vJtHiQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+        <script src="https://threejs.org/examples/js/controls/OrbitControls.js"></script>
+        <script src="https://threejs.org/examples/js/controls/TransformControls.js"></script>
+        <script src="https://threejs.org/examples/js/utils/SceneUtils.js"></script>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta2/css/all.min.css" integrity="sha512-YWzhKL2whUzgiheMoBFwW8CKV4qpHQAEuvilg9FAn5VJUDwKZZxkJNuGM4XkWuk94WCrrwslk8yWNGmY1EduTA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta2/js/all.min.js" integrity="sha512-cyAbuGborsD25bhT/uz++wPqrh5cqPh1ULJz4NSpN9ktWcA6Hnh9g+CWKeNx2R0fgQt+ybRXdabSBgYXkQTTmA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+        <script>
+            const wsPort = 23020;
+            const codec = "cbor";
+        </script>
+        <script src="simAddOnVisualization stream.js"></script>
+    </body>
+</html>
