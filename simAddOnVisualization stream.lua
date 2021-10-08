@@ -151,6 +151,8 @@ function onWSHTTP(server,connection,resource,data)
         return 200,c
     elseif resource=='/'..baseName..'.js' then
         return 200,getFileContents(appPath..pathSep..baseName..'.js')
+    else
+        sim.addLog(sim.verbosity_errors,'resource not found: '..resource)
     end
 end
 
