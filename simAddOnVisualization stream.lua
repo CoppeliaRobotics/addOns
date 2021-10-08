@@ -62,6 +62,7 @@ function sysCall_init()
         error('unsupported codec: '..codec)
     end
     base64=require('base64')
+    url=require('socket.url')
 
     localData={}
     remoteData={}
@@ -144,6 +145,7 @@ function onWSMessage(server,connection,message)
 end
 
 function onWSHTTP(server,connection,resource,data)
+    resource=url.unescape(resource)
     if resource=='/' or resource=='/'..baseName..'.html' then
         local c=getFileContents(appPath..pathSep..baseName..'.html')
         c=string.gsub(c,'const wsPort = 23020;','const wsPort = '..wsPort..';')
