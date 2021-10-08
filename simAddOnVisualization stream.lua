@@ -94,7 +94,7 @@ function sysCall_cleanup()
 end
 
 function getFileContents(path)
-    local f=assert(io.open(file, "rb"))
+    local f=assert(io.open(path,"rb"))
     local content=f:read("*all")
     f:close()
     return content
@@ -144,12 +144,12 @@ function onWSMessage(server,connection,message)
 end
 
 function onWSHTTP(server,connection,resource,data)
-    if resource=='/' or resource=='/index.html' then
+    if resource=='/' or resource=='/'..baseName..'.html' then
         local c=getFileContents(appPath..pathSep..baseName..'.html')
         c=string.gsub(c,'const wsPort = 23020;','const wsPort = '..wsPort..';')
         c=string.gsub(c,'const codec = "cbor";','const codec = "'..codec..'";')
         return 200,c
-    elseif resource=='/index.js' then
+    elseif resource=='/'..baseName..'.js' then
         return 200,getFileContents(appPath..pathSep..baseName..'.js')
     end
 end
