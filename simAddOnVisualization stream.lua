@@ -178,9 +178,9 @@ function getObjectData(handle)
         local st=sim.getJointType(handle)
         if st~=sim_joint_spherical_subtype then
             data.jointPosition=sim.getJointPosition(handle)
-        else
-            data.jointMatrix=sim.getJointMatrix(handle)
         end
+        data.jointMatrix=sim.getJointMatrix(handle)
+        data.jointQuaternion=sim.getQuaternionFromMatrix(data.jointMatrix)
     elseif t==sim.object_graph_type then
     elseif t==sim.object_camera_type then
     elseif t==sim.object_light_type then
