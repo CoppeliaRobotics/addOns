@@ -130,6 +130,8 @@ function onWSOpen(server,connection)
         -- send current objects:
         for handle,data in pairs(remoteData) do
             sendEvent(objectAdded(handle),connection)
+        end
+        for handle,data in pairs(remoteData) do
             sendEvent(objectChanged(handle),connection)
         end
     end
