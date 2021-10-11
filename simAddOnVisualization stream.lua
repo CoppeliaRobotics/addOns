@@ -176,13 +176,6 @@ function getObjectData(handle)
         --data.opacity=o
     elseif t==sim.object_joint_type then
         local st=sim.getJointType(handle)
-        if st==sim_joint_revolute_subtype then
-            data.subtype='revolute'
-        elseif st==sim_joint_prismatic_subtype then
-            data.subtype='prismatic'
-        elseif st==sim_joint_spherical_subtype then
-            data.subtype='spherical'
-        end
         if st~=sim_joint_spherical_subtype then
             data.jointPosition=sim.getJointPosition(handle)
         else
@@ -264,6 +257,14 @@ function objectAdded(handle)
         end
     elseif t== sim.object_joint_type then
         data.type="joint"
+        local st=sim.getJointType(handle)
+        if st==sim_joint_revolute_subtype then
+            data.subtype='revolute'
+        elseif st==sim_joint_prismatic_subtype then
+            data.subtype='prismatic'
+        elseif st==sim_joint_spherical_subtype then
+            data.subtype='spherical'
+        end
     elseif t==sim.object_graph_type then
         data.type="graph"
     elseif t==sim.object_camera_type then
