@@ -242,9 +242,16 @@ function scan()
         end
     end
 
+    fastGetShapeViz=sim.getNamedBoolParam('visualizationStream.fastGetShapeViz')
     for uid,data in pairs(localData) do
         if remoteData[uid]==nil then
-            sendEvent(objectAdded(uid))
+            local handle=sim.getHandleByUID(uid)
+            if fastGetShapeViz and handle~=nil and sim.getObjectType(handle)==sim.object_shape_type then
+                -- XXX: testing fast (?) function
+                sendEventRaw(sim.test('sim.getShapeViz',handle,objectAdded(uid)))
+            else
+                sendEvent(objectAdded(uid))
+            end
         end
     end
 
@@ -274,6 +281,10 @@ function objectAdded(uid)
     local t=sim.getObjectType(handle)
     if t==sim.object_shape_type then
         data.type="shape"
+        if fastGetShapeViz then
+            data.__fastGetShapeViz=1
+            return data
+        end
         data.meshData={}
         for i=0,1000 do
             local meshData=sim.getShapeViz(handle,i)
