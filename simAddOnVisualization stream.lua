@@ -265,6 +265,12 @@ function objectAdded(uid)
     local handle=sim.getHandleByUID(uid)
     if handle==nil then return nil end
 
+    local objProp=sim.getObjectProperty(handle)
+    data.selectModelBaseInstead=(objProp&sim.objectproperty_selectmodelbaseinstead)>0
+
+    local modelProp=sim.getModelProperty(handle)
+    data.modelBase=(modelProp&sim.modelproperty_not_model)==0
+
     local t=sim.getObjectType(handle)
     if t==sim.object_shape_type then
         data.type="shape"
