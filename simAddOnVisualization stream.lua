@@ -66,6 +66,7 @@ function sysCall_init()
 
     localData={}
     remoteData={}
+    uidToHandle={}
 end
 
 function sysCall_addOnScriptSuspend()
@@ -94,6 +95,13 @@ function sysCall_cleanup()
     end
 end
 
+function sim.getHandleByUID(uid)
+    local handle=uidToHandle[uid]
+    if handle==nil then return nil end
+    local uid1=sim.getObjectInt32Param(handle,sim.objintparam_unique_id)
+    if uid==uid1 then return handle else return nil end
+end
+
 function getFileContents(path)
     local f=assert(io.open(path,"rb"))
     local content=f:read("*all")
@@ -116,9 +124,13 @@ function onZMQRequest(data)
     local resp={}
     if data.cmd=='getbacklog' then
         -- send current objects:
-        for handle,data in pairs(remoteData) do
-            table.insert(resp,objectAdded(handle))
-            table.insert(resp,objectChanged(handle))
+        for uid,data in pairs(remoteData) do
+            local d=objectAdded(uid)
+            if d then table.insert(resp,d) end
+        end
+        for uid,data in pairs(remoteData) do
+            local d=objectChanged(uid)
+            if d then table.insert(resp,d) end
         end
     end
     return resp
@@ -128,11 +140,11 @@ function onWSOpen(server,connection)
     if server==wsServer then
         wsClients[connection]=1
         -- send current objects:
-        for handle,data in pairs(remoteData) do
-            sendEvent(objectAdded(handle),connection)
+        for uid,data in pairs(remoteData) do
+            sendEvent(objectAdded(uid),connection)
         end
-        for handle,data in pairs(remoteData) do
-            sendEvent(objectChanged(handle),connection)
+        for uid,data in pairs(remoteData) do
+            sendEvent(objectChanged(uid),connection)
         end
     end
 end
@@ -162,9 +174,16 @@ end
 
 function getObjectData(handle)
     local data={}
+    data.handle=handle
+    data.uid=sim.getObjectInt32Param(handle,sim.objintparam_unique_id)
     data.name=sim.getObjectAlias(handle,0)
-    data.parent=sim.getObjectParent(handle)
-    data.pose=sim.getObjectPose(handle,data.parent)
+    data.parentHandle=sim.getObjectParent(handle)
+    if data.parentHandle==-1 then
+        data.parentUid=-1
+    else
+        data.parentUid=sim.getObjectInt32Param(data.parentHandle,sim.objintparam_unique_id)
+    end
+    data.pose=sim.getObjectPose(handle,data.parentHandle)
     data.absolutePose=sim.getObjectPose(handle,-1)
     data.visible=sim.getObjectInt32Param(handle,sim.objintparam_visible)>0
     -- fetch type-specific data:
@@ -204,42 +223,48 @@ function objectDataChanged(a,b)
     return false
         or poseChanged(a.pose,b.pose)
         or poseChanged(a.absolutePose,b.absolutePose)
-        or a.parent~=b.parent
+        or a.parentUid~=b.parentUid
         or a.name~=b.name
 end
 
 function scan()
     localData={}
     for i,handle in ipairs(sim.getObjectsInTree(sim.handle_scene)) do
-        localData[handle]=getObjectData(handle)
+        local uid=sim.getObjectInt32Param(handle,sim.objintparam_unique_id)
+        uidToHandle[uid]=handle
+        localData[uid]=getObjectData(handle)
     end
 
-    for handle,_ in pairs(remoteData) do
-        if localData[handle]==nil then
-            sendEvent(objectRemoved(handle))
-            remoteData[handle]=nil
+    for uid,_ in pairs(remoteData) do
+        if localData[uid]==nil or remoteData[uid].uid~=uid then
+            sendEvent(objectRemoved(uid))
+            remoteData[uid]=nil
         end
     end
 
-    for handle,data in pairs(localData) do
-        if remoteData[handle]==nil then
-            sendEvent(objectAdded(handle))
+    for uid,data in pairs(localData) do
+        if remoteData[uid]==nil then
+            sendEvent(objectAdded(uid))
         end
     end
 
-    for handle,data in pairs(localData) do
-        if remoteData[handle]==nil or objectDataChanged(localData[handle],remoteData[handle]) then
-            sendEvent(objectChanged(handle))
-            remoteData[handle]=data
+    for uid,data in pairs(localData) do
+        if remoteData[uid]==nil or objectDataChanged(localData[uid],remoteData[uid]) then
+            sendEvent(objectChanged(uid))
+            remoteData[uid]=data
         end
     end
 end
 
-function objectAdded(handle)
+function objectAdded(uid)
     local data={
         event='objectAdded',
-        handle=handle,
+        uid=uid,
     }
+
+    local handle=sim.getHandleByUID(uid)
+    if handle==nil then return nil end
+
     local t=sim.getObjectType(handle)
     if t==sim.object_shape_type then
         data.type="shape"
@@ -290,26 +315,28 @@ function objectAdded(handle)
     return data
 end
 
-function objectRemoved(handle)
+function objectRemoved(uid)
     local data={
         event='objectRemoved',
-        handle=handle,
+        uid=uid,
     }
     return data
 end
 
-function objectChanged(handle)
+function objectChanged(uid)
     local data={
         event='objectChanged',
-        handle=handle,
+        uid=uid,
     }
-    for field,value in pairs(localData[handle]) do
+    for field,value in pairs(localData[uid]) do
         data[field]=value
     end
     return data
 end
 
 function sendEvent(d,conn)
+    if d==nil then return end
+
     if verbose()>0 then
         print('Visualization stream:',d)
     end
