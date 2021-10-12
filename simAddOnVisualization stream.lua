@@ -348,6 +348,12 @@ function sendEvent(d,conn)
     end
     --d=encode(d)
     d=sim.packTable(d,1)
+    sendEventRaw(d,conn)
+end
+
+function sendEventRaw(d,conn)
+    if d==nil then return end
+
     if zmqPUBSocket then
         simZMQ.send(zmqPUBSocket,d,0)
     end
