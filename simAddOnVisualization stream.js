@@ -10,13 +10,25 @@ if(typeof Element.prototype.clearChildren === 'undefined') {
 }
 
 const objtree = document.querySelector('#objtree');
-const canvas = document.querySelector('#c');
+const viewCanvas = document.querySelector('#view');
+const axesCanvas = document.querySelector('#axes');
+const debugDiv = document.querySelector('#debug');
 
-canvas.addEventListener('mousedown', onMouseDown, false);
-canvas.addEventListener('mouseup', onMouseUp, false);
-canvas.addEventListener('mousemove', onMouseMove, false);
-//canvas.addEventListener('click', onClick, false);
+viewCanvas.addEventListener('mousedown', onMouseDown, false);
+viewCanvas.addEventListener('mouseup', onMouseUp, false);
+viewCanvas.addEventListener('mousemove', onMouseMove, false);
+//viewCanvas.addEventListener('click', onClick, false);
 window.addEventListener('resize', onWindowResize);
+
+function debug(text) {
+    if(text !== undefined)
+        console.log(text);
+    if(typeof text === 'string' || text instanceof String) {
+        debugDiv.innerText = text;
+    } else {
+        debug(JSON.stringify(text, undefined, 2));
+    }
+}
 
 THREE.Object3D.DefaultUp = new THREE.Vector3(0,0,1);
 
@@ -40,18 +52,47 @@ camera.up.z = 1;
 camera.add(light);
 scene.add(camera); // required because the camera has a child
 
-const renderer = new THREE.WebGLRenderer({canvas, alpha: true});
+const renderer = new THREE.WebGLRenderer({canvas: viewCanvas, alpha: true});
 renderer.setPixelRatio(window.devicePixelRatio);
 renderer.setSize(window.innerWidth, window.innerHeight);
 
 const orbitControls = new THREE.OrbitControls(camera, renderer.domElement);
 orbitControls.addEventListener('change', render);
 
+const transformControls = new THREE.TransformControls(camera, renderer.domElement);
+transformControls.enabled = false;
+transformControls.addEventListener('change', function(event) {
+    bboxHelper.update();
+    render();
+});
+transformControls.addEventListener('dragging-changed', function(event) {
+    // disable orbit controls while dragging:
+    orbitControls.enabled = !event.value;
+
+    if(event.value)
+        transformControlsStartTransform();
+    else
+        transformControlsEndTransform();
+});
+scene.add(transformControls);
+
 const raycaster = new THREE.Raycaster();
 const bboxHelper = new THREE.BoxHelper(undefined, 0xffffff);
 bboxHelper.visible = false;
 scene.add(bboxHelper);
 
+const axesScene = new THREE.Scene();
+const axesHelper = new THREE.AxesHelper(20);
+axesScene.add(axesHelper);
+const axesRenderer = new THREE.WebGLRenderer({canvas: axesCanvas, alpha: true});
+axesRenderer.setPixelRatio(window.devicePixelRatio);
+axesRenderer.setSize(80, 80);
+const axesCamera = new THREE.PerspectiveCamera(40, axesCanvas.width / axesCanvas.height, 1, 1000);
+axesCamera.up = camera.up;
+axesScene.add(axesCamera);
+
+var selectPointMode = false;
+var selectedPointConfirmed = false;
 var selectedObject = null;
 
 var mouse = {
@@ -66,7 +107,75 @@ var mouse = {
     clickDragTolerance: 1
 };
 
+const selectPointSphere = new THREE.Mesh(
+    new THREE.SphereGeometry(0.01, 8, 4),
+    new THREE.MeshBasicMaterial({color: 0xff0000})
+);
+selectPointSphere.visible = false;
+scene.add(selectPointSphere);
+
+const selectPointArrow = new THREE.ArrowHelper(
+    new THREE.Vector3(0, 0, 1),
+    new THREE.Vector3(0, 0, 0),
+    0.2,
+    0xff0000
+);
+selectPointArrow.visible = false;
+scene.add(selectPointArrow);
+
+function isObjectPickable(o) {
+    if(o.visible === false)
+        return null;
+    if(o.userData.uid !== undefined)
+        return o;
+    var smh = o.userData.supermeshHandle;
+    if(smh !== undefined) {
+        if(meshes[smh] !== undefined) {
+            if(meshes[smh].userData.visible) {
+                return meshes[smh];
+            }
+        } else {
+            console.log(`found an intersect but supermeshHandle ${smh} is not known`);
+        }
+    }
+    return null;
+}
+
+function showSurfacePoint(intersect) {
+    intersect.object.updateMatrixWorld();
+    //intersect.object.updateWorldMatrix(true, false);
+    selectPointSphere.position.copy(intersect.point);
+    selectPointSphere.visible = true;
+    // normal is local, convert it to global:
+    var normalMatrix = new THREE.Matrix3().getNormalMatrix(intersect.object.matrixWorld);
+    var normal = intersect.face.normal.clone().applyMatrix3(normalMatrix).normalize();
+    selectPointArrow.setDirection(normal);
+    selectPointArrow.position.copy(intersect.point);
+    selectPointArrow.visible = true;
+}
+
 function render() {
+    if(selectPointMode) {
+        raycaster.setFromCamera({
+            // normalized device coordinates (-1...+1)
+            x: (mouse.pos.x / window.innerWidth) * 2 - 1,
+            y: -(mouse.pos.y / window.innerHeight) * 2 + 1
+        }, camera);
+        const intersects = raycaster.intersectObjects(scene.children, true);
+        for(let i = 0; i < intersects.length; i++) {
+            var obj = isObjectPickable(intersects[i].object);
+            if(obj !== null) {
+                showSurfacePoint(intersects[i]);
+                break;
+            }
+        }
+    }
+
+    axesCamera.position.subVectors(camera.position, orbitControls.target);
+    axesCamera.position.setLength(50);
+    axesCamera.lookAt(axesScene.position);
+
+    axesRenderer.render(axesScene, axesCamera);
 	renderer.render(scene, camera);
 }
 
@@ -94,6 +203,12 @@ function onMouseMove(event) {
 }
 
 function onClick(event) {
+    if(selectPointMode) {
+        selectedPointConfirmed = true;
+        toolSelect();
+        return;
+    }
+
 	raycaster.setFromCamera({
         // normalized device coordinates (-1...+1)
         x: (event.clientX / window.innerWidth) * 2 - 1,
@@ -102,22 +217,122 @@ function onClick(event) {
     const intersects = raycaster.intersectObjects(scene.children, true);
     var obj = null;
 	for(let i = 0; i < intersects.length; i++) {
-        if(intersects[i].object.userData.handle !== undefined) {
-            obj = intersects[i].object;
-            break;
-        }
+        obj = isObjectPickable(intersects[i].object);
+        if(obj !== null) break;
 	}
-    //setSelectedObject(obj);
+    setSelectedObject(obj, true);
 }
 
-function setSelectedObject(o) {
+function transformControlsEnable() {
+    transformControls.enabled = true;
+}
+
+function transformControlsDisable() {
+    transformControls.enabled = false;
+}
+
+function transformControlsMode(mode) {
+    transformControls.setMode(mode);
+}
+
+function transformControlsAttach(obj) {
+    if(obj === null || obj === undefined) return;
+
+    var clone = obj.clone(true);
+    if(clone.material !== undefined) {
+        clone.material = obj.material.clone();
+        clone.material.transparent = true;
+        clone.material.opacity = 0.4;
+    }
+
+    delete clone.userData.uid;
+
+    obj.parent.add(clone);
+
+    obj.userData.clone = clone;
+    clone.userData.original = obj;
+
+    bboxHelper.setFromObject(clone);
+
+    transformControls.attach(clone);
+}
+
+function transformControlsStartTransform() {
+}
+
+function transformControlsEndTransform() {
+    var clone = transformControls.object;
+    var obj = clone.userData.original;
+    obj.position.copy(clone.position);
+    obj.quaternion.copy(clone.quaternion);
+}
+
+function transformControlsDetach() {
+    if(transformControls.object === undefined)
+        return; // was not attached
+
+    var clone = transformControls.object;
+    var obj = clone.userData.original;
+
+    //obj.userData.uid = clone.userData.uid;
+
+    clone.removeFromParent();
+
+    delete clone.userData.original;
+    delete obj.userData.clone;
+
+    bboxHelper.setFromObject(obj);
+
+    transformControls.detach();
+}
+
+function findModelBase(o,followSMBI) {
+    if(o.userData.modelBase && !o.userData.selectModelBaseInstead) {
+        return o;
+    } else {
+        return findModelBase(o.parent);
+    }
+}
+
+function setSelectedObject(o, followSMBI) {
+    if(selectedObject !== null && selectedObject.userData.treeElement !== undefined) {
+        $(selectedObject.userData.treeElement).removeClass('selected');
+    }
+
     if(o == null) {
         bboxHelper.visible = false;
         selectedObject = null;
+        transformControlsDetach();
     } else {
+        if(followSMBI && o.userData.selectModelBaseInstead) {
+            o = findModelBase(o);
+        }
+
+        debug(`id = ${o.id}`);
         selectedObject = o;
+        if(selectedObject.userData.treeElement !== undefined) {
+            $(selectedObject.userData.treeElement).addClass('selected');
+        }
         bboxHelper.setFromObject(selectedObject);
         bboxHelper.visible = true;
+        if(transformControls.object !== undefined) {
+            transformControlsDetach();
+            transformControlsAttach(selectedObject);
+        } else if(transformControls.enabled) {
+            transformControlsAttach(selectedObject);
+        }
+    }
+}
+
+function setSelectPointMode(enable) {
+    selectPointMode = enable;
+    if(enable) {
+        selectedPointConfirmed = false;
+    } else {
+        if(!selectedPointConfirmed) {
+            selectPointSphere.visible = false;
+            selectPointArrow.visible = false;
+        }
     }
 }
 
@@ -190,8 +405,21 @@ function makeMesh(meshData) {
         emissive: new THREE.Color(c[6], c[7], c[8]),
         map: texture
     });
+    if(meshData.transparency !== undefined && meshData.transparency > 0.001) {
+        material.transparent = true;
+        material.opacity = 1 - meshData.transparency;
+    }
 
     return new THREE.Mesh(geometry, material);
+}
+
+function setCommonUserData(o, e) {
+    o.userData = {
+        uid: e.uid,
+        type: e.type,
+        modelBase: e.modelBase,
+        selectModelBaseInstead: e.selectModelBaseInstead
+    };
 }
 
 function onObjectAdded(e) {
@@ -199,25 +427,36 @@ function onObjectAdded(e) {
 
     if(e.type == "shape") {
         if(e.meshData.length > 1) {
-            meshes[e.handle] = new THREE.Group();
+            meshes[e.uid] = new THREE.Group();
             for(var i = 0; i < e.meshData.length; i++) {
-                meshes[e.handle].add(makeMesh(e.meshData[i]));
+                var submesh = makeMesh(e.meshData[i]);
+                submesh.userData.supermeshHandle = e.uid;
+                meshes[e.uid].add(submesh);
             }
         } else if(e.meshData.length == 1) {
-            meshes[e.handle] = makeMesh(e.meshData[0]);
+            meshes[e.uid] = makeMesh(e.meshData[0]);
         }
-        meshes[e.handle].userData = {handle: e.handle, type: e.type};
-        scene.add(meshes[e.handle]);
+        setCommonUserData(meshes[e.uid], e);
+        meshes[e.uid].visible = false;
+        scene.add(meshes[e.uid]);
     } else if(e.type == "pointcloud") {
         const geometry = new THREE.BufferGeometry();
         geometry.setAttribute('position', new THREE.Float32BufferAttribute(e.points, 3));
         const material = new THREE.PointsMaterial({color: 0x0000FF, size: 0.005});
-        meshes[e.handle] = new THREE.Points(geometry, material);
-        scene.add(meshes[e.handle]);
-    } else if(e.type == "dummy" || e.type == "forcesensor" || e.type == "joint") {
-        meshes[e.handle] = new THREE.Group();
-        meshes[e.handle].userData = {handle: e.handle, type: e.type};
-        scene.add(meshes[e.handle]);
+        meshes[e.uid] = new THREE.Points(geometry, material);
+        meshes[e.uid].visible = false;
+        scene.add(meshes[e.uid]);
+    } else if(e.type == "dummy" || e.type == "forcesensor") {
+        meshes[e.uid] = new THREE.Group();
+        setCommonUserData(meshes[e.uid], e);
+        scene.add(meshes[e.uid]);
+    } else if(e.type == "joint") {
+        var jf = new THREE.Group();
+        meshes[e.uid] = new THREE.Group();
+        meshes[e.uid].add(jf);
+        setCommonUserData(meshes[e.uid], e);
+        meshes[e.uid].userData.jointFrameId = jf.id;
+        scene.add(meshes[e.uid]);
     } else if(e.type == "camera") {
         if(e.name == "DefaultCamera" && e.absolutePose !== undefined) {
             camera.position.x = e.absolutePose[0];
@@ -230,11 +469,124 @@ function onObjectAdded(e) {
             //camera.updateProjectionMatrix();
             orbitControls.update();
         } else {
-            meshes[e.handle] = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 1, 1000);
-            meshes[e.handle].userData = {handle: e.handle, type: e.type};
-            scene.add(meshes[e.handle]);
+            meshes[e.uid] = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 1, 1000);
+            setCommonUserData(meshes[e.uid], e);
+            scene.add(meshes[e.uid]);
         }
     }
+
+    updateTree();
+}
+
+function getSceneHierarchy(o) {
+    var r = [
+        {
+            n: o === scene ? "SCENE" : o.name,
+            t: o.type
+        }
+    ];
+    if(o.children !== undefined) {
+        for(var c of o.children) {
+            if(c.userData.uid !== undefined)
+                r.push(getSceneHierarchy(c));
+        }
+    }
+    return r;
+}
+
+function updateTree(o) {
+    if(o === undefined) {
+        objtree.clearChildren();
+        objtree.appendChild(updateTree(scene));
+    } else {
+        var li = document.createElement('li');
+        var icon = document.createElement('i');
+        icon.classList.add('tree-item-icon');
+        icon.classList.add('fas');
+        if(o.type == "Scene") {
+            icon.classList.add('fa-globe');
+        } else if(o.userData.type == "camera") {
+            icon.classList.add('fa-video');
+        } else if(o.userData.type == "shape") {
+            icon.classList.add('fa-cubes');
+        } else if(o.userData.type == "light") {
+            icon.classList.add('fa-lightbulb');
+        } else if(o.userData.type == "joint") {
+            icon.classList.add('fa-cogs');
+        } else if(o.userData.type == "dummy") {
+            icon.classList.add('fa-bullseye');
+        } else {
+            icon.classList.add('fa-question');
+        }
+        var nameLabel = document.createElement('span');
+        nameLabel.classList.add("tree-item");
+        nameLabel.appendChild(document.createTextNode(" " +
+            (o === scene ? "(scene)" : o.name)
+        ));
+        nameLabel.addEventListener('click', function() {
+            setSelectedObject(o, false);
+        });
+        o.userData.treeElement = nameLabel;
+        var hasChildren = false;
+        var childrenContainer = o;
+        if(o.userData.type === "joint" && o.userData.jointFrameId !== undefined) {
+            childrenContainer = scene.getObjectById(o.userData.jointFrameId);
+            if(childrenContainer === undefined) {
+                console.log(`invalid joint frame id ${o.userData.jointFrameId} for object id ${o.id}`, o);
+            }
+        }
+        for(var c of childrenContainer.children) {
+            if(c.userData.uid !== undefined) {
+                hasChildren = true;
+                break;
+            }
+        }
+        if(hasChildren) {
+            var ul = document.createElement('ul');
+            ul.classList.add('active');
+            for(var c of childrenContainer.children)
+                if(c.userData.uid !== undefined)
+                    ul.appendChild(updateTree(c));
+            var toggler = document.createElement('span');
+            toggler.classList.add('toggler');
+            toggler.classList.add('toggler-open');
+            toggler.addEventListener('click', function() {
+                ul.classList.toggle('active');
+                toggler.classList.toggle('toggler-open');
+                toggler.classList.toggle('toggler-close');
+            });
+            li.appendChild(toggler);
+            li.appendChild(icon);
+            li.appendChild(nameLabel);
+            li.appendChild(ul);
+        } else {
+            li.appendChild(icon);
+            li.appendChild(nameLabel);
+        }
+        return li;
+    }
+}
+
+function setPropertyRecursive(o, p, v) {
+    if(typeof p === 'string' || p instanceof String) {
+        if(o[p] !== undefined)
+            o[p] = v;
+    } else if(Array.isArray(p)) {
+        if(p.length > 0) {
+            var objref = o;
+            for(var i = 0; i < (p.length - 1); i++) {
+                if(objref === undefined) break;
+                objref = objref[p[i]];
+            }
+            if(objref !== undefined)
+                objref[p[p.length - 1]] = v;
+        }
+    } else {
+        return;
+    }
+    if(o.children !== undefined)
+        for(var c of o.children)
+            setPropertyRecursive(c,p,v);
 }
 
 function setVisibility(o, v) {
@@ -249,18 +601,33 @@ function setVisibility(o, v) {
 }
 
 function onObjectChanged(e) {
-    //console.log("changed", e, {self: meshes[e.handle], parent: meshes[e.parent]});
+    //console.log("changed", e, {self: meshes[e.uid], parent: meshes[e.parentUid]});
 
-    var o = meshes[e.handle];
+    var o = meshes[e.uid];
     if(o === undefined) return;
+
+    o.visible = true;
 
     if(e.name !== undefined) {
         o.name = e.name;
     }
-    if(e.parent !== undefined) {
-        if(meshes[e.parent] !== undefined) {
-            meshes[e.parent].attach(o);
-        } else /*if(e.parent === -1)*/ {
+    if(e.parentUid !== undefined) {
+        var p = meshes[e.parentUid];
+        if(p !== undefined) {
+            if(p.userData.jointFrameId !== undefined) {
+                // when parenting to a joint, attach to joint child frame:
+                var jf = scene.getObjectById(p.userData.jointFrameId);
+                if(jf !== undefined) {
+                    jf.attach(o);
+                } else {
+                    console.log(`joint frame with id=${p.userData.jointFrameId} not known`);
+                }
+            } else {
+                p.attach(o);
+            }
+        } else /*if(e.parentUid === -1)*/ {
+            if(e.parentUid !== -1)
+                console.log(`parent with uid=${e.parentUid} not known`);
             scene.attach(o);
         }
     }
@@ -281,15 +648,33 @@ function onObjectChanged(e) {
         o.quaternion.z = e.absolutePose[5];
         o.quaternion.w = e.absolutePose[6];
     }
+    if(e.jointQuaternion !== undefined) {
+        if(o.userData.jointFrameId !== undefined) {
+            var jf = scene.getObjectById(o.userData.jointFrameId);
+            jf.quaternion.x = e.jointQuaternion[0];
+            jf.quaternion.y = e.jointQuaternion[1];
+            jf.quaternion.z = e.jointQuaternion[2];
+            jf.quaternion.w = e.jointQuaternion[3];
+        }
+    }
     if(e.visible !== undefined) {
         setVisibility(o, e.visible);
+        o.userData.visible = e.visible;
     }
+
+    updateTree();
 }
 
 function onObjectRemoved(e) {
-    if(meshes[e.handle] === undefined) return;
-    scene.remove(meshes[e.handle]);
-    delete meshes[e.handle];
+    if(meshes[e.uid] === undefined) return;
+
+    if(meshes[e.uid] === selectedObject)
+        setSelectedObject(null, false);
+
+    scene.remove(meshes[e.uid]);
+    delete meshes[e.uid];
+
+    updateTree();
 }
 
 function dispatchEvent(e) {

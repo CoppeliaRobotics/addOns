@@ -10,7 +10,7 @@
                 background-image: linear-gradient(rgb(204,222,235), rgb(13,13,26));
                 user-select: none;
             }
-            #c {
+            #view {
                 width: 100%;
                 height: 100%;
                 display: block;
@@ -24,24 +24,111 @@
                 width: 400px;
                 height: auto;
             }
+            #axes {
+                position: absolute;
+                right: 20px;
+                bottom: 20px;
+                width: 80px;
+                height: 80px;
+                z-index: 100;
+                pointer-events: none;
+            }
+            #objtreeBG {
+                display: none;
+                position: absolute;
+                left: 0;
+                top: 0;
+                bottom: 0;
+                z-index: 100;
+                width: 95%;
+                margin: 0px;
+                background: linear-gradient(90deg, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0));
+                pointer-events: none;
+            }
+            #objtree {
+                position: absolute;
+                left: 10px;
+                top: 60px;
+                bottom: 0;
+                width: 100%;
+                overflow: scroll;
+                margin: 0;
+            }
+            #objtree, #objtree ul {
+                list-style-type: none;
+                padding-left: 20px;
+            }
+            #objtree, #objtree ul, #objtree ul li {
+                user-select: none;
+                white-space: nowrap;
+                font-size: 12px;
+            }
+            #objtree li {
+                position: relative;
+            }
+            #objtree .toggler {
+                position: absolute;
+                left: -15px;
+                top: 3px;
+                cursor: pointer;
+                color: rgba(0,0,0,0.25);
+                font-size: 80%;
+            }
+            #objtree .toggler-open::after {
+                font-family: "Font Awesome 6 Free";
+                content: "\f146";
+            }
+            #objtree .toggler-close::after {
+                font-family: "Font Awesome 6 Free";
+                content: "\f0fe";
+            }
+            #objtree .tree-item {
+                background-color: rgb(255, 255, 255, 0.5);
+                border-radius: 5px;
+                padding: 2px;
+                line-height: 1.75em;
+                cursor: pointer;
+                user-select: none;
+                font-family: sans-serif;
+                font-size: 11px;
+                pointer-events: all;
+            }
+            #objtree .tree-item.selected {
+                background-color: rgb(30, 200, 250, 0.5);
+            }
+            #objtree .tree-item-icon {
+                width: 20px;
+            }
+            #objtree ul {
+                display: none;
+            }
+            #objtree ul.active {
+                display: block;
+            }
+            #debug {
+                position: absolute;
+                bottom: 10px;
+                right: 90px;
+                width: 60%;
+                z-index: 100;
+                pointer-events: none;
+                font-family: sans-serif;
+                font-size: 60%;
+                white-space: pre;
+            }
 		</style>
     </head>
     <body>
         <img id="logo" src="data:image/png;base64,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" alt="Brought to you by Coppelia Robotics" />
-        <ul id="objtree"></ul>
-        <canvas id="c"></canvas>
-        <div id="toolbar">
-            <div id="toggle-object-tree" class="button"><i title="Toggle object tree (H)" class="fas fa-folder-tree"></i></div>
-            <div class="spacer"></div>
-            <div id="tool-select" class="tool-group-1 button selected"><i title="Select (Esc)" class="fas fa-mouse-pointer"></i></div>
-            <div id="tool-translate" class="tool-group-1 button"><i title="Translate (T)" class="fas fa-arrows-alt"></i></div>
-            <div id="tool-rotate" class="tool-group-1 button"><i title="Rotate (R)" class="fas fa-redo"></i></div>
-            <div id="tool-scale" class="tool-group-1 button disabled"><i title="Scale (S)" class="fas fa-expand-alt"></i></div>
-            <div id="tool-select-point" class="tool-group-1 button"><i title="Select point... (P)" class="far fa-dot-circle"></i> Select point</div>
+        <div id="objtreeBG">
+            <ul id="objtree"></ul>
         </div>
+        <canvas id="view"></canvas>
+        <canvas id="axes"></canvas>
+        <div id="debug"></div>
         <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
         <script src="https://cdn.jsdelivr.net/gh/spaceify/cbor-js@master/cbor.js" integrity="sha512-0ABB8mRQj73e8+aaUzonPYnP34/YsUCf6SGUJp/pj5BUXttDonDIvCI7XuC7C27Qem6yRpzIzTlq8kJSlUNjoQ==" crossorigin="anonymous"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.js" integrity="sha512-NLtnLBS9Q2w7GKK9rKxdtgL7rA7CAS85uC/0xd9im4J/yOL4F9ZVlv634NAM7run8hz3wI2GabaA6vv8vJtHiQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+        <script src="https://cdn.jsdelivr.net/gh/mrdoob/three.js@r133/build/three.js" integrity="sha512-npBSChPpyudoVOX6nM7U8bIzE2OpIRZ1s6KBbEU5mmPBiDGLPT7djyo/jhz3AnwcBgKuD9A/rIaeDLiml0WDiQ==" crossorigin="anonymous"></script>
         <script src="https://threejs.org/examples/js/controls/OrbitControls.js"></script>
         <script src="https://threejs.org/examples/js/controls/TransformControls.js"></script>
         <script src="https://threejs.org/examples/js/utils/SceneUtils.js"></script>
