@@ -311,7 +311,7 @@ function objectAdded(uid)
             return data
         end
         data.meshData={}
-        for i=0,1000 do
+        for i=0,1000000000 do
             local meshData=sim.getShapeViz(handle,i)
             if meshData==nil then break end
             if meshData.texture then
