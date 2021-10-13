@@ -213,7 +213,12 @@ function onMouseMove(event) {
 function onClick(event) {
     if(selectPointMode) {
         selectedPointConfirmed = true;
-        toolSelect();
+
+        setSelectPointMode(false);
+        transformControlsDisable();
+        if(selectedObject !== null) {
+            transformControlsDetach();
+        }
         return;
     }
 
@@ -271,8 +276,13 @@ function transformControlsStartTransform() {
 function transformControlsEndTransform() {
     var clone = transformControls.object;
     var obj = clone.userData.original;
+    /* (original object will change as the result of synchronization)
     obj.position.copy(clone.position);
     obj.quaternion.copy(clone.quaternion);
+    */
+    var p = clone.position.toArray();
+    var q = clone.quaternion.toArray();
+    sim.setObjectPose([obj.userData.handle, sim.handle_parent, p.concat(q)], function(e) {});
 }
 
 function transformControlsDetach() {
@@ -355,6 +365,12 @@ function onWindowResize() {
 
 // handle updates from CoppeliaSim:
 
+var remoteApiClient = new RemoteAPIClient();
+var sim = null;
+remoteApiClient.websocket.addEventListener('open', function(event) {
+    remoteApiClient.getObject('sim', function(o) { sim = o; });
+});
+
 var meshes = {};
 
 function makeMesh(meshData) {
@@ -428,6 +444,7 @@ function setCommonUserData(o, e) {
     o.userData = {
         uid: e.uid,
         type: e.type,
+        handle: e.handle,
         modelBase: e.modelBase,
         selectModelBaseInstead: e.selectModelBaseInstead
     };
@@ -651,6 +668,9 @@ function onObjectChanged(e) {
                     child.layers.set(e.visible ? 0 : 1);
         }
         o.userData.visible = e.visible;
+    }
+    if(e.handle !== undefined) {
+        o.userData.handle = e.handle;
     }
 
     if(updateTreeTimeout !== undefined)

@@ -329,6 +329,7 @@ function objectAdded(uid)
     local handle=sim.getHandleByUID(uid)
     if handle==nil then return nil end
 
+    data.handle=handle
     data.visible=sim.getObjectInt32Param(handle,sim.objintparam_visible)>0
 
     local objProp=sim.getObjectProperty(handle)
