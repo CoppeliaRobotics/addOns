@@ -52,15 +52,9 @@ scene.add(ambientLight);
 const light = new THREE.PointLight(0xffffff, 0.7);
 
 const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
-camera.position.x = 1.12;
-camera.position.y = -1.9;
-camera.position.z = 1.08;
-camera.rotation.x = 1.08;
-camera.rotation.y = 0.64;
-camera.rotation.z = 0.31;
-camera.up.x = 0;
-camera.up.y = 0;
-camera.up.z = 1;
+camera.position.set(1.12, -1.9, 1.08);
+camera.rotation.set(1.08, 0.64, 0.31);
+camera.up.set(0, 0, 1);
 camera.add(light);
 scene.add(camera); // required because the camera has a child
 
@@ -476,13 +470,8 @@ function onObjectAdded(e) {
         scene.add(meshes[e.uid]);
     } else if(e.type == "camera") {
         if(e.name == "DefaultCamera" && e.absolutePose !== undefined) {
-            camera.position.x = e.absolutePose[0];
-            camera.position.y = e.absolutePose[1];
-            camera.position.z = e.absolutePose[2];
-            camera.quaternion.x = e.absolutePose[3];
-            camera.quaternion.y = e.absolutePose[4];
-            camera.quaternion.z = e.absolutePose[5];
-            camera.quaternion.w = e.absolutePose[6];
+            camera.position.set(e.absolutePose[0], e.absolutePose[1], e.absolutePose[2]);
+            camera.quaternion.set(e.absolutePose[3], e.absolutePose[4], e.absolutePose[5], e.absolutePose[6]);
             //camera.updateProjectionMatrix();
             orbitControls.update();
         } else {
@@ -640,29 +629,16 @@ function onObjectChanged(e) {
         }
     }
     if(e.pose !== undefined) {
-        o.position.x = e.pose[0];
-        o.position.y = e.pose[1];
-        o.position.z = e.pose[2];
-        o.quaternion.x = e.pose[3];
-        o.quaternion.y = e.pose[4];
-        o.quaternion.z = e.pose[5];
-        o.quaternion.w = e.pose[6];
+        o.position.set(e.pose[0], e.pose[1], e.pose[2]);
+        o.quaternion.set(e.pose[3], e.pose[4], e.pose[5], e.pose[6]);
     } else if(e.absolutePose !== undefined) {
-        o.position.x = e.absolutePose[0];
-        o.position.y = e.absolutePose[1];
-        o.position.z = e.absolutePose[2];
-        o.quaternion.x = e.absolutePose[3];
-        o.quaternion.y = e.absolutePose[4];
-        o.quaternion.z = e.absolutePose[5];
-        o.quaternion.w = e.absolutePose[6];
+        o.position.set(e.absolutePose[0], e.absolutePose[1], e.absolutePose[2]);
+        o.quaternion.set(e.absolutePose[3], e.absolutePose[4], e.absolutePose[5], e.absolutePose[6]);
     }
     if(e.jointQuaternion !== undefined) {
         if(o.userData.jointFrameId !== undefined) {
             var jf = scene.getObjectById(o.userData.jointFrameId);
-            jf.quaternion.x = e.jointQuaternion[0];
-            jf.quaternion.y = e.jointQuaternion[1];
-            jf.quaternion.z = e.jointQuaternion[2];
-            jf.quaternion.w = e.jointQuaternion[3];
+            jf.quaternion.set(e.jointQuaternion[0], e.jointQuaternion[1], e.jointQuaternion[2], e.jointQuaternion[3]);
         }
     }
     if(e.visible !== undefined) {
