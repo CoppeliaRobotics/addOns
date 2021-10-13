@@ -226,7 +226,9 @@ function getObjectData(handle)
             data.jointPosition=sim.getJointPosition(handle)
         end
         local jointMatrix=sim.getJointMatrix(handle)
-        data.jointQuaternion=sim.getQuaternionFromMatrix(jointMatrix)
+        local p={jointMatrix[4],jointMatrix[8],jointMatrix[12]}
+        local q=sim.getQuaternionFromMatrix(jointMatrix)
+        data.jointPose={p[1],p[2],p[3],q[1],q[2],q[3],q[4]}
     elseif t==sim.object_graph_type then
     elseif t==sim.object_camera_type then
     elseif t==sim.object_light_type then

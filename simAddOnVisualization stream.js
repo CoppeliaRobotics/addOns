@@ -635,10 +635,11 @@ function onObjectChanged(e) {
         o.position.set(e.absolutePose[0], e.absolutePose[1], e.absolutePose[2]);
         o.quaternion.set(e.absolutePose[3], e.absolutePose[4], e.absolutePose[5], e.absolutePose[6]);
     }
-    if(e.jointQuaternion !== undefined) {
+    if(e.jointPose !== undefined) {
         if(o.userData.jointFrameId !== undefined) {
             var jf = scene.getObjectById(o.userData.jointFrameId);
-            jf.quaternion.set(e.jointQuaternion[0], e.jointQuaternion[1], e.jointQuaternion[2], e.jointQuaternion[3]);
+            jf.position.set(e.jointPose[0], e.jointPose[1], e.jointPose[2]);
+            jf.quaternion.set(e.jointPose[3], e.jointPose[4], e.jointPose[5], e.jointPose[6]);
         }
     }
     if(e.visible !== undefined) {
