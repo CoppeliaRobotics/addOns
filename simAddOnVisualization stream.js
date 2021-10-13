@@ -298,7 +298,8 @@ function transformControlsDetach() {
     transformControls.detach();
 }
 
-function findModelBase(o,followSMBI) {
+function findModelBase(o, followSMBI) {
+    if(o === null) return null;
     if(o.userData.modelBase && !o.userData.selectModelBaseInstead) {
         return o;
     } else {
@@ -317,7 +318,9 @@ function setSelectedObject(o, followSMBI) {
         transformControlsDetach();
     } else {
         if(followSMBI && o.userData.selectModelBaseInstead) {
-            o = findModelBase(o);
+            var modelBase = findModelBase(o);
+            if(modelBase !== null)
+                o = modelBase;
         }
 
         debug(`id = ${o.id}`);
