@@ -295,6 +295,8 @@ function objectAdded(uid)
     local handle=sim.getHandleByUID(uid)
     if handle==nil then return nil end
 
+    data.visible=sim.getObjectInt32Param(handle,sim.objintparam_visible)>0
+
     local objProp=sim.getObjectProperty(handle)
     data.selectModelBaseInstead=(objProp&sim.objectproperty_selectmodelbaseinstead)>0
 
