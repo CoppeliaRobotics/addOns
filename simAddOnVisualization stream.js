@@ -297,10 +297,19 @@ function transformControlsAttach(obj) {
     transformControls.attach(clone);
 }
 
+var sendTransformRate = 0;
+var sendTransformInterval = null;
+
 function transformControlsStartTransform() {
+    if(sendTransformRate > 0) {
+        sendTransformInterval = setInterval(transformControlsEndTransform, Math.max(50, 1000 / sendTransformRate), true);
+    }
 }
 
-function transformControlsEndTransform() {
+function transformControlsEndTransform(o) {
+    if(!o)
+        clearInterval(sendTransformInterval);
+
     var clone = transformControls.object;
     var obj = clone.userData.original;
     /* (original object will change as the result of synchronization)
