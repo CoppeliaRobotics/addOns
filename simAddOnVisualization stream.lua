@@ -92,6 +92,11 @@ function sysCall_sensing()
     scan()
 end
 
+function sysCall_suspended()
+    processZMQRequests()
+    scan()
+end
+
 function sysCall_cleanup()
     if zmqPUBSocket or zmqREPSocket then
         if zmqPUBSocket then simZMQ.close(zmqPUBSocket) end
