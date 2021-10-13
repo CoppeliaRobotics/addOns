@@ -31,7 +31,16 @@ function sysCall_init()
     if wsEnable and simWS then
         wsPort=sim.getNamedInt32Param('visualizationStream.ws.port') or 23020
         print('Add-on "Visualization stream": WS endpoint on port '..tostring(wsPort)..'...')
-        wsServer=simWS.start(wsPort)
+        if sim.getNamedBoolParam('visualizationStream.ws.retryOnStartFailure') then
+            while true do
+                local r,e=pcall(function() wsServer=simWS.start(wsPort) end)
+                if r then break end
+                print('Add-on "Visualization stream": WS failed to start ('..e..'). Retrying...')
+                sim.wait(0.5,false)
+            end
+        else
+            wsServer=simWS.start(wsPort)
+        end
         simWS.setOpenHandler(wsServer,'onWSOpen')
         simWS.setCloseHandler(wsServer,'onWSClose')
         simWS.setMessageHandler(wsServer,'onWSMessage')
