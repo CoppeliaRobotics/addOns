@@ -581,6 +581,8 @@ function updateTree(o) {
         }
         var nameLabel = document.createElement('span');
         nameLabel.classList.add("tree-item");
+        if(selectedObject === o)
+            nameLabel.classList.add("selected");
         nameLabel.appendChild(document.createTextNode(" " +
             (o === scene ? "(scene)" : o.name)
         ));
