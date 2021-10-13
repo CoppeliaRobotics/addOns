@@ -211,7 +211,7 @@ function getObjectData(handle)
         data.parentUid=sim.getObjectInt32Param(data.parentHandle,sim.objintparam_unique_id)
     end
     data.pose=sim.getObjectPose(handle,data.parentHandle)
-    data.absolutePose=sim.getObjectPose(handle,-1)
+    --data.absolutePose=sim.getObjectPose(handle,-1)
     data.visible=sim.getObjectInt32Param(handle,sim.objintparam_visible)>0
     -- fetch type-specific data:
     local t=sim.getObjectType(handle)
@@ -225,8 +225,8 @@ function getObjectData(handle)
         if st~=sim_joint_spherical_subtype then
             data.jointPosition=sim.getJointPosition(handle)
         end
-        data.jointMatrix=sim.getJointMatrix(handle)
-        data.jointQuaternion=sim.getQuaternionFromMatrix(data.jointMatrix)
+        local jointMatrix=sim.getJointMatrix(handle)
+        data.jointQuaternion=sim.getQuaternionFromMatrix(jointMatrix)
     elseif t==sim.object_graph_type then
     elseif t==sim.object_camera_type then
     elseif t==sim.object_light_type then
