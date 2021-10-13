@@ -13,6 +13,7 @@ function sysCall_init()
     wsEnable=sim.getNamedBoolParam('visualizationStream.ws.enable')
     if wsEnable==nil then wsEnable=true end
     groupEvents=sim.getNamedBoolParam('visualizationStream.groupEvents')
+    if groupEvents==nil then groupEvents=true end
 
     if zmqEnable and simZMQ then
         simZMQ.__raiseErrors(true) -- so we don't need to check retval with every call
