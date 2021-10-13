@@ -137,11 +137,19 @@ function onZMQRequest(data)
 end
 
 function onWSOpen(server,connection)
+    fastGetShapeViz=sim.getNamedBoolParam('visualizationStream.fastGetShapeViz')
     if server==wsServer then
         wsClients[connection]=1
         -- send current objects:
         for uid,data in pairs(remoteData) do
-            sendEvent(objectAdded(uid),connection)
+            local handle=sim.getHandleByUID(uid)
+            if fastGetShapeViz and handle~=nil and sim.getObjectType(handle)==sim.object_shape_type then
+                -- XXX: testing fast (?) function
+                sendEventRaw(sim.test('sim.getShapeViz',handle,objectAdded(uid)),connection)
+                sim.addLog(sim.verbosity_scriptinfos, 'sim.test called')
+            else
+                sendEvent(objectAdded(uid),connection)
+            end
         end
         for uid,data in pairs(remoteData) do
             sendEvent(objectChanged(uid),connection)
@@ -249,6 +257,7 @@ function scan()
             if fastGetShapeViz and handle~=nil and sim.getObjectType(handle)==sim.object_shape_type then
                 -- XXX: testing fast (?) function
                 sendEventRaw(sim.test('sim.getShapeViz',handle,objectAdded(uid)))
+                sim.addLog(sim.verbosity_scriptinfos, 'sim.test called')
             else
                 sendEvent(objectAdded(uid))
             end
