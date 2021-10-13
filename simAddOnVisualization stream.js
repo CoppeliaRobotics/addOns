@@ -19,6 +19,18 @@ viewCanvas.addEventListener('mouseup', onMouseUp, false);
 viewCanvas.addEventListener('mousemove', onMouseMove, false);
 //viewCanvas.addEventListener('click', onClick, false);
 window.addEventListener('resize', onWindowResize);
+window.addEventListener('keydown', onKeyDown);
+
+function onKeyDown(event) {
+    switch(event.code) {
+        case 'KeyH':
+            $("#objtreeBG").toggle();
+            break;
+        case 'KeyD':
+            $("#debug").toggle();
+            break;
+    }
+}
 
 function debug(text) {
     if(text !== undefined)
