@@ -151,19 +151,11 @@ function onZMQRequest(data)
 end
 
 function onWSOpen(server,connection)
-    fastGetShapeViz=sim.getNamedBoolParam('visualizationStream.fastGetShapeViz')
     if server==wsServer then
         wsClients[connection]=1
         -- send current objects:
         for uid,data in pairs(remoteData) do
-            local handle=sim.getHandleByUID(uid)
-            if fastGetShapeViz and handle~=nil and sim.getObjectType(handle)==sim.object_shape_type then
-                -- XXX: testing fast (?) function
-                sendEventRaw(sim.test('sim.getShapeViz',handle,objectAdded(uid)),connection)
-                sim.addLog(sim.verbosity_scriptinfos, 'sim.test called')
-            else
-                sendEvent(objectAdded(uid),connection)
-            end
+            sendEvent(objectAdded(uid),connection)
         end
         for uid,data in pairs(remoteData) do
             sendEvent(objectChanged(uid),connection)
@@ -264,17 +256,9 @@ function scan()
         end
     end
 
-    fastGetShapeViz=sim.getNamedBoolParam('visualizationStream.fastGetShapeViz')
     for uid,data in pairs(localData) do
         if remoteData[uid]==nil then
-            local handle=sim.getHandleByUID(uid)
-            if fastGetShapeViz and handle~=nil and sim.getObjectType(handle)==sim.object_shape_type then
-                -- XXX: testing fast (?) function
-                sendEventRaw(sim.test('sim.getShapeViz',handle,objectAdded(uid)))
-                sim.addLog(sim.verbosity_scriptinfos, 'sim.test called')
-            else
-                sendEvent(objectAdded(uid))
-            end
+            sendEvent(objectAdded(uid))
         end
     end
 
@@ -306,10 +290,6 @@ function objectAdded(uid)
     local t=sim.getObjectType(handle)
     if t==sim.object_shape_type then
         data.type="shape"
-        if fastGetShapeViz then
-            data.__fastGetShapeViz=1
-            return data
-        end
         data.meshData={}
         for i=0,1000000000 do
             local meshData=sim.getShapeViz(handle,i)
