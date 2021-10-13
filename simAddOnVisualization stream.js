@@ -159,7 +159,7 @@ selectPointArrow.visible = false;
 scene.add(selectPointArrow);
 
 function isObjectPickable(o) {
-    if(o.visible === false || !o.layers.test(0))
+    if(o.visible === false)
         return null;
     if(o.userData.uid !== undefined)
         return o;
