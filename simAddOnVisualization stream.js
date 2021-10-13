@@ -107,6 +107,8 @@ var selectPointMode = false;
 var selectedPointConfirmed = false;
 var selectedObject = null;
 
+updateTreeTimeout = undefined;
+
 var mouse = {
     dragStart: {x: 0, y: 0},
     dragDelta: function(e) {
@@ -490,7 +492,9 @@ function onObjectAdded(e) {
         }
     }
 
-    updateTree();
+    if(updateTreeTimeout !== undefined)
+        clearTimeout(updateTreeTimeout);
+    updateTreeTimeout = setTimeout(updateTree, 1000);
 }
 
 function getSceneHierarchy(o) {
@@ -672,7 +676,9 @@ function onObjectChanged(e) {
         o.userData.visible = e.visible;
     }
 
-    updateTree();
+    if(updateTreeTimeout !== undefined)
+        clearTimeout(updateTreeTimeout);
+    updateTreeTimeout = setTimeout(updateTree, 1000);
 }
 
 function onObjectRemoved(e) {
@@ -684,7 +690,9 @@ function onObjectRemoved(e) {
     scene.remove(meshes[e.uid]);
     delete meshes[e.uid];
 
-    updateTree();
+    if(updateTreeTimeout !== undefined)
+        clearTimeout(updateTreeTimeout);
+    updateTreeTimeout = setTimeout(updateTree, 1000);
 }
 
 function dispatchEvent(e) {
