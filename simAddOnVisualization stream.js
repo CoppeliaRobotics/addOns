@@ -29,6 +29,33 @@ function onKeyDown(event) {
         case 'KeyD':
             $("#debug").toggle();
             break;
+        case 'Escape':
+            setSelectPointMode(false);
+            transformControlsDisable();
+            if(selectedObject !== null) {
+                transformControlsDetach();
+            }
+            break;
+        case 'KeyT':
+            setSelectPointMode(false);
+            transformControlsEnable();
+            transformControlsMode('translate');
+            if(selectedObject !== null) {
+                transformControlsAttach(selectedObject);
+            }
+            break;
+        case 'KeyR':
+            setSelectPointMode(false);
+            transformControlsEnable();
+            transformControlsMode('rotate');
+            if(selectedObject !== null) {
+                transformControlsAttach(selectedObject);
+            }
+            break;
+        case 'KeyP':
+            transformControlsDetach();
+            setSelectPointMode(true);
+            break;
     }
 }
 
