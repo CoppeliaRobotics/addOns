@@ -663,11 +663,11 @@ function onObjectChanged(e) {
     }
     if(e.visible !== undefined) {
         if(o.type === "Mesh") {
-            o.layers.set(v ? 0 : 1);
+            o.layers.set(e.visible ? 0 : 1);
         } else if(o.type === "Group") {
             for(var child of o.children)
-                if(child.userData.supermeshUid == topObj.userData.uid)
-                    child.layers.set(v ? 0 : 1);
+                if(child.userData.supermeshUid == o.userData.uid)
+                    child.layers.set(e.visible ? 0 : 1);
         }
         o.userData.visible = e.visible;
     }
