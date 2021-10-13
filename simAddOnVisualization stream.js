@@ -73,10 +73,10 @@ THREE.Object3D.DefaultUp = new THREE.Vector3(0,0,1);
 
 const scene = new THREE.Scene();
 
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
 scene.add(ambientLight);
 
-const light = new THREE.PointLight(0xffffff, 0.7);
+const light = new THREE.PointLight(0xffffff, 0.3);
 
 const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
 camera.position.set(1.12, -1.9, 1.08);
