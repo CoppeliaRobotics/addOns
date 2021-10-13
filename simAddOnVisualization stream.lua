@@ -12,6 +12,7 @@ function sysCall_init()
     zmqEnable=sim.getNamedBoolParam('visualizationStream.zmq.enable')
     wsEnable=sim.getNamedBoolParam('visualizationStream.ws.enable')
     if wsEnable==nil then wsEnable=true end
+    groupEvents=sim.getNamedBoolParam('visualizationStream.groupEvents')
 
     if zmqEnable and simZMQ then
         simZMQ.__raiseErrors(true) -- so we don't need to check retval with every call
@@ -152,13 +153,25 @@ end
 
 function onWSOpen(server,connection)
     if server==wsServer then
+        local events={}
         wsClients[connection]=1
         -- send current objects:
         for uid,data in pairs(remoteData) do
-            sendEvent(objectAdded(uid),connection)
+            if groupEvents then
+                table.insert(events,objectAdded(uid))
+            else
+                sendEvent(objectAdded(uid),connection)
+            end
         end
         for uid,data in pairs(remoteData) do
-            sendEvent(objectChanged(uid),connection)
+            if groupEvents then
+                table.insert(events,objectChanged(uid))
+            else
+                sendEvent(objectChanged(uid),connection)
+            end
+        end
+        if groupEvents and #events>0 then
+            sendEvent(events,connection)
         end
     end
 end
@@ -249,24 +262,42 @@ function scan()
         localData[uid]=getObjectData(handle)
     end
 
+    local events={}
+
     for uid,_ in pairs(remoteData) do
         if localData[uid]==nil or remoteData[uid].uid~=uid then
-            sendEvent(objectRemoved(uid))
+            if groupEvents then
+                table.insert(events,objectRemoved(uid))
+            else
+                sendEvent(objectRemoved(uid))
+            end
             remoteData[uid]=nil
         end
     end
 
     for uid,data in pairs(localData) do
         if remoteData[uid]==nil then
-            sendEvent(objectAdded(uid))
+            if groupEvents then
+                table.insert(events,objectAdded(uid))
+            else
+                sendEvent(objectAdded(uid))
+            end
         end
     end
 
     for uid,data in pairs(localData) do
         if remoteData[uid]==nil or objectDataChanged(localData[uid],remoteData[uid]) then
-            sendEvent(objectChanged(uid))
+            if groupEvents then
+                table.insert(events,objectChanged(uid))
+            else
+                sendEvent(objectChanged(uid))
+            end
             remoteData[uid]=data
         end
+    end
+
+    if groupEvents and #events>0 then
+        sendEvent(events)
     end
 end
 

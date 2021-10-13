@@ -695,6 +695,14 @@ function onObjectRemoved(e) {
     updateTreeTimeout = setTimeout(updateTree, 1000);
 }
 
+function dispatchEvents(events) {
+    if(events.length !== undefined)
+        for(var event of events)
+            dispatchEvent(event);
+    else if(events.event !== undefined)
+        dispatchEvent(events);
+}
+
 function dispatchEvent(e) {
     if(e.event == "objectAdded")
         onObjectAdded(e);
@@ -708,10 +716,10 @@ var websocket = new WebSocket('ws://localhost:' + wsPort);
 if(codec == 'cbor') {
     websocket.binaryType = "arraybuffer";
     websocket.onmessage = function(event) {
-        dispatchEvent(CBOR.decode(event.data));
+        dispatchEvents(CBOR.decode(event.data));
     }
 } else if(codec == "json") {
     websocket.onmessage = function(event) {
-        dispatchEvent(JSON.parse(event.data));
+        dispatchEvents(JSON.parse(event.data));
     }
 }
