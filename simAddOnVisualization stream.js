@@ -136,18 +136,18 @@ selectPointArrow.visible = false;
 scene.add(selectPointArrow);
 
 function isObjectPickable(o) {
-    if(o.visible === false)
+    if(o.visible === false || !o.layers.test(0))
         return null;
     if(o.userData.uid !== undefined)
         return o;
-    var smh = o.userData.supermeshHandle;
-    if(smh !== undefined) {
-        if(meshes[smh] !== undefined) {
-            if(meshes[smh].userData.visible) {
-                return meshes[smh];
+    var sm = o.userData.supermeshUid;
+    if(sm !== undefined) {
+        if(meshes[sm] !== undefined) {
+            if(meshes[sm].userData.visible) {
+                return meshes[sm];
             }
         } else {
-            console.log(`found an intersect but supermeshHandle ${smh} is not known`);
+            console.log(`found an intersect but supermeshUid ${sm} is not known`);
         }
     }
     return null;
@@ -445,7 +445,7 @@ function onObjectAdded(e) {
             meshes[e.uid] = new THREE.Group();
             for(var i = 0; i < e.meshData.length; i++) {
                 var submesh = makeMesh(e.meshData[i]);
-                submesh.userData.supermeshHandle = e.uid;
+                submesh.userData.supermeshUid = e.uid;
                 meshes[e.uid].add(submesh);
             }
         } else if(e.meshData.length == 1) {
@@ -604,17 +604,6 @@ function setPropertyRecursive(o, p, v) {
             setPropertyRecursive(c,p,v);
 }
 
-function setVisibility(o, v) {
-    // can't change object visibility, as that would affect children too:
-    //o.visible = e.visible;
-
-    if(o.type === "Mesh" && o.material !== undefined)
-        o.material.visible = v;
-    else if(o.type === "Group")
-        for(var child of o.children)
-            setVisibility(child, v);
-}
-
 function onObjectChanged(e) {
     //console.log("changed", e, {self: meshes[e.uid], parent: meshes[e.parentUid]});
 
@@ -673,7 +662,13 @@ function onObjectChanged(e) {
         }
     }
     if(e.visible !== undefined) {
-        setVisibility(o, e.visible);
+        if(o.type === "Mesh") {
+            o.layers.set(v ? 0 : 1);
+        } else if(o.type === "Group") {
+            for(var child of o.children)
+                if(child.userData.supermeshUid == topObj.userData.uid)
+                    child.layers.set(v ? 0 : 1);
+        }
         o.userData.visible = e.visible;
     }
 
