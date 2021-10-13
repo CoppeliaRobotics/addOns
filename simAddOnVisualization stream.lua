@@ -241,15 +241,31 @@ function getObjectData(handle)
 end
 
 function objectDataChanged(a,b)
+    local wl,wa=1,17.5
     local function poseChanged(a,b)
         if a==nil and b==nil then return false end
-        local wl,wa=1,17.5
         local d=sim.getConfigDistance(a,b,{wl,wl,wl,wa,wa,wa,wa},{0,0,0,2,2,2,2})
         return d>0.0001
+    end
+    local function vector3Changed(a,b)
+        if a==nil and b==nil then return false end
+        local d=sim.getConfigDistance(a,b,{wl,wl,wl},{0,0,0})
+        return d>0.0001
+    end
+    local function quaternionChanged(a,b)
+        if a==nil and b==nil then return false end
+        local d=sim.getConfigDistance(a,b,{wa,wa,wa,wa},{2,2,2,2})
+        return d>0.0001
+    end
+    local function numberChanged(a,b)
+        if a==nil and b==nil then return false end
+        return math.abs(a-b)>0.0001
     end
     return false
         or poseChanged(a.pose,b.pose)
         or poseChanged(a.absolutePose,b.absolutePose)
+        or quaternionChanged(a.jointQuaternion,b.jointQuaternion)
+        or numberChanged(a.jointPosition,b.jointPosition)
         or a.parentUid~=b.parentUid
         or a.name~=b.name
 end
