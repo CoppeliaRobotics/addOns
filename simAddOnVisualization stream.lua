@@ -216,6 +216,12 @@ function getObjectData(handle)
         local st=sim.getJointType(handle)
         if st~=sim_joint_spherical_subtype then
             data.jointPosition=sim.getJointPosition(handle)
+            cyclic,interval=sim.getJointInterval(handle)
+            data.jointCyclic=cyclic
+            if not cyclic then
+                data.jointMin=interval[1]
+                data.jointMax=interval[1]+interval[2]
+            end
         end
         local jointMatrix=sim.getJointMatrix(handle)
         local p={jointMatrix[4],jointMatrix[8],jointMatrix[12]}
