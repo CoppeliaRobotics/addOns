@@ -64,7 +64,8 @@ function sysCall_init()
         opcode=simWS.opcode.text
     elseif codec=='cbor' then
         cbor=require('org.conman.cbor')
-        encode=cbor.encode
+        --encode=cbor.encode
+        encode=function(d) return sim.packTable(d,1) end -- faster
         decode=cbor.decode
         opcode=simWS.opcode.binary
     else
@@ -391,8 +392,7 @@ function sendEvent(d,conn)
     if verbose()>0 then
         print('Visualization stream:',d)
     end
-    --d=encode(d)
-    d=sim.packTable(d,1)
+    d=encode(d)
     sendEventRaw(d,conn)
 end
 
