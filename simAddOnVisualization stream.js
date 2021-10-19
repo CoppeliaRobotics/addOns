@@ -1,6 +1,5 @@
 class VisualizationStreamClient {
     constructor(host = 'localhost', port = 23020, codec = 'cbor') {
-        const client = this;
         this.host = host;
         this.port = port;
         this.codec = codec;
@@ -8,13 +7,9 @@ class VisualizationStreamClient {
         this.listeners = {};
         if(codec == 'cbor') {
             this.websocket.binaryType = 'arraybuffer';
-            this.websocket.onmessage = function(event) {
-                client.dispatchEvents(CBOR.decode(event.data));
-            }
+            this.websocket.onmessage = (event) => this.dispatchEvents(CBOR.decode(event.data));
         } else if(codec == 'json') {
-            this.websocket.onmessage = function(event) {
-                client.dispatchEvents(JSON.parse(event.data));
-            }
+            this.websocket.onmessage = (event) => this.dispatchEvents(JSON.parse(event.data));
         }
     }
 
@@ -50,6 +45,8 @@ class SceneWrapper {
         const light = new THREE.PointLight(0xffffff, 0.3);
 
         this.camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
+        this.camera.name = 'User camera';
+        this.camera.userData.type = 'camera';
         this.camera.position.set(1.12, -1.9, 1.08);
         this.camera.rotation.set(1.08, 0.64, 0.31);
         this.camera.up.set(0, 0, 1);
@@ -60,19 +57,37 @@ class SceneWrapper {
 
         this.objectsByUid = {};
 
-        const sceneWrapper = this;
         window.addEventListener('resize', () => {
             var w = window.innerWidth;
             var h = window.innerHeight;
-            sceneWrapper.adjustCameraAspect(w, h);
+            this.adjustCameraAspect(w, h);
         });
+
+        this.listeners = {};
+    }
+
+    dispatchEvent(eventType, eventData) {
+        var listeners = this.listeners[eventType] || [];
+        for(var listener of listeners)
+            listener(eventData);
+    }
+
+    addEventListener(eventType, listener) {
+        if(this.listeners[eventType] === undefined)
+            this.listeners[eventType] = [];
+        this.listeners[eventType].push(listener);
     }
 
     setCameraPose(pose) {
+        if(pose instanceof THREE.Object3D) {
+            var p = pose.position.toArray();
+            var q = pose.quaternion.toArray();
+            return this.setCameraPose(p.concat(q));
+        }
+
         this.camera.position.set(pose[0], pose[1], pose[2]);
         this.camera.quaternion.set(pose[3], pose[4], pose[5], pose[6]);
-        if(this.orbitControls !== undefined)
-            this.orbitControls.update();
+        this.dispatchEvent('cameraPoseChanged', {});
     }
 
     fitCameraToSelection(selection, fitOffset = 1.2) {
@@ -256,6 +271,7 @@ class SceneWrapper {
         var near = 1;   // FIXME: extract this from data
         var far = 1000; // FIXME: extract this from data
         var obj = new THREE.PerspectiveCamera(fov, aspect, near, far);
+        obj.up.set(0, 0, 1);
         obj.userData = this.commonUserData(data);
         // create an initially hidden object
         // will be shown as soon as some property is changed
@@ -429,6 +445,8 @@ class View {
         this.renderer.setPixelRatio(window.devicePixelRatio);
         this.renderer.setSize(window.innerWidth, window.innerHeight);
 
+        this.selectedCamera = this.sceneWrapper.camera;
+
         this.bboxHelper = new THREE.BoxHelper(undefined, 0xffffff);
         this.bboxHelper.visible = false;
         this.sceneWrapper.scene.add(this.bboxHelper);
@@ -437,13 +455,12 @@ class View {
         this.selectedPointConfirmed = false;
         this.selectedObject = null;
 
-        const view = this;
         this.mouse = {
             dragStart: {x: 0, y: 0},
-            dragDistance: function(event) {
+            dragDistance: (event) => {
                 return Math.hypot(
-                    view.mouse.pos.x - view.mouse.dragStart.x,
-                    view.mouse.pos.y - view.mouse.dragStart.y
+                    this.mouse.pos.x - this.mouse.dragStart.x,
+                    this.mouse.pos.y - this.mouse.dragStart.y
                 );
             },
             pos: {x: 0, y: 0},
@@ -474,7 +491,7 @@ class View {
         window.addEventListener('resize', () => {
             var w = window.innerWidth;
             var h = window.innerHeight;
-            view.renderer.setSize(w, h);
+            this.renderer.setSize(w, h);
         });
 
         this.listeners = {};
@@ -568,7 +585,7 @@ class View {
             return;
         }
 
-        var pick = this.sceneWrapper.pickObject(this.sceneWrapper.camera, this.mouse.normPos);
+        var pick = this.sceneWrapper.pickObject(this.selectedCamera, this.mouse.normPos);
         view.setSelectedObject(pick === null ? null : pick.object, true);
     }
 
@@ -588,14 +605,14 @@ class View {
         this.selectPointArrow.visible = true;
     }
 
-    render(camera) {
+    render() {
         if(this.selectPointMode) {
-            var pick = sceneWrapper.pickObject(this.sceneWrapper.camera, this.mouse.normPos);
+            var pick = sceneWrapper.pickObject(this.selectedCamera, this.mouse.normPos);
             if(pick !== null)
                 this.showSurfacePoint(pick);
         }
 
-        this.renderer.render(this.sceneWrapper.scene, camera);
+        this.renderer.render(this.sceneWrapper.scene, this.selectedCamera);
     }
 }
 
@@ -624,7 +641,6 @@ class OrbitControlsWrapper {
     constructor(sceneWrapper, renderer) {
         this.sceneWrapper = sceneWrapper;
         this.orbitControls = new THREE.OrbitControls(this.sceneWrapper.camera, renderer.domElement);
-        this.sceneWrapper.orbitControls = this.orbitControls;
     }
 }
 
@@ -633,16 +649,14 @@ class TransformControlsWrapper {
         this.sceneWrapper = sceneWrapper;
         this.transformControls = new THREE.TransformControls(this.sceneWrapper.camera, renderer.domElement);
         this.transformControls.enabled = false;
-        const self = this;
-        this.transformControls.addEventListener('dragging-changed', function(event) {
-            if(event.value) self.onStartTransform();
-            else self.onEndTransform();
+        this.transformControls.addEventListener('dragging-changed', (event) => {
+            if(event.value) this.onStartTransform();
+            else this.onEndTransform();
         });
         this.sceneWrapper.scene.add(this.transformControls);
-        this.sceneWrapper.transformControls = this.transformControls;
 
         this.sendTransformRate = 0;
-        this.sendTransformInterval = null;
+        this._sendTransformInterval = null;
     }
 
     enable() {
@@ -688,7 +702,7 @@ class TransformControlsWrapper {
         */
         var p = clone.position.toArray();
         var q = clone.quaternion.toArray();
-        sim.setObjectPose([obj.userData.handle, sim.handle_parent, p.concat(q)], function(e) {});
+        sim.setObjectPose(obj.userData.handle, sim.handle_parent, p.concat(q));
     }
 
     detach() {
@@ -712,12 +726,12 @@ class TransformControlsWrapper {
 
     onStartTransform() {
         if(this.sendTransformRate > 0) {
-            this.sendTransformInterval = setInterval(this.updateTargetPosition, Math.max(50, 1000 / this.sendTransformRate), true);
+            this._sendTransformInterval = setInterval(() => this.updateTargetPosition(), Math.max(50, 1000 / this.sendTransformRate), true);
         }
     }
 
     onEndTransform() {
-        clearInterval(this.sendTransformInterval);
+        clearInterval(this._sendTransformInterval);
         this.updateTargetPosition();
     }
 }
@@ -737,12 +751,11 @@ class ObjTree {
             joint: 'cogs',
             dummy: 'bullseye'
         }
-        const objTree = this;
         this.updateRequested = false;
-        setInterval(() => {
-            if(objTree.updateRequested && $(objTree.domElement).is(":visible")) {
-                objTree.update();
-                objTree.updateRequested = false;
+        this._checkInterval = setInterval(() => {
+            if(this.updateRequested && $(this.domElement).is(":visible")) {
+                this.update();
+                this.updateRequested = false;
             }
         }, 200);
     }
@@ -760,7 +773,6 @@ class ObjTree {
     }
 
     update(obj = undefined) {
-        const objTree = this;
         if(obj === undefined) {
             while(this.domElement.firstChild)
                 this.domElement.removeChild(this.domElement.lastChild);
@@ -781,8 +793,8 @@ class ObjTree {
             nameLabel.appendChild(document.createTextNode(" " +
                 (obj === this.sceneWrapper.scene ? "(scene)" : obj.name)
             ));
-            nameLabel.addEventListener('click', function() {
-                objTree.dispatchEvent('itemClicked', obj.userData.uid);
+            nameLabel.addEventListener('click', () => {
+                this.dispatchEvent('itemClicked', obj.userData.uid);
             });
             obj.userData.treeElement = nameLabel;
             var hasChildren = false;
@@ -847,6 +859,9 @@ THREE.Object3D.DefaultUp = new THREE.Vector3(0,0,1);
 //const scene = new THREE.Scene();
 
 var sceneWrapper = new SceneWrapper();
+sceneWrapper.addEventListener('cameraPoseChanged', () => {
+    orbitControlsWrapper.orbitControls.update();
+});
 
 const visualizationStreamClient = new VisualizationStreamClient('localhost', wsPort, codec);
 visualizationStreamClient.addEventListener('objectAdded', onObjectAdded);
@@ -871,6 +886,9 @@ view.addEventListener('selectedPoint', (event) => {
         transformControlsWrapper.detach();
     }
 });
+view.addEventListener('selectedCameraChanged', (data) => {
+    orbitControlsWrapper.orbitControls.update();
+});
 
 var axesView = new AxesView(document.querySelector('#axes'), sceneWrapper.camera.up);
 
@@ -889,17 +907,20 @@ transformControlsWrapper.transformControls.addEventListener('change', function(e
     render();
 });
 
-var remoteApiClient = new RemoteAPIClient();
+var remoteApiClient = new RemoteAPIClient('localhost', 23050, 'json');
 var sim = null;
-remoteApiClient.websocket.addEventListener('open', function(event) {
-    remoteApiClient.getObject('sim', function(o) { sim = o; });
+remoteApiClient.websocket.onOpen.addListener(() => {
+    remoteApiClient.getObject('sim').then((_sim) => {
+        sim = _sim;
+    });
 });
+remoteApiClient.websocket.open();
 
 var objTree = new ObjTree(sceneWrapper, $('#objtree'));
 objTree.addEventListener('itemClicked', onTreeItemSelected);
 
 function render() {
-    view.render(sceneWrapper.camera);
+    view.render();
     axesView.render(sceneWrapper.camera.position, orbitControlsWrapper.orbitControls.target);
 }
 
