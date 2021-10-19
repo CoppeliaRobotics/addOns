@@ -90,10 +90,7 @@ class SceneWrapper {
         this.dispatchEvent('cameraPoseChanged', {});
     }
 
-    fitCameraToSelection(selection, fitOffset = 1.2) {
-        const camera = this.camera;
-        const controls = this.orbitControls;
-
+    fitCameraToSelection(selection, camera, controls, fitOffset = 1.2) {
         const box = new THREE.Box3();
         for(const object of selection) box.expandByObject(object);
         const size = box.getSize(new THREE.Vector3());
@@ -266,11 +263,26 @@ class SceneWrapper {
     }
 
     createCamera(data) {
-        var fov = 50;   // FIXME: extract this from data
-        var aspect = 1; // FIXME: extract this from data
-        var near = 1;   // FIXME: extract this from data
-        var far = 1000; // FIXME: extract this from data
-        var obj = new THREE.PerspectiveCamera(fov, aspect, near, far);
+        const isPerspective = (data) => {
+            for(var n of ['', 'N'])
+                for(var d of ['X', 'Y', 'Z'])
+                    if(data.name == `${n}${d}ViewCamera`)
+                        return false;
+            return !data.name.endsWith('Ortho');
+        };
+        var obj;
+        var aspectRatio = window.innerWidth / window.innerHeight;
+        if(isPerspective(data)) {
+            obj = new THREE.PerspectiveCamera(data.fov * 180 / Math.PI, aspectRatio, data.near, data.far);
+        } else {
+            var width = data.orthoSize;
+            var height = data.orthoSize / aspectRatio;
+            var left = width / 2;
+            var right = -width / 2;
+            var top = height / 2;
+            var bottom = -height / 2;
+            obj = new THREE.OrthographicCamera(left, right, top, bottom, data.near, data.far);
+        }
         obj.up.set(0, 0, 1);
         obj.userData = this.commonUserData(data);
         // create an initially hidden object
@@ -292,11 +304,9 @@ class SceneWrapper {
         } else if(data.type == "joint") {
             obj = this.createJoint(data);
         } else if(data.type == "camera") {
+            obj = this.createCamera(data);
             if(data.name == "DefaultCamera" && data.absolutePose !== undefined) {
                 this.setCameraPose(data.absolutePose);
-                return;
-            } else {
-                obj = this.createCamera(data);
             }
         }
         if(obj === null)
@@ -340,6 +350,17 @@ class SceneWrapper {
         obj.quaternion.set(pose[3], pose[4], pose[5], pose[6]);
     }
 
+    setJointData(joint, position, cyclic, min, max) {
+        if(position !== undefined)
+            joint.userData.jointPosition = position;
+        if(cyclic !== undefined)
+            joint.userData.jointCyclic = cyclic;
+        if(min !== undefined)
+            joint.userData.jointMin = min;
+        if(max !== undefined)
+            joint.userData.jointMax = max;
+    }
+
     setJointPose(joint, pose) {
         if(joint.userData.jointFrameId !== undefined) {
             var jointFrame = this.scene.getObjectById(joint.userData.jointFrameId);
@@ -373,6 +394,7 @@ class SceneWrapper {
             this.setObjectParentUid(obj, data.parentUid);
         if(data.pose !== undefined)
             this.setObjectPose(obj, data.pose);
+        this.setJointData(obj, data.jointPosition, data.jointCyclic, data.jointMin, data.jointMax);
         if(data.jointPose !== undefined)
             this.setJointPose(obj, data.jointPose);
         if(data.visible !== undefined)
@@ -507,6 +529,12 @@ class View {
         if(this.listeners[eventType] === undefined)
             this.listeners[eventType] = [];
         this.listeners[eventType].push(listener);
+    }
+
+    setSelectedCamera(obj) {
+        if(obj === this.selectedCamera) return;
+        this.selectedCamera = obj;
+        this.dispatchEvent('selectedCameraChanged', {});
     }
 
     setSelectPointMode(enable) {
@@ -886,7 +914,8 @@ view.addEventListener('selectedPoint', (event) => {
         transformControlsWrapper.detach();
     }
 });
-view.addEventListener('selectedCameraChanged', (data) => {
+view.addEventListener('selectedCameraChanged', () => {
+    orbitControlsWrapper.orbitControls.object = view.selectedCamera;
     orbitControlsWrapper.orbitControls.update();
 });
 
@@ -1011,8 +1040,18 @@ function onKeyDown(event) {
             view.setSelectPointMode(true);
             break;
         case 'KeyZ':
-            if(view.selectedObject !== null)
-                sceneWrapper.fitCameraToSelection([view.selectedObject]);
+            var objs = [];
+            if(view.selectedObject === null) {
+                sceneWrapper.scene.traverse((obj) => {
+                    if(obj.userData.uid) objs.push(obj);
+                });
+            } else {
+                objs.push(view.selectedObject);
+            }
+            sceneWrapper.fitCameraToSelection(objs, view.selectedCamera, orbitControlsWrapper.orbitControls);
+            break;
+        case 'KeyG':
+            $('#gui').toggle();
             break;
     }
 }

@@ -354,6 +354,14 @@ function objectAdded(uid)
         data.type="camera"
         -- XXX: trick for giving an initial position for the default frontend camera
         data.absolutePose=sim.getObjectPose(handle,-1)
+
+        -- XXX: from name we assume camera type
+        data.name=sim.getObjectAlias(handle,0)
+
+        data.near=sim.getObjectFloatParam(handle,sim.camerafloatparam_near_clipping)
+        data.far=sim.getObjectFloatParam(handle,sim.camerafloatparam_far_clipping)
+        data.fov=sim.getObjectFloatParam(handle,sim.camerafloatparam_perspective_angle)
+        data.orthoSize=sim.getObjectFloatParam(handle,sim.camerafloatparam_ortho_size)
     elseif t==sim.object_light_type then
         data.type="light"
     elseif t==sim.object_dummy_type then
