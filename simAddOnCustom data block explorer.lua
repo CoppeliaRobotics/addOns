@@ -91,8 +91,10 @@ decoders={
 
 function getTagType(tag)
     -- standard tags that have known types:
-    if tag=='__info__' or tag=='__config__' then
+    if tag=='__info__' or tag=='__config__' or tag=='__schema__' then
         return 'table'
+    elseif tag=='__type__' then
+        return 'string'
     end
 
     if info and info.blocks and info.blocks[tag] then
