@@ -13,7 +13,7 @@ function sysCall_init()
     maxHeight=0
     for i=1,#allChars,1 do
         local char=string.sub(allChars,i,i)
-        local m=sim.getObjectHandle('./'..char,{proxy=h})
+        local m=sim.getObject('./'..char,{proxy=h})
         sim.setModelProperty(m,0)
         allLetters[char]=sim.saveModel(m)
         local s=sim.getShapeBB(m)
