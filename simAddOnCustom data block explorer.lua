@@ -171,7 +171,7 @@ function showDlg()
         end
         local title="Custom data blocks in scene:"
         if object~=sim.handle_scene then
-            title="Custom data blocks in object '<b>"..sim.getObjectAlias(object,1).."</b>':"
+            title="Custom data blocks in object '<b>"..sim.getObjectAlias(object,0).."</b>':"
         end
         if not ui then
             xml='<ui title="Custom Data Block Explorer" activate="false" closeable="true" on-close="onCloseClicked" resizable="false" '..pos..'>'
@@ -228,7 +228,7 @@ function sysCall_nonSimulation()
     content=nil
     object=-1
     info=nil
-    local tags={}
+    local tags=nil
     if s then
         if #s>=1 then
             if s[#s]>=0 then
