@@ -141,7 +141,7 @@ function coll(ui,id)
                         if allCollisions[objPair[1]][objPair[2]]==nil then
                             local indic1=sim.getObjectInt32Param(objPair[1],sim.objintparam_collection_self_collision_indicator)
                             local indic2=sim.getObjectInt32Param(objPair[2],sim.objintparam_collection_self_collision_indicator)
-                            if math.abs(indic1-indic2)~=1 then
+                            if math.abs(indic1-indic2)~=1 and math.abs(indic1-indic2)~=10 and math.abs(indic1-indic2)~=100 and math.abs(indic1-indic2)~=1000 and math.abs(indic1-indic2)~=10000 and math.abs(indic1-indic2)~=100000 then
                                 local r,collPair=sim.checkCollision(objPair[1],objPair[2])
                                 if r>0 then
                                     sim.addLog(sim.verbosity_scriptinfos,"collision detected between object "..sim.getObjectAlias(objPair[1],5).." and object "..sim.getObjectAlias(objPair[2],5))
