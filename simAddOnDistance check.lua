@@ -39,7 +39,7 @@ function dist(ui,id)
     local r,distData,pair=sim.checkDistance(entity1,entity2)
     sim.destroyCollection(entity1)
     sim.destroyCollection(entity2)
-    restoreData={time=sim.getSystemTimeInMs(-1)}
+    restoreData={time=sim.getSystemTime()}
     if r>0 then
         sim.addLog(sim.verbosity_scriptinfos,string.format("measured distance is %.3f meters",distData[7]))
         restoreData.lineContainer=sim.addDrawingObject(sim.drawing_lines,4,0,-1,99,{0,0,0})
@@ -153,7 +153,7 @@ function update()
         hideDlg()
     end
     if restoreData then
-        if sim.getSystemTimeInMs(restoreData.time)>1000 then
+        if sim.getSystemTime()-restoreData.time>1 then
             restoreScene()
         end
     end

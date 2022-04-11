@@ -202,7 +202,7 @@ function coll(ui,id)
         if id==2 then
             restoreData.selfCollEntity=obj1
         end
-        restoreData.time=sim.getSystemTimeInMs(-1)
+        restoreData.time=sim.getSystemTime()
     end
 end
 
@@ -327,7 +327,7 @@ function update()
         hideDlg()
     end
     if restoreData then
-        if sim.getSystemTimeInMs(restoreData.time)>1000 then
+        if sim.getSystemTime()-restoreData.time>1 then
             restoreScene(restoreData.selfCollEntity)
         end
     end
