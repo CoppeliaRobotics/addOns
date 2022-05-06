@@ -44,7 +44,7 @@ function sysCall_nonSimulation()
         m[2]=y[1]  m[6]=y[2]  m[10]=y[3]
         m[3]=z[1]  m[7]=z[2]  m[11]=z[3]
         
-        local sensor=sim.createProximitySensor(sim.proximitysensor_ray_subtype,16,1,{3,3,2,2,1,1,0,0},{0,30,0.01,0.01,0.01,0.01,0,0,0,0,0,0,0.01,0,0})
+        local sensor=sim.createProximitySensor(sim.proximitysensor_ray_subtype,16,1,{3,3,2,2,1,1,0,0},{0,2000,0.01,0.01,0.01,0.01,0,0,0,0,0,0,0.01,0,0})
         sim.setObjectMatrix(sensor,sim.handle_world,m)
         r,d,pt,o,n=sim.checkProximitySensor(sensor,coll)
         sim.removeObjects({sensor})
