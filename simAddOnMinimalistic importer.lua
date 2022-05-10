@@ -119,12 +119,12 @@ function sysCall_init()
                             limits[2]=limits[2]-limits[1]
                         end
                         if jointType=="prismatic" then
-                            objHandle=sim.createJoint(sim.joint_prismatic_subtype,sim.jointmode_passive,0)
+                            objHandle=sim.createJoint(sim.joint_prismatic_subtype,sim.jointmode_kinematic,0)
                             sim.setJointInterval(objHandle,false,limits)
                             sim.setJointPosition(objHandle,tonumber(position))
                         end
                         if jointType=="revolute" then
-                            objHandle=sim.createJoint(sim.joint_revolute_subtype,sim.jointmode_passive,0)
+                            objHandle=sim.createJoint(sim.joint_revolute_subtype,sim.jointmode_kinematic,0)
                             if limits then
                                 sim.setJointInterval(objHandle,false,limits)
                             else
@@ -133,7 +133,7 @@ function sysCall_init()
                             sim.setJointPosition(objHandle,tonumber(position))
                         end
                         if jointType=="spherical" then
-                            objHandle=sim.createJoint(sim.joint_spherical_subtype,sim.jointmode_passive,0)
+                            objHandle=sim.createJoint(sim.joint_spherical_subtype,sim.jointmode_kinematic,0)
                             sim.setJointInterval(objHandle,false,{math.pi,2*math.pi})
                             sim.setSphericalJointMatrix(objHandle,getNumberTable(position))
                         end
