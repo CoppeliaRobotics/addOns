@@ -3,6 +3,7 @@ function sysCall_info()
 end
 
 function sysCall_init()
+    cbor=require'org.conman.cbor'
     sim.addLog(sim.verbosity_scriptinfos,"This tool will display the custom data blocks attached to the selected object, or the custom data blocks attached to the scene, if no object is selected. Custom data blocks can be written and read with simWriteCustomDataBlock and simReadCustomDataBlock.")
     object=-1
     selectedDecoder=1
@@ -15,22 +16,21 @@ end
 decoders={
     {
         name='auto',
-        f=function(tag,data)
-            local t=getTagType(tag)
-            if t then
-                local d=getDecoderForType(t)
+        f=function(tag,data,type)
+            if type then
+                local d=getDecoderForType(type)
                 if d then
-                    return d.f(tag,data)
+                    return d.f(tag,data,type)
                 else
-                    error('unknown type: '..t)
+                    error('unknown type: '..type)
                 end
             end
-            return '<font color=#b75501>For automatic selection of decoder, there must be an \'__info__\' block with type information, e.g.: {myTagName={type=\'table\'}}</font>'
+            return '<font color=#b75501>For automatic selection of decoder, there must be an \'__info__\' block with type information, e.g.: {blocks={myTagName={type=\'table\'}}}, which is normally written by sim.writeCustomTableData or sim.writeCustomDataBlockEx.</font>'
         end,
     },
     {
         name='binary',
-        f=function(tag,data)
+        f=function(tag,data,type)
             return '<tt>'..data:gsub('(.)',function(y)
                 return string.format('%02X ',string.byte(y))
             end)..'</tt>'
@@ -38,13 +38,13 @@ decoders={
     },
     {
         name='string',
-        f=function(tag,data)
+        f=function(tag,data,type)
             return data
         end,
     },
     {
         name='table',
-        f=function(tag,data)
+        f=function(tag,data,type)
             local status,data=pcall(function() return sim.unpackTable(data) end)
             if status then
                 return getAsString(data):gsub('[\n ]',{['\n']='<br/>',[' ']='&nbsp;'})
@@ -52,55 +52,51 @@ decoders={
         end,
     },
     {
+        name='cbor',
+        f=function(tag,data,type)
+            local status,data=pcall(function() return cbor.decode(data) end)
+            if status then
+                return getAsString(data):gsub('[\n ]',{['\n']='<br/>',[' ']='&nbsp;'})
+            end
+        end,
+    },
+    {
         name='float[]',
-        f=function(tag,data)
+        f=function(tag,data,type)
             return getAsString(sim.unpackFloatTable(data))
         end,
     },
     {
         name='double[]',
-        f=function(tag,data)
+        f=function(tag,data,type)
             return getAsString(sim.unpackDoubleTable(data))
         end,
     },
     {
         name='int32[]',
-        f=function(tag,data)
+        f=function(tag,data,type)
             return getAsString(sim.unpackInt32Table(data))
         end,
     },
     {
         name='uint8[]',
-        f=function(tag,data)
+        f=function(tag,data,type)
             return getAsString(sim.unpackUInt8Table(data))
         end,
     },
     {
         name='uint16[]',
-        f=function(tag,data)
+        f=function(tag,data,type)
             return getAsString(sim.unpackUInt16Table(data))
         end,
     },
     {
         name='uint32[]',
-        f=function(tag,data)
+        f=function(tag,data,type)
             return getAsString(sim.unpackUInt32Table(data))
         end,
     },
 }
-
-function getTagType(tag)
-    -- standard tags that have known types:
-    if tag=='__info__' or tag=='__config__' or tag=='__schema__' then
-        return 'table'
-    elseif tag=='__type__' then
-        return 'string'
-    end
-
-    if info and info.blocks and info.blocks[tag] then
-        return info.blocks[tag]['type']
-    end
-end
 
 function getDecoderForType(t)
     for i,decoder in ipairs(decoders) do
@@ -128,7 +124,7 @@ function onDecoderChanged()
     if selectedDecoder>0 then
         local decoder=decoders[selectedDecoder]
         if selectedTag then
-            local html=decoder.f(selectedTag,content[selectedTag])
+            local html=decoder.f(selectedTag,content[selectedTag][1],content[selectedTag][2])
             if html then
                 simUI.setText(ui,800,html)
             else
@@ -184,8 +180,7 @@ function showDlg()
                 xml=xml..'<row>'
                 xml=xml..'<item>'..tag..'</item>'
                 xml=xml..'<item>'..#data..'</item>'
-                local t=getTagType(tag)
-                if t then xml=xml..'<item>'..t..'</item>' end
+                if data[2] then xml=xml..'<item>'..data[2]..'</item>' end
                 xml=xml..'</row>'
                 i=i+1
             end
@@ -240,8 +235,7 @@ function sysCall_nonSimulation()
     end
     if object~=-1 then
         tags=sim.readCustomDataBlockTags(object)
-        info=sim.readCustomDataBlock(object,'__info__')
-        if info then info=sim.unpackTable(info) end
+        info=sim.readCustomTableData(object,'__info__')
     end
     if previousObject~=object then
         hideDlg()
@@ -249,7 +243,7 @@ function sysCall_nonSimulation()
     if tags then
         content={}
         for i,tag in ipairs(tags) do
-            content[tag]=sim.readCustomDataBlock(object,tag)
+            content[tag]={sim.readCustomDataBlockEx(object,tag)}
         end
         local _=function(x) return x~=nil and sim.packTable(x) or nil end
         if _(content)~=_(previousContent) then
