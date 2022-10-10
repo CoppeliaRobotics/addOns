@@ -8,6 +8,7 @@ end
 
 function sysCall_init()
     createDummies=false
+    parent=-1
     sim.addLog(sim.verbosity_scriptinfos,"This tool allows to sample points in the scene, and optionally create dummies from them")
     showDlg()
 end
@@ -43,7 +44,7 @@ function sysCall_nonSimulation()
         m[1]=x[1]  m[5]=x[2]  m[9]=x[3]
         m[2]=y[1]  m[6]=y[2]  m[10]=y[3]
         m[3]=z[1]  m[7]=z[2]  m[11]=z[3]
-        
+
         local sensor=sim.createProximitySensor(sim.proximitysensor_ray_subtype,16,1,{3,3,2,2,1,1,0,0},{0,2000,0.01,0.01,0.01,0.01,0,0,0,0,0,0,0.01,0,0})
         sim.setObjectMatrix(sensor,sim.handle_world,m)
         r,d,pt,o,n=sim.checkProximitySensor(sensor,coll)
@@ -57,10 +58,10 @@ function sysCall_nonSimulation()
             n=sim.multiplyVector(m,n)
             sim.addDrawingObjectItem(pts,pt)
             sim.addDrawingObjectItem(lines,{pt[1],pt[2],pt[3],pt[1]+n[1]*0.1,pt[2]+n[2]*0.1,pt[3]+n[3]*0.1})
-            
+
             simUI.setLabelText(ui,2,string.format("Position: (%.3f, %.3f, %.3f)",pt[1],pt[2],pt[3]))
             simUI.setLabelText(ui,3,string.format("Normal vector: (%.3f, %.3f, %.3f)",n[1],n[2],n[3]))
-            
+
             local c=sim.getInt32Param(sim.intparam_mouseclickcounterdown)
             if c~=clickCnt and createDummies then
                 clickCnt=c
@@ -84,6 +85,13 @@ function sysCall_nonSimulation()
                     m[3]=1  m[7]=0  m[11]=0
                 end
                 sim.setObjectMatrix(h,sim.handle_world,m)
+                sim.setObjectParent(h,parent or -1)
+                if simUI.getCheckboxValue(ui,5) then
+                    sim.setObjectAlias(h,'ctrlPt')
+                    index=index and (index+1) or 3
+                    sim.writeCustomTableData(h,'ABC_PATHCTRLPT',{handle=h,index=index})
+                end
+                sim.setObjectPose(h,h,{0,0,simUI.getSpinboxValue(ui,8),0,0,0,1})
             end
         end
     end
@@ -120,12 +128,18 @@ function showDlg()
             pos='position="'..uiPos[1]..','..uiPos[2]..'" placement="absolute"'
         end
         local xml ='<ui title="Point sampler" activate="false" closeable="true" on-close="close_callback" '..pos..[[>
-            <checkbox checked="false" text="Create a dummy with each click" on-change="createDummy_callback" id="1" />
             <label text="Position:" id="2"/>
             <label text="Normal vector:" id="3"/>
+            <checkbox checked="false" text="Create a dummy with each click" on-change="createDummy_callback" id="1" />
+            <checkbox checked="false" enabled="false" text="Path control point" style="margin-left: 2em" id="5" />
+            <label id="6" text="Parent:" style="margin-left: 2em"/>
+            <combobox id="4" on-change="parentChange_callback" style="margin-left: 2em"/>
+            <label id="7" text="Offset: [m]" style="margin-left: 2em"/>
+            <spinbox id="8" value="0.0" step="0.01" style="margin-left: 2em"/>
         </ui>]]
         ui=simUI.create(xml)
-        simUI.setCheckboxValue(ui,1,createDummies and 2 or 0) 
+        populateParentCombobox()
+        simUI.setCheckboxValue(ui,1,createDummies and 2 or 0)
     end
 end
 
@@ -142,6 +156,24 @@ end
 
 function createDummy_callback(ui,id,v)
     createDummies=not createDummies
+    for id=4,8 do simUI.setEnabled(ui,id,createDummies) end
+end
+
+function populateParentCombobox()
+    local items,sel={},simUI.getComboboxSelectedIndex(ui,4)
+    for i,h in ipairs(sim.getObjectsInTree(sim.handle_scene)) do
+        table.insert(items,sim.getObjectAlias(h,1))
+        if parent==h then sel=i-1 end
+    end
+    simUI.setComboboxItems(ui,4,items,sel)
+end
+
+function parentChange_callback(ui,id,v)
+    if v<0 then parent=-1; return end
+    local txt=simUI.getComboboxItemText(ui,id,v)
+    local h=sim.getObject(txt)
+    parent=h
+    populateParentCombobox()
 end
 
 function close_callback()
