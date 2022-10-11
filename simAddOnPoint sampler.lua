@@ -131,11 +131,11 @@ function showDlg()
             <label text="Position:" id="2"/>
             <label text="Normal vector:" id="3"/>
             <checkbox checked="false" text="Create a dummy with each click" on-change="createDummy_callback" id="1" />
+            <label id="6" enabled="false" text="Parent:" style="margin-left: 2em"/>
+            <combobox id="4" enabled="false" on-change="parentChange_callback" style="margin-left: 2em"/>
+            <label id="7" enabled="false" text="Offset: [m]" style="margin-left: 2em"/>
+            <spinbox id="8" enabled="false" value="0.0" step="0.01" style="margin-left: 2em"/>
             <checkbox checked="false" enabled="false" text="Path control point" style="margin-left: 2em" id="5" />
-            <label id="6" text="Parent:" style="margin-left: 2em"/>
-            <combobox id="4" on-change="parentChange_callback" style="margin-left: 2em"/>
-            <label id="7" text="Offset: [m]" style="margin-left: 2em"/>
-            <spinbox id="8" value="0.0" step="0.01" style="margin-left: 2em"/>
         </ui>]]
         ui=simUI.create(xml)
         populateParentCombobox()
