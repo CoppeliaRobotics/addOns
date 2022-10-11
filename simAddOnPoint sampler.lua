@@ -155,15 +155,18 @@ function hideDlg()
 end
 
 function createDummy_callback(ui,id,v)
-    createDummies=not createDummies
+    createDummies=v>0
     for id=4,8 do simUI.setEnabled(ui,id,createDummies) end
+    if createDummies then populateParentCombobox() end
 end
 
 function populateParentCombobox()
     local items,sel={},simUI.getComboboxSelectedIndex(ui,4)
+    local seln=simUI.getComboboxItemText(ui,4,sel)
     for i,h in ipairs(sim.getObjectsInTree(sim.handle_scene)) do
-        table.insert(items,sim.getObjectAlias(h,1))
-        if parent==h then sel=i-1 end
+        local n=sim.getObjectAlias(h,1)
+        table.insert(items,n)
+        if n==seln then sel=i-1 end
     end
     simUI.setComboboxItems(ui,4,items,sel)
 end
@@ -173,7 +176,6 @@ function parentChange_callback(ui,id,v)
     local txt=simUI.getComboboxItemText(ui,id,v)
     local h=sim.getObject(txt)
     parent=h
-    populateParentCombobox()
 end
 
 function close_callback()
