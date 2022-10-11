@@ -86,7 +86,7 @@ function sysCall_nonSimulation()
                 end
                 sim.setObjectMatrix(h,sim.handle_world,m)
                 sim.setObjectParent(h,parent or -1)
-                if simUI.getCheckboxValue(ui,5) then
+                if simUI.getCheckboxValue(ui,5)>0 then
                     sim.setObjectAlias(h,'ctrlPt')
                     index=index and (index+1) or 3
                     sim.writeCustomTableData(h,'ABC_PATHCTRLPT',{handle=h,index=index})
