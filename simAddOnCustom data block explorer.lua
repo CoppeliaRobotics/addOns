@@ -179,7 +179,7 @@ function showDlg()
                 if tag==selectedTag then selectedIndex=i end
                 xml=xml..'<row>'
                 xml=xml..'<item>'..tag..'</item>'
-                xml=xml..'<item>'..#data..'</item>'
+                xml=xml..'<item>'..#data[1]..'</item>'
                 if data[2] then xml=xml..'<item>'..data[2]..'</item>' end
                 xml=xml..'</row>'
                 i=i+1
