@@ -170,7 +170,7 @@ function showDlg()
             title="Custom data blocks in object '<b>"..sim.getObjectAlias(object,0).."</b>':"
         end
         if not ui then
-            xml='<ui title="Custom Data Block Explorer" activate="false" closeable="true" on-close="onCloseClicked" resizable="false" '..pos..'>'
+            xml='<ui title="Custom Data Block Explorer" activate="false" closeable="true" on-close="onCloseClicked" resizable="true" '..pos..'>'
             xml=xml..'<group flat="true"><label text="'..title..'" /></group>'
             xml=xml..'<table id="600" selection-mode="row" editable="false" on-selection-change="onSelectionChange">'
             xml=xml..'<header><item>Tag name</item><item>Size (bytes)</item><item>Type</item></header>'
