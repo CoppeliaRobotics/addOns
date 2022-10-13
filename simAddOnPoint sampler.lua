@@ -86,11 +86,6 @@ function sysCall_nonSimulation()
                 end
                 sim.setObjectMatrix(h,sim.handle_world,m)
                 sim.setObjectParent(h,parent or -1)
-                if simUI.getCheckboxValue(ui,5)>0 then
-                    sim.setObjectAlias(h,'ctrlPt')
-                    index=index and (index+1) or 3
-                    sim.writeCustomTableData(h,'ABC_PATHCTRLPT',{handle=h,index=index})
-                end
                 sim.setObjectPose(h,h,{0,0,simUI.getSpinboxValue(ui,8),0,0,0,1})
             end
         end
@@ -135,7 +130,6 @@ function showDlg()
             <combobox id="4" enabled="false" on-change="parentChange_callback" style="margin-left: 2em"/>
             <label id="7" enabled="false" text="Offset: [m]" style="margin-left: 2em"/>
             <spinbox id="8" enabled="false" value="0.0" step="0.01" style="margin-left: 2em"/>
-            <checkbox checked="false" enabled="false" text="Path control point" style="margin-left: 2em" id="5" />
         </ui>]]
         ui=simUI.create(xml)
         populateParentCombobox()
