@@ -52,7 +52,7 @@ function onSelectionChanged()
     ui=simUI.create(xml)
 end
 
-function sysCall_nonSimulation()
+function checkSelectionChanged()
     local newsel=sim.getObjectSelection()
     table.sort(newsel)
     if sim.packInt32Table(sel)~=sim.packInt32Table(newsel) then
@@ -60,6 +60,14 @@ function sysCall_nonSimulation()
         onSelectionChanged()
         return
     end
+end
+
+function sysCall_nonSimulation()
+    checkSelectionChanged()
+end
+
+function sysCall_sensing()
+    checkSelectionChanged()
 end
 
 function sysCall_cleanup()
