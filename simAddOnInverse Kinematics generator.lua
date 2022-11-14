@@ -37,7 +37,7 @@ function sysCall_init()
             </group>
             <label text="Handling:" />
             <group flat="true" content-margins="0,0,0,0" layout="vbox">
-                <checkbox id="${ui_chkHandleInSimulation}" text="During simulation" on-change="updateUi" />
+                <checkbox id="${ui_chkHandleInSimulation}" text="During simulation" checked="true" on-change="updateUi" />
                 <checkbox id="${ui_chkHandleInNonSimulation}" text="When not simulating" on-change="updateUi" />
             </group>
             <label text="" />
