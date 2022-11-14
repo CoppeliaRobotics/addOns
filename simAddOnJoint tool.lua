@@ -10,6 +10,7 @@ function sysCall_init()
     sim.addLog(sim.verbosity_scriptinfos,"Select an object to use the Joint tool.")
     sel={}
     idToJointMap={}
+    jointToIdMap={}
 end
 
 function setJointPos(ui,id,val)
@@ -27,12 +28,14 @@ end
 
 function onSelectionChanged()
     idToJointMap={}
+    jointToIdMap={}
     local nid=1
     closeUi()
     for i,sh in ipairs(sel) do
         for j,h in ipairs(sim.getObjectsInTree(sh,sim.object_joint_type)) do
             local mh,a,b=sim.getJointDependency(h)
-            if mh==-1 then
+            if mh==-1 and not jointToIdMap[h] then
+                jointToIdMap[h]=nid
                 idToJointMap[nid]=h
                 nid=nid+1
             end
