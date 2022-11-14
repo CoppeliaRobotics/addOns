@@ -60,34 +60,39 @@ end
 function onModelChanged()
     updateUi()
     local robotModel=getRobotModelHandle()
+    local needsUpdateUi=false
     if robotModel then
         -- make some reasonable guesses:
 
         -- select base = robot model
-        local idx=0
-        for i,h in ipairs(comboRobotBaseHandle) do
-            if h==robotModel then idx=i; break end
+        local idx=table.find(comboRobotBaseHandle,robotModel)
+        if idx then
+            simUI.setComboboxSelectedIndex(ui,ui_comboRobotBase,idx-1)
+            needsUpdateUi=true
         end
-        simUI.setComboboxSelectedIndex(ui,ui_comboRobotBase,idx-1)
 
         -- find 'tip' within model:
         local tip=sim.getObject('./tip',{proxy=robotModel,noError=true})
         if tip~=-1 then
-            local idx=0
-            for i,h in ipairs(comboRobotTipHandle) do
-                if h==tip then idx=i; break end
+            local idx=table.find(comboRobotTipHandle,tip)
+            if idx then
+                simUI.setComboboxSelectedIndex(ui,ui_comboRobotTip,idx-1)
+                needsUpdateUi=true
             end
-            simUI.setComboboxSelectedIndex(ui,ui_comboRobotTip,idx-1)
         end
 
         -- find 'target' within model:
         local target=sim.getObject('./target',{proxy=robotModel,noError=true})
         if target~=-1 then
-            local idx=0
-            for i,h in ipairs(comboRobotTargetHandle) do
-                if h==target then idx=i; break end
+            local idx=table.find(comboRobotTargetHandle,target)
+            if idx then
+                simUI.setComboboxSelectedIndex(ui,ui_comboRobotTarget,idx-1)
+                needsUpdateUi=true
             end
-            simUI.setComboboxSelectedIndex(ui,ui_comboRobotTarget,idx-1)
+        end
+
+        if needsUpdateUi then
+            updateUi()
         end
     end
 end
