@@ -45,6 +45,13 @@ function sysCall_init()
         </group>
     </ui>]])
     updateUi()
+    local sel=sim.getObjectSelection()
+    if #sel==1 then
+        local idx=table.find(comboRobotModelHandle,sel[1])
+        if idx then
+            simUI.setComboboxSelectedIndex(ui,ui_comboRobotModel,idx-1,false)
+        end
+    end
 end
 
 function sysCall_nonSimulation()
