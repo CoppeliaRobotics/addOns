@@ -29,16 +29,25 @@ function sysCall_init()
                 </group>
             </group>
             <label text="Solver:" />
-            <group flat="true" content-margins="0,0,0,0" layout="form">
-                <label text="Max. iterations:" />
-                <spinbox id="${ui_spinMaxIterations}" minimum="1" maximum="1000" value="10" on-change="updateUi" />
-                <label text="Damping factor:" />
-                <spinbox id="${ui_spinDampingFactor}" minimum="0" maximum="10" value="0.01" step="0.01" on-change="updateUi" />
+            <group flat="true" content-margins="0,0,0,0" layout="vbox">
+                <group flat="true" content-margins="0,0,0,0" layout="form">
+                    <label text="Max. iterations:" />
+                    <spinbox id="${ui_spinMaxIterations}" minimum="1" maximum="1000" value="10" on-change="updateUi" />
+                    <label text="Damping factor:" />
+                    <spinbox id="${ui_spinDampingFactor}" minimum="0" maximum="10" value="0.01" step="0.01" on-change="updateUi" />
+                </group>
+                <checkbox id="${ui_chkAbortOnJointLimitsHit}" text="Abort on joint limits hit" on-change="updateUi" />
             </group>
             <label text="Handling:" />
             <group flat="true" content-margins="0,0,0,0" layout="vbox">
                 <checkbox id="${ui_chkHandleInSimulation}" text="During simulation" checked="true" on-change="updateUi" />
                 <checkbox id="${ui_chkHandleInNonSimulation}" text="When not simulating" on-change="updateUi" />
+            </group>
+            <label text="Script:" />
+            <group flat="true" content-margins="0,0,0,0" layout="vbox">
+                <checkbox id="${ui_chkGenSimJoints}" text="Table of joints" checked="true" on-change="updateUi" />
+                <checkbox id="${ui_chkGenGetSetConfig}" text="Functions to get/set config" on-change="updateUi" />
+                <checkbox id="${ui_chkGenIKVars}" text="IK variables (ikBase, ikTip, ikTarget, ikJoints)" on-change="updateUi" />
             </group>
             <label text="" />
             <button id="${ui_btnGenerate}" text="Generate" on-click="generate" />
@@ -236,6 +245,9 @@ function generate()
     local scriptText=''
     local function appendLine(...) scriptText=scriptText..string.format(...)..'\n' end
     local robotModel=getRobotModelHandle()
+    local simBase=getRobotBaseHandle()
+    local simTip=getRobotTipHandle()
+    local simTarget=getRobotTargetHandle()
     local existingIK=sim.getObject('./IK',{proxy=robotModel,noError=true})
     if existingIK~=-1 then
         if simUI.msgbox_result.ok~=simUI.msgBox(simUI.msgbox_type.warning,simUI.msgbox_buttons.okcancel,'IK already exists','The specified model already contains an \'IK\' object. By proceeding, it will be replaced!') then return end
@@ -246,17 +258,43 @@ function generate()
     local maxIterations=simUI.getSpinboxValue(ui,ui_spinMaxIterations)
     local handleInSim=simUI.getCheckboxValue(ui,ui_chkHandleInSimulation)>0
     local handleInNonSim=simUI.getCheckboxValue(ui,ui_chkHandleInNonSimulation)>0
+    local abortOnJointLimitsHit=simUI.getCheckboxValue(ui,ui_chkAbortOnJointLimitsHit)>0
+    local genSimJoints=simUI.getCheckboxValue(ui,ui_chkGenSimJoints)>0
+    local genGetSetConfig=simUI.getCheckboxValue(ui,ui_chkGenGetSetConfig)>0
+    local genIKVars=simUI.getCheckboxValue(ui,ui_chkGenIKVars)>0
 
     appendLine("function sysCall_init()")
     appendLine("    self=sim.getObject'.'")
     appendLine("    parent=sim.getObjectParent(self)")
     appendLine("")
-    appendLine("    simBase=sim.getObject('%s',{proxy=parent})",sim.getObjectAliasRelative(getRobotBaseHandle(),robotModel,1))
-    appendLine("    simTip=sim.getObject('%s',{proxy=parent})",sim.getObjectAliasRelative(getRobotTipHandle(),robotModel,1))
-    appendLine("    simTarget=sim.getObject('%s',{proxy=parent})",sim.getObjectAliasRelative(getRobotTargetHandle(),robotModel,1))
+    appendLine("    simBase=sim.getObject('%s',{proxy=parent})",sim.getObjectAliasRelative(simBase,robotModel,1))
+    appendLine("    simTip=sim.getObject('%s',{proxy=parent})",sim.getObjectAliasRelative(simTip,robotModel,1))
+    appendLine("    simTarget=sim.getObject('%s',{proxy=parent})",sim.getObjectAliasRelative(simTarget,robotModel,1))
     appendLine("")
     appendLine("    ikEnv=simIK.createEnvironment()")
     appendLine("")
+    if genSimJoints then
+        local tmp=simTip
+        local jointAliases={}
+        while true do
+            if sim.getObjectType(tmp)==sim.object_joint_type then
+                table.insert(jointAliases,1,sim.getObjectAliasRelative(tmp,robotModel,1))
+            end
+            if tmp==simBase then break end
+            tmp=sim.getObjectParent(tmp)
+            if tmp==-1 then break end
+        end
+        appendLine("    simJoints={")
+        for _,a in ipairs(jointAliases) do
+            appendLine("        sim.getObject('%s',{proxy=parent}),",a)
+        end
+        appendLine("    }")
+        if genGetSetConfig then
+            appendLine("    getConfig=partial(map,sim.getJointPosition,simJoints)")
+            appendLine("    setConfig=partial(foreach,sim.setJointPosition,simJoints)")
+        end
+        appendLine("")
+    end
     appendLine("    dampingFactor=%f",dampingFactor)
     appendLine("    maxIterations=%d",maxIterations)
     appendLine("    if dampingFactor>0 then")
@@ -267,7 +305,25 @@ function generate()
     appendLine("    constraint=%s",getConstraintVar())
     appendLine("    ikGroup=simIK.createIkGroup(ikEnv)")
     appendLine("    simIK.setIkGroupCalculation(ikEnv,ikGroup,method,dampingFactor,maxIterations)")
-    appendLine("    simIK.addIkElementFromScene(ikEnv,ikGroup,simBase,simTip,simTarget,constraint)")
+    if abortOnJointLimitsHit then
+        appendLine("    local flags=simIK.getIkGroupFlags(ikEnv,ikGroup)")
+        appendLine("    flags=flags|16 -- abort on joint limits hit")
+        appendLine("    simIK.setIkGroupFlags(ikEnv,ikGroup,flags)")
+    end
+    appendLine("    _,ikHandleMap=simIK.addIkElementFromScene(ikEnv,ikGroup,simBase,simTip,simTarget,constraint)")
+    if genIKVars then
+        appendLine("")
+        appendLine("    ikBase=ikHandleMap[simBase]")
+        appendLine("    ikTip=ikHandleMap[simBase]")
+        appendLine("    ikTarget=ikHandleMap[simTarget]")
+        if genSimJoints then
+            appendLine("    ikJoints=map(table.index(ikHandleMap),simJoints)")
+            if genGetSetConfig then
+                appendLine("    getIkConfig=partial(map,partial(simIK.getJointPosition,ikEnv),ikJoints)")
+                appendLine("    setIkConfig=partial(foreach,partial(simIK.setJointPosition,ikEnv),ikJoints)")
+            end
+        end
+    end
     appendLine("end")
 
     appendLine("")
