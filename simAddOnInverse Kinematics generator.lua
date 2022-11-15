@@ -333,7 +333,7 @@ function generate()
 
     appendLine("")
     appendLine("function handleIk()")
-    appendLine("    local result,failureReason=simIK.applyIkEnvironmentToScene(ikEnv,ikGroup,true)")
+    appendLine("    local result,failureReason=simIK.handleIkGroup(ikEnv,ikGroup,{syncWorlds=true})")
     appendLine("    if result~=simIK.result_success then")
     appendLine("        print('IK failed: '..simIK.getFailureDescription(failureReason))")
     appendLine("    end")
