@@ -235,6 +235,9 @@ function updateUi()
         getRobotModelHandle() and getRobotBaseHandle() and getRobotTipHandle() and getRobotTargetHandle()
         and getConstraint()~=0
     ))
+    if simUI.getCheckboxValue(ui,ui_chkGenGetSetConfig)>0 and simUI.getCheckboxValue(ui,ui_chkGenSimJoints)==0 then
+        simUI.setCheckboxValue(ui,ui_chkGenSimJoints,2)
+    end
 end
 
 function onClose()
