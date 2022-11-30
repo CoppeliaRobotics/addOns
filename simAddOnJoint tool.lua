@@ -27,6 +27,7 @@ function closeUi()
 end
 
 function onSelectionChanged()
+    aliasOption=sim.getNamedInt32Param('addons.jointTool.aliasOption') or -1
     idToJointMap={}
     jointToIdMap={}
     local nid=1
@@ -48,7 +49,7 @@ function onSelectionChanged()
         local v=sim.getJointPosition(h)*180/math.pi
         local cyclic,i=sim.getJointInterval(h)
         local vmin,vmax=i[1]*180/math.pi,(i[1]+i[2])*180/math.pi
-        xml=xml..string.format('    <label text="%s" />\n',sim.getObjectAlias(h))
+        xml=xml..string.format('    <label text="%s" />\n',sim.getObjectAlias(h,aliasOption))
         xml=xml..string.format('    <group flat="true" content-margins="0,0,0,0" layout="hbox"><spinbox id="%s" value="%f" minimum="%f" maximum="%f" step="0.5" on-change="setJointPos" /><label text="%.1f~%.1f [deg]" enabled="false" /></group>\n',id,v,vmin,vmax,vmin,vmax)
     end
     xml=xml..'</ui>'
