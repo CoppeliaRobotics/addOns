@@ -166,44 +166,28 @@ function createPath()
     sim.setObjectInt32Param(pathDummy,sim.objintparam_visibility_layer,0)
     sim.setObjectProperty(pathDummy,sim.objectproperty_collapsed)
     local s=sim.addScript(sim.scripttype_customizationscript)
-    local t=
-[[function sysCall_init()
-    self=sim.getObject'.'
-    states={}
-end
-
-function sysCall_userConfig()
-    local i=0
-    while true do
-        local childHandle=sim.getObjectChild(self,i)
-        if childHandle==-1 then break end
-        if not states[i] then
-            states[i]=sim.getScriptFunctions(sim.getScript(sim.scripttype_customizationscript,childHandle))
-        end
-        i=i+1
-    end
-    local skip=#states//8
-    for i=1,#states,skip do
-        states[i]:sysCall_userConfig()
-    end
-end]]
-    sim.setScriptStringParam(s,sim.scriptstringparam_text,t)
+    sim.setScriptStringParam(s,sim.scriptstringparam_text,
+[[require'models.robotConfigPath_customization'
+self=sim.getObject'.'
+states=Matrix(-1,]]..simOMPL.getStateSpaceDimension(task)..[[,sim.readCustomTableData(self,'path'))
+]])
     sim.associateScriptWithObject(s,pathDummy)
-    for i=1,simOMPL.getPathStateCount(task,path) do
-        local p=sim.createDummy(0.05)
-        sim.setObjectAlias(p,'State')
-        sim.setObjectParent(p,pathDummy)
-        sim.setObjectInt32Param(p,sim.objintparam_visibility_layer,0)
-        sim.writeCustomTableData(p,'config',simOMPL.getPathState(task,path,i))
-        local s=sim.addScript(sim.scripttype_customizationscript)
-        local t=
-[[require'models.robotState_customization'
+    sim.writeCustomTableData(pathDummy,'path',path)
+    local stateDummy=sim.createDummy(0.01)
+    sim.setObjectAlias(stateDummy,'State')
+    sim.setObjectParent(stateDummy,pathDummy,false)
+    sim.setObjectPose(stateDummy,pathDummy,{0,0,0,0,0,0,1})
+    sim.setObjectInt32Param(stateDummy,sim.objintparam_visibility_layer,0)
+    sim.setObjectProperty(stateDummy,sim.objectproperty_collapsed)
+    local s=sim.addScript(sim.scripttype_customizationscript)
+    sim.setScriptStringParam(s,sim.scriptstringparam_text,
+[[require'models.robotConfig_customization'
 model=sim.getObject'::'
+color={1,1,0}
 ik=false
-        ]]
-        sim.setScriptStringParam(s,sim.scriptstringparam_text,t)
-        sim.associateScriptWithObject(s,p)
-    end
+create=true
+]])
+    sim.associateScriptWithObject(s,stateDummy)
 end
 
 function getJoints()
@@ -255,11 +239,11 @@ end]===]
     sim.setScriptStringParam(script,sim.scriptstringparam_text,scriptText)
     sim.associateScriptWithObject(script,motionPlanningDummy)
     local startStateScript=sim.addScript(sim.scripttype_customizationscript)
-    sim.setScriptStringParam(startStateScript,sim.scriptstringparam_text,[[require'models.robotState_customization'
+    sim.setScriptStringParam(startStateScript,sim.scriptstringparam_text,[[require'models.robotConfig_customization'
 model=sim.getObject'::']])
     sim.associateScriptWithObject(startStateScript,startStateDummy)
     local goalStateScript=sim.addScript(sim.scripttype_customizationscript)
-    sim.setScriptStringParam(goalStateScript,sim.scriptstringparam_text,[[require'models.robotState_customization'
+    sim.setScriptStringParam(goalStateScript,sim.scriptstringparam_text,[[require'models.robotConfig_customization'
 model=sim.getObject'::'
 color={0,1,0}]])
     sim.associateScriptWithObject(goalStateScript,goalStateDummy)
