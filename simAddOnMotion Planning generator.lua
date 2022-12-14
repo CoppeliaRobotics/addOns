@@ -167,12 +167,10 @@ function createPath()
     sim.setObjectProperty(pathDummy,sim.objectproperty_collapsed)
     local s=sim.addScript(sim.scripttype_customizationscript)
     sim.setScriptStringParam(s,sim.scriptstringparam_text,
-[[require'models.robotConfigPath_customization'
-self=sim.getObject'.'
-states=Matrix(-1,]]..simOMPL.getStateSpaceDimension(task)..[[,sim.readCustomTableData(self,'path'))
-]])
+[[require'models.robotConfigPath_customization']])
     sim.associateScriptWithObject(s,pathDummy)
-    sim.writeCustomTableData(pathDummy,'path',path)
+    local n=simOMPL.getStateSpaceDimension(task)
+    sim.writeCustomTableData(pathDummy,'path',Matrix(-1,n,path):totable{})
     local stateDummy=sim.createDummy(0.01)
     sim.setObjectAlias(stateDummy,'State')
     sim.setObjectParent(stateDummy,pathDummy,false)
