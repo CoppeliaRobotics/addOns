@@ -24,7 +24,7 @@ function sysCall_init()
             simUI.setComboboxSelectedIndex(ui,ui_comboRobotModel,idx-1,false)
         end
     end
-    local idxAlgo=table.find(algorithm,simOMPL.Algorithm.PRMstar)
+    local idxAlgo=table.find(algorithm,simOMPL.Algorithm.PRM)
     simUI.setComboboxSelectedIndex(ui,ui_comboAlgorithm,idxAlgo-1,false)
 end
 
@@ -68,6 +68,12 @@ function getAlgorithm()
     end
 end
 
+function getAlgorithmName()
+    if algorithmName then
+        return algorithmName[1+simUI.getComboboxSelectedIndex(ui,ui_comboAlgorithm)]
+    end
+end
+
 function populateComboAlgorithm()
     local robotModel=getRobotModelHandle()
     local oldAlgorithm,idx=getAlgorithm(),0
@@ -97,7 +103,7 @@ function generate()
     local scriptText=''
     local function appendLine(...) scriptText=scriptText..string.format(...)..'\n' end
     local robotModel=getRobotModelHandle()
-    local algorithm=getAlgorithm()
+    local algorithmName=getAlgorithmName()
     local existingMotionPlanning=sim.getObject('./MotionPlanning',{proxy=robotModel,noError=true})
     if existingMotionPlanning~=-1 then
         if simUI.msgbox_result.ok~=simUI.msgBox(simUI.msgbox_type.warning,simUI.msgbox_buttons.okcancel,'MotionPlanning already exists','The specified model already contains a \'MotionPlanning\' object. By proceeding, it will be replaced!') then return end
@@ -115,7 +121,7 @@ function generate()
     robotCollection=sim.createCollection()
     sim.addItemToCollection(robotCollection,sim.handle_tree,model,0)
     simOMPL.setCollisionPairs(task,{robotCollection,sim.handle_all})
-    setAlgorithm(simOMPL.Algorithm.PRMstar)
+    setAlgorithm(simOMPL.Algorithm.]===]..algorithmName..[===[)
     planTime=planTime or 10
     simplificationTime=simplificationTime or -1
     stateCnt=stateCnt or 0
