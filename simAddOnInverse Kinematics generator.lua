@@ -362,5 +362,6 @@ function generate()
     sim.setObjectParent(ikDummy,robotModel,false)
     sim.setObjectPose(ikDummy,robotModel,{0,0,0,0,0,0,1})
     sim.setObjectInt32Param(ikDummy,sim.objintparam_visibility_layer,0)
+    sim.setObjectInt32Param(ikDummy,sim.objintparam_manipulation_permissions,0)
     leaveNow=true
 end
