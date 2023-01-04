@@ -334,6 +334,16 @@ function generate()
     appendLine("end")
 
     appendLine("")
+    appendLine("function getTip()")
+    appendLine("    return simTip")
+    appendLine("end")
+
+    appendLine("")
+    appendLine("function getTarget()")
+    appendLine("    return simTarget")
+    appendLine("end")
+
+    appendLine("")
     appendLine("function handleIk()")
     appendLine("    local result,failureReason=simIK.handleGroup(ikEnv,ikGroup,{syncWorlds=true})")
     appendLine("    if result~=simIK.result_success then")
