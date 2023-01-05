@@ -162,7 +162,6 @@ function getJoints()
         if sim.getObjectType(h)==sim.object_joint_type then
             table.insert(joints,h)
         end
-        return true
     end)
     return joints
 end
