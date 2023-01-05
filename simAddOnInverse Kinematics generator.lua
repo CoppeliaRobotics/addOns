@@ -373,5 +373,13 @@ function generate()
     sim.setObjectPose(ikDummy,robotModel,{0,0,0,0,0,0,1})
     sim.setObjectInt32Param(ikDummy,sim.objintparam_visibility_layer,0)
     sim.setObjectInt32Param(ikDummy,sim.objintparam_manipulation_permissions,0)
+
+    if not sim.readCustomDataBlock(simTip,'ikTip') then
+        sim.writeCustomDataBlock(simTip,'ikTip',sim.packInt32Table{1})
+    end
+    if not sim.readCustomDataBlock(simTarget,'ikTarget') then
+        sim.writeCustomDataBlock(simTarget,'ikTarget',sim.packInt32Table{1})
+    end
+
     leaveNow=true
 end
