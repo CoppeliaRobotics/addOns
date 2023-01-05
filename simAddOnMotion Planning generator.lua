@@ -198,7 +198,7 @@ end
 
 function getJoints()
     local joints={}
-    visitTree(model,function(h)
+    sim.visitTree(model,function(h)
         if h~=model and sim.getModelProperty(h)&sim.modelproperty_not_model==0 then return false end
         if sim.getObjectType(h)==sim.object_joint_type then
             table.insert(joints,h)
@@ -206,17 +206,6 @@ function getJoints()
         return true
     end)
     return joints
-end
-
-function visitTree(handle,visitor)
-    if not visitor(handle) then return end
-    local i=0
-    while true do
-        local childHandle=sim.getObjectChild(handle,i)
-        if childHandle==-1 then return end
-        visitTree(childHandle,visitor)
-        i=i+1
-    end
 end
 
 function ObjectProxy(p,t)
