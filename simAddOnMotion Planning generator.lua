@@ -111,7 +111,9 @@ function generate()
         sim.removeObjects{existingMotionPlanning}
     end
 
-    scriptText=[===[function sysCall_init()
+    scriptText=[===[robotConfigPath=require'models.robotConfigPath'
+
+function sysCall_init()
     model=sim.getObject'::'
     task=simOMPL.createTask'main'
     joints=getJoints()
@@ -156,44 +158,13 @@ function compute()
     updateGoalState()
     simOMPL.setup(task)
     solved,path=simOMPL.compute(task,planTime,simplificationTime,stateCnt)
-    printf('solved: %s',solved)
-    printf('approximate: %s',simOMPL.hasApproximateSolution(task))
-    printf('path: %d items',#path)
-    if solved and createPath then
-        createPath(path)
+    path=Matrix(-1,simOMPL.getStateSpaceDimension(task),path)
+    printf('solved: %s (%s)',solved,simOMPL.hasApproximateSolution(task) and 'approximate' or 'exact')
+    printf('path: %d states',#path)
+    if solved then
+        local n=simOMPL.getStateSpaceDimension(task)
+        robotConfigPath.create(path,model)
     end
-end
-
-function createPath()
-    local pathDummy=sim.createDummy(0.05)
-    sim.setObjectAlias(pathDummy,'Path')
-    sim.setModelProperty(pathDummy,0)
-    sim.setObjectParent(pathDummy,model)
-    sim.setObjectInt32Param(pathDummy,sim.objintparam_visibility_layer,0)
-    sim.setObjectInt32Param(pathDummy,sim.objintparam_manipulation_permissions,0)
-    sim.setObjectProperty(pathDummy,sim.objectproperty_collapsed)
-    local s=sim.addScript(sim.scripttype_customizationscript)
-    sim.setScriptStringParam(s,sim.scriptstringparam_text,
-[[require'models.robotConfigPath_customization']])
-    sim.associateScriptWithObject(s,pathDummy)
-    local n=simOMPL.getStateSpaceDimension(task)
-    sim.writeCustomTableData(pathDummy,'path',Matrix(-1,n,path):totable())
-    local stateDummy=sim.createDummy(0.01)
-    sim.setObjectAlias(stateDummy,'State')
-    sim.setObjectParent(stateDummy,pathDummy,false)
-    sim.setObjectPose(stateDummy,pathDummy,{0,0,0,0,0,0,1})
-    sim.setObjectInt32Param(stateDummy,sim.objintparam_visibility_layer,0)
-    sim.setObjectInt32Param(stateDummy,sim.objintparam_manipulation_permissions,0)
-    sim.setObjectProperty(stateDummy,sim.objectproperty_collapsed)
-    local s=sim.addScript(sim.scripttype_customizationscript)
-    sim.setScriptStringParam(s,sim.scriptstringparam_text,
-[[require'models.robotConfig_customization'
-model=sim.getObject'::'
-color={1,1,0}
-ik=false
-create=true
-]])
-    sim.associateScriptWithObject(s,stateDummy)
 end
 
 function getJoints()
