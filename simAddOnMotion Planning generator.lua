@@ -115,54 +115,42 @@ function generate()
 
 function sysCall_init()
     model=sim.getObject'::'
-    task=simOMPL.createTask'main'
+
     joints=getJoints()
-    startState=ObjectProxy'./StartState'
-    goalState=ObjectProxy'./GoalState'
-    simOMPL.setStateSpaceForJoints(task,joints,{1,1,1})
+
     robotCollection=sim.createCollection()
     sim.addItemToCollection(robotCollection,sim.handle_tree,model,0)
-    simOMPL.setCollisionPairs(task,{robotCollection,sim.handle_all})
+
+    startState=ObjectProxy'./StartState'
+    goalState=ObjectProxy'./GoalState'
+
+    task=simOMPL.createTask'main'
+
+    -- wrap simOMPL.* functions with task argument:
+    for k,v in pairs(simOMPL) do
+        if type(v)=='function' and not _G[k] then
+            _G[k]=function(...) return simOMPL[k](task,...) end
+        end
+    end
+
+    setStateSpaceForJoints(joints,{1,1,1})
+    setCollisionPairs({robotCollection,sim.handle_all})
     setAlgorithm(simOMPL.Algorithm.]===]..algorithmName..[===[)
-    planTime=planTime or 10
-    simplificationTime=simplificationTime or -1
-    stateCnt=stateCnt or 0
 end
 
 function sysCall_cleanup()
-    simOMPL.destroyTask(task)
-end
-
-function setAlgorithm(a)
-    simOMPL.setAlgorithm(task,a)
-end
-
-function setStartState(cfg)
-    simOMPL.setStartState(task,cfg)
-end
-
-function setGoalState(cfg)
-    simOMPL.setGoalState(task,cfg)
-end
-
-function updateStartState()
-    simOMPL.setStartState(task,startState:getConfig())
-end
-
-function updateGoalState()
-    simOMPL.setGoalState(task,goalState:getConfig())
+    destroyTask()
 end
 
 function compute()
-    updateStartState()
-    updateGoalState()
-    simOMPL.setup(task)
-    solved,path=simOMPL.compute(task,planTime,simplificationTime,stateCnt)
-    path=Matrix(-1,simOMPL.getStateSpaceDimension(task),path)
-    printf('solved: %s (%s)',solved,simOMPL.hasApproximateSolution(task) and 'approximate' or 'exact')
+    setStartState(startState:getConfig())
+    setGoalState(goalState:getConfig())
+    setup()
+    solved,path=simOMPL.compute(task,10)
+    path=Matrix(-1,getStateSpaceDimension(),path)
+    printf('solved: %s (%s)',solved,hasApproximateSolution() and 'approximate' or 'exact')
     printf('path: %d states',#path)
     if solved then
-        local n=simOMPL.getStateSpaceDimension(task)
         robotConfigPath.create(path,model)
     end
 end
