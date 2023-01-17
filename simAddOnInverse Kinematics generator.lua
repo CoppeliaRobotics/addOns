@@ -280,7 +280,7 @@ function generate()
         local jointAliases={}
         while true do
             if sim.getObjectType(tmp)==sim.object_joint_type then
-                table.insert(jointAliases,1,sim.getObjectAliasRelative(tmp,robotModel,1))
+                table.insert(jointAliases,1,sim.getObjectAliasRelative(tmp,robotModel,8))
             end
             if tmp==simBase then break end
             tmp=sim.getObjectParent(tmp)
@@ -288,7 +288,7 @@ function generate()
         end
         appendLine("    simJoints={")
         for _,a in ipairs(jointAliases) do
-            appendLine("        sim.getObject('%s',{proxy=parent}),",a)
+            appendLine("        sim.getObject'%s',",a)
         end
         appendLine("    }")
         if genGetSetConfig then
@@ -342,6 +342,13 @@ function generate()
     appendLine("function getTarget()")
     appendLine("    return simTarget")
     appendLine("end")
+
+    if genSimJoints then
+        appendLine("")
+        appendLine("function getJoints()")
+        appendLine("    return simJoints")
+        appendLine("end")
+    end
 
     appendLine("")
     appendLine("function handleIk()")
