@@ -105,17 +105,22 @@ function generate()
     local robotModel=getRobotModelHandle()
     local algorithmName=getAlgorithmName()
     local existingMotionPlanning=sim.getObject('./MotionPlanning',{proxy=robotModel,noError=true})
+    local existingIK=sim.getObject('./IK',{proxy=robotModel,noError=true})
     if existingMotionPlanning~=-1 then
         if simUI.msgbox_result.ok~=simUI.msgBox(simUI.msgbox_type.warning,simUI.msgbox_buttons.okcancel,'MotionPlanning already exists','The specified model already contains a \'MotionPlanning\' object. By proceeding, it will be replaced!') then return end
         if simUI.msgbox_result.yes~=simUI.msgBox(simUI.msgbox_type.question,simUI.msgbox_buttons.yesno,'Confirm object removal','Are you sure you want to remove object '..sim.getObjectAlias(existingMotionPlanning,1)..'?') then return end
         sim.removeObjects{existingMotionPlanning}
+    end
+    local getIK=''
+    if existingIK~=-1 then
+        getIK="\n    IK=ObjectProxy'::/IK'\n\n"
     end
 
     scriptText=[===[robotConfigPath=require'models.robotConfigPath'
 
 function sysCall_init()
     model=sim.getObject'::'
-
+]===]..getIK..[===[
     joints=getJoints()
 
     robotCollection=sim.createCollection()
@@ -155,6 +160,22 @@ function compute()
     end
 end
 
+function ObjectProxy(p,t)
+    t=t or sim.scripttype_customizationscript
+    return sim.getScriptFunctions(sim.getScript(t,sim.getObject(p)))
+end
+]===]
+
+    if existingIK~=-1 then
+        appendLine[[
+
+function getJoints()
+    return IK:getJoints()
+end
+]]
+    else
+        appendLine[[
+
 function getJoints()
     local joints={}
     sim.visitTree(model,function(h)
@@ -165,11 +186,8 @@ function getJoints()
     end)
     return joints
 end
-
-function ObjectProxy(p,t)
-    t=t or sim.scripttype_customizationscript
-    return sim.getScriptFunctions(sim.getScript(t,sim.getObject(p)))
-end]===]
+]]
+    end
 
     local motionPlanningDummy=sim.createDummy(0.01)
     sim.setModelProperty(motionPlanningDummy,0)
