@@ -272,9 +272,6 @@ function generate()
     appendLine("    simBase=sim.getObject'%s'",sim.getObjectAliasRelative(simBase,robotModel,1))
     appendLine("    simTip=sim.getObject'%s'",sim.getObjectAliasRelative(simTip,robotModel,1))
     appendLine("    simTarget=sim.getObject'%s'",sim.getObjectAliasRelative(simTarget,robotModel,1))
-    appendLine("")
-    appendLine("    ikEnv=simIK.createEnvironment()")
-    appendLine("")
     if genSimJoints then
         local tmp=simTip
         local jointAliases={}
@@ -295,8 +292,10 @@ function generate()
             appendLine("    getConfig=partial(map,sim.getJointPosition,simJoints)")
             appendLine("    setConfig=partial(foreach,sim.setJointPosition,simJoints)")
         end
-        appendLine("")
     end
+    appendLine("")
+    appendLine("    enabledWhenSimulationRunning=%s",handleInSim)
+    appendLine("    enabledWhenSimulationStopped=%s",handleInNonSim)
     appendLine("    dampingFactor=%f",dampingFactor)
     appendLine("    maxIterations=%d",maxIterations)
     appendLine("    if dampingFactor>0 then")
@@ -305,6 +304,11 @@ function generate()
     appendLine("        method=simIK.method_pseudo_inverse")
     appendLine("    end")
     appendLine("    constraint=%s",getConstraintVar())
+    appendLine("    ikOptions={")
+    appendLine("        syncWorlds=true,")
+    appendLine("        allowError=false,")
+    appendLine("    }")
+    appendLine("    ikEnv=simIK.createEnvironment()")
     appendLine("    ikGroup=simIK.createGroup(ikEnv)")
     appendLine("    simIK.setGroupCalculation(ikEnv,ikGroup,method,dampingFactor,maxIterations)")
     if abortOnJointLimitsHit then
@@ -329,8 +333,46 @@ function generate()
     appendLine("end")
 
     appendLine("")
+    appendLine("function sysCall_actuation()")
+    appendLine("    if enabledWhenSimulationRunning then handleIk() end")
+    appendLine("end")
+
+    appendLine("")
+    appendLine("function sysCall_nonSimulation()")
+    appendLine("    if enabledWhenSimulationStopped then handleIk() end")
+    appendLine("end")
+
+    appendLine("")
     appendLine("function sysCall_cleanup()")
     appendLine("    simIK.eraseEnvironment(ikEnv)")
+    appendLine("end")
+
+    appendLine("")
+    appendLine("function handleIk()")
+    appendLine("    local result,failureReason=simIK.handleGroup(ikEnv,ikGroup,ikOptions)")
+    appendLine("    if result~=simIK.result_success then")
+    appendLine("        print('IK failed: '..simIK.getFailureDescription(failureReason))")
+    appendLine("    end")
+    appendLine("end")
+
+    appendLine("")
+    appendLine("function getEnvironment()")
+    appendLine("    return ikEnv")
+    appendLine("end")
+
+    appendLine("")
+    appendLine("function getGroup()")
+    appendLine("    return ikGroup")
+    appendLine("end")
+
+    appendLine("")
+    appendLine("function getElement()")
+    appendLine("    return ikElement")
+    appendLine("end")
+
+    appendLine("")
+    appendLine("function getBase()")
+    appendLine("    return simBase")
     appendLine("end")
 
     appendLine("")
@@ -343,31 +385,30 @@ function generate()
     appendLine("    return simTarget")
     appendLine("end")
 
+    appendLine("")
+    appendLine("function getEnabledWhenSimulationRunning()")
+    appendLine("    return enabledWhenSimulationRunning")
+    appendLine("end")
+
+    appendLine("")
+    appendLine("function getEnabledWhenSimulationStopped()")
+    appendLine("    return enabledWhenSimulationStopped")
+    appendLine("end")
+
+    appendLine("")
+    appendLine("function setEnabledWhenSimulationRunning(enabled)")
+    appendLine("    enabledWhenSimulationRunning=not not enabled")
+    appendLine("end")
+
+    appendLine("")
+    appendLine("function setEnabledWhenSimulationStopped(enabled)")
+    appendLine("    enabledWhenSimulationStopped=not not enabled")
+    appendLine("end")
+
     if genSimJoints then
         appendLine("")
         appendLine("function getJoints()")
         appendLine("    return simJoints")
-        appendLine("end")
-    end
-
-    appendLine("")
-    appendLine("function handleIk()")
-    appendLine("    local result,failureReason=simIK.handleGroup(ikEnv,ikGroup,{syncWorlds=true})")
-    appendLine("    if result~=simIK.result_success then")
-    appendLine("        print('IK failed: '..simIK.getFailureDescription(failureReason))")
-    appendLine("    end")
-    appendLine("end")
-
-    if handleInSim then
-        appendLine("")
-        appendLine("function sysCall_actuation()")
-        appendLine("    handleIk()")
-        appendLine("end")
-    end
-    if handleInNonSim then
-        appendLine("")
-        appendLine("function sysCall_nonSimulation()")
-        appendLine("    handleIk()")
         appendLine("end")
     end
 
