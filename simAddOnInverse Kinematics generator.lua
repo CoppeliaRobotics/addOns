@@ -320,7 +320,7 @@ function generate()
     if genIKVars then
         appendLine("")
         appendLine("    ikBase=ikHandleMap[simBase]")
-        appendLine("    ikTip=ikHandleMap[simBase]")
+        appendLine("    ikTip=ikHandleMap[simTip]")
         appendLine("    ikTarget=ikHandleMap[simTarget]")
         if genSimJoints then
             appendLine("    ikJoints=map(table.index(ikHandleMap),simJoints)")
