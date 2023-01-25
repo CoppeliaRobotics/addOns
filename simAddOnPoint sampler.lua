@@ -155,7 +155,7 @@ function displayTriangleInfo(pt,n,o)
     simUI.setWidgetVisibility(ui,18,true)
     simUI.setLabelText(ui,31,string.format('%d',r[1]))
     if closest~=4 then
-        simUI.setLabelText(ui,33,string.format('%d (%f, %f, %f)',tri[closest],unpack(v[closest]:data())))
+        simUI.setLabelText(ui,33,string.format('%d (%.3f, %.3f, %.3f)',tri[closest],unpack(v[closest]:data())))
         local itemData=v[closest]:data()
         table.insert(itemData,0.0025*distanceToCamera(v[closest]))
         sim.addDrawingObjectItem(trianglesv,itemData)
