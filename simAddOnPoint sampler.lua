@@ -113,19 +113,21 @@ function clearTextInfo()
     simUI.setLabelText(ui,11,'N/A')
     simUI.setLabelText(ui,13,'N/A')
     simUI.setLabelText(ui,15,'N/A')
-    simUI.setLabelText(ui,17,'N/A')
+    simUI.setLabelText(ui,31,'N/A')
+    simUI.setLabelText(ui,33,'N/A')
 end
 
 function displayPointInfo(pt,n,o)
     local d=distanceToCamera(pt)
     sim.addDrawingObjectItem(pts,{pt[1],pt[2],pt[3],0.005*d})
     sim.addDrawingObjectItem(lines,{pt[1],pt[2],pt[3],pt[1]+n[1]*0.1*d,pt[2]+n[2]*0.1*d,pt[3]+n[3]*0.1*d})
-    simUI.setLabelText(ui,11,string.format('(%.3f, %.3f, %.3f)',pt[1],pt[2],pt[3]))
-    simUI.setLabelText(ui,13,string.format('(%.3f, %.3f, %.3f)',n[1],n[2],n[3]))
+    simUI.setLabelText(ui,11,string.format('(%.3f, %.3f, %.3f)',unpack(pt)))
+    simUI.setLabelText(ui,13,string.format('(%.3f, %.3f, %.3f)',unpack(n)))
     simUI.setLabelText(ui,15,string.format('%s',sim.getObjectAlias(o,9)))
 end
 
 function displayTriangleInfo(pt,n,o)
+    pt=Matrix(1,3,pt)
     if not simIGL then return end
     if not meshInfo then meshInfo={} end
     if not meshInfo[o] then
@@ -135,23 +137,31 @@ function displayTriangleInfo(pt,n,o)
         meshInfo[o].v=Matrix(-1,3,meshInfo[o].mesh.vertices)
         meshInfo[o].e,meshInfo[o].ue,meshInfo[o].emap,meshInfo[o].uec,meshInfo[o].uee=simIGL.uniqueEdgeMap(meshInfo[o].f:totable{})
     end
-    local r,s=simIGL.closestFacet(meshInfo[o].mesh,Matrix(1,3,pt):totable{},meshInfo[o].emap,meshInfo[o].uec,meshInfo[o].uee)
+    local r,s=simIGL.closestFacet(meshInfo[o].mesh,pt:totable{},meshInfo[o].emap,meshInfo[o].uec,meshInfo[o].uee)
     local tri=meshInfo[o].f[1+r[1]]
-    simUI.setWidgetVisibility(ui,18,true)
-    simUI.setLabelText(ui,17,string.format('%d (<font color="red">%d</font> <font color="green">%d</font> <font color="blue">%d</font>)',r[1],tri[1],tri[2],tri[3]))
     local v={
         meshInfo[o].v[1+tri[1]],
         meshInfo[o].v[1+tri[2]],
         meshInfo[o].v[1+tri[3]],
     }
-    local c=Matrix:eye(3)
+    local dist={
+        (v[1]-pt):t():norm(),
+        (v[2]-pt):t():norm(),
+        (v[3]-pt):t():norm(),
+        ((v[1]+v[2]+v[3])/3-pt):t():norm(),
+    }
+    local closest,d=nil,nil
+    for i=1,4 do if not d or dist[i]<d then closest,d=i,dist[i] end end
+    simUI.setWidgetVisibility(ui,18,true)
+    simUI.setLabelText(ui,31,string.format('%d',r[1]))
+    if closest~=4 then
+        simUI.setLabelText(ui,33,string.format('%d (%f, %f, %f)',tri[closest],unpack(v[closest]:data())))
+        local itemData=v[closest]:data()
+        table.insert(itemData,0.0025*distanceToCamera(v[closest]))
+        sim.addDrawingObjectItem(trianglesv,itemData)
+    end
     for _,i in ipairs{1,2,3,1} do
         sim.addDrawingObjectItem(triangles,v[i]:data())
-    end
-    for i=1,3 do
-        local itemData=Matrix:vertcat(v[i],c[i]):data()
-        table.insert(itemData,0.0025*distanceToCamera(v[i]))
-        sim.addDrawingObjectItem(trianglesv,itemData)
     end
 end
 
@@ -186,7 +196,7 @@ function showDlg()
         pts=sim.addDrawingObject(sim.drawing_spherepts|sim.drawing_itemsizes,0.01,0,-1,1,{0,1,0})
         lines=sim.addDrawingObject(sim.drawing_lines,2,0,-1,1,{0,1,0})
         triangles=sim.addDrawingObject(sim.drawing_linestrip,4,0,-1,4,{0,1,0})
-        trianglesv=sim.addDrawingObject(sim.drawing_spherepts|sim.drawing_itemcolors|sim.drawing_itemsizes,0.0025,0,-1,3)
+        trianglesv=sim.addDrawingObject(sim.drawing_spherepts|sim.drawing_itemsizes,0.0025,0,-1,1,{0,1,0})
         local pos='position="-50,50" placement="relative"'
         if uiPos then
             pos='position="'..uiPos[1]..','..uiPos[2]..'" placement="absolute"'
@@ -203,8 +213,10 @@ function showDlg()
             <group id="19" layout="vbox" flat="true" content-margins="0,0,0,0">
                 <checkbox checked="false" text="Display triangle/vertex info (only for shapes)" on-change="showTriangleInfo_callback" id="20" />
                 <group id="18" visible="false" layout="form" flat="true" content-margins="20,0,0,0">
-                    <label id="16" text="Triangle:"/>
-                    <label id="17" text="N/A"/>
+                    <label id="30" text="Triangle:"/>
+                    <label id="31" text="N/A"/>
+                    <label id="32" text="Vertex:"/>
+                    <label id="33" text="N/A"/>
                 </group>
             </group>
             <group layout="vbox" flat="true" content-margins="0,0,0,0">
