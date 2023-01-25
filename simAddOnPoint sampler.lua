@@ -26,7 +26,7 @@ function sysCall_nonSimulation()
         local clicked=newClickCnt~=clickCnt and clickCnt~=nil
         clickCnt=newClickCnt
         local pt,n,o=rayCast(orig,dir,clicked)
-        clearInfo()
+        clearDrawingInfo()
         if pt then
             displayPointInfo(pt,n,o)
             if showTriangleInfo and sim.getObjectType(o)==sim.object_shape_type then
@@ -35,6 +35,8 @@ function sysCall_nonSimulation()
             if clicked and createDummies then
                 createDummy(pt,n)
             end
+        else
+            clearTextInfo()
         end
     end
 end
@@ -100,11 +102,14 @@ function rayCast(orig,dir,clicked)
     end
 end
 
-function clearInfo()
+function clearDrawingInfo()
     sim.addDrawingObjectItem(pts,nil)
     sim.addDrawingObjectItem(lines,nil)
     sim.addDrawingObjectItem(triangles,nil)
     sim.addDrawingObjectItem(trianglesv,nil)
+end
+
+function clearTextInfo()
     simUI.setLabelText(ui,11,'N/A')
     simUI.setLabelText(ui,13,'N/A')
     simUI.setLabelText(ui,15,'N/A')
