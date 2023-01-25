@@ -130,7 +130,6 @@ function displayTriangleInfo(pt,n,o)
         meshInfo[o].v=Matrix(-1,3,meshInfo[o].mesh.vertices)
         meshInfo[o].e,meshInfo[o].ue,meshInfo[o].emap,meshInfo[o].uec,meshInfo[o].uee=simIGL.uniqueEdgeMap(meshInfo[o].f:totable{})
     end
-    print(pt)
     local r,s=simIGL.closestFacet(meshInfo[o].mesh,Matrix(1,3,pt):totable{},meshInfo[o].emap,meshInfo[o].uec,meshInfo[o].uee)
     local tri=meshInfo[o].f[1+r[1]]
     simUI.setWidgetVisibility(ui,18,true)
