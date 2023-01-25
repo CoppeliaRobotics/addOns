@@ -25,7 +25,7 @@ function sysCall_nonSimulation()
         local newClickCnt=sim.getInt32Param(sim.intparam_mouseclickcounterdown)
         local clicked=newClickCnt~=clickCnt and clickCnt~=nil
         clickCnt=newClickCnt
-        local pt,n,o=rayCast(orig,dir,clicked)
+        local pt,n,o=rayCast(orig,dir)
         clearDrawingInfo()
         if pt then
             displayPointInfo(pt,n,o)
@@ -65,7 +65,7 @@ function distanceToCamera(pt)
     return (Vector(pt)-Vector(currentCameraPos)):norm()
 end
 
-function rayCast(orig,dir,clicked)
+function rayCast(orig,dir)
     local coll=sim.createCollection(1)
     local objs=sim.getObjectsInTree(sim.handle_scene)
     for i=1,#objs,1 do
