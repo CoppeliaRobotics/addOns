@@ -170,7 +170,7 @@ function showDlg()
             </group>
             <group layout="vbox" flat="true" content-margins="0,0,0,0">
                 <checkbox checked="false" text="Create a dummy with each click" on-change="createDummy_callback" id="1" />
-                <group id="5" enabled="false" layout="form" flat="true" content-margins="20,0,0,0">
+                <group id="5" visible="false" layout="form" flat="true" content-margins="20,0,0,0">
                     <label id="6" text="Parent:"/>
                     <combobox id="4" on-change="parentChange_callback"/>
                     <label id="7" text="Offset: [m]"/>
@@ -203,7 +203,8 @@ end
 
 function createDummy_callback(ui,id,v)
     createDummies=v>0
-    simUI.setEnabled(ui,5,createDummies)
+    simUI.setWidgetVisibility(ui,5,createDummies)
+    simUI.adjustSize(ui)
     if createDummies then populateParentCombobox() end
 end
 
