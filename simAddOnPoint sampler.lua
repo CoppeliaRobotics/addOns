@@ -18,107 +18,25 @@ function sysCall_nonSimulation()
         return {cmd='cleanup'}
     end
 
-    sim.addDrawingObjectItem(pts,nil)
-    sim.addDrawingObjectItem(lines,nil)
-    sim.addDrawingObjectItem(triangles,nil)
-    sim.addDrawingObjectItem(trianglesv,nil)
     if sim.getBoolParam(sim.boolparam_rayvalid) then
-        local coll=sim.createCollection(1)
-        local objs=sim.getObjectsInTree(sim.handle_scene)
-        for i=1,#objs,1 do
-            local t=sim.getObjectType(objs[i])
-            if (t==sim.object_shape_type)or(t==sim.object_octree_type) then
-                if sim.getObjectInt32Param(objs[i],sim.objintparam_visible)~=0 then
-                    sim.addItemToCollection(coll,sim.handle_single,objs[i],0)
-                end
-            end
-        end
+        currentCameraPos=sim.getObjectPosition(sim.adjustView(0,-1,512),sim.handle_world)
         local orig=sim.getArrayParam(sim.arrayparam_rayorigin)
         local dir=sim.getArrayParam(sim.arrayparam_raydirection)
-        local m=sim.buildIdentityMatrix()
-        m[4]=orig[1]
-        m[8]=orig[2]
-        m[12]=orig[3]
-        local z=Vector3(dir)
-        local up=Vector3({0,0,1})
-        local x=up:cross(z):normalized()
-        local y=z:cross(x)
-        m[1]=x[1]  m[5]=x[2]  m[9]=x[3]
-        m[2]=y[1]  m[6]=y[2]  m[10]=y[3]
-        m[3]=z[1]  m[7]=z[2]  m[11]=z[3]
-
-        local sensor=sim.createProximitySensor(sim.proximitysensor_ray_subtype,16,1,{3,3,2,2,1,1,0,0},{0,2000,0.01,0.01,0.01,0.01,0,0,0,0,0,0,0.01,0,0})
-        sim.setObjectMatrix(sensor,sim.handle_world,m)
-        r,d,pt,o,n=sim.checkProximitySensor(sensor,coll)
-        sim.removeObjects({sensor})
-        sim.destroyCollection(coll)
-        if r>0 then
-            pt=sim.multiplyVector(m,pt)
-            m[4]=0
-            m[8]=0
-            m[12]=0
-            n=sim.multiplyVector(m,n)
-            sim.addDrawingObjectItem(pts,pt)
-            sim.addDrawingObjectItem(lines,{pt[1],pt[2],pt[3],pt[1]+n[1]*0.1,pt[2]+n[2]*0.1,pt[3]+n[3]*0.1})
-            simUI.setLabelText(ui,11,string.format("(%.3f, %.3f, %.3f)",pt[1],pt[2],pt[3]))
-            simUI.setLabelText(ui,13,string.format("(%.3f, %.3f, %.3f)",n[1],n[2],n[3]))
-            simUI.setLabelText(ui,15,string.format("%s",sim.getObjectAlias(o,9)))
-            if not simIGL then
-                simUI.setWidgetVisibility(ui,19,false)
-                simUI.adjustSize(ui)
+        local newClickCnt=sim.getInt32Param(sim.intparam_mouseclickcounterdown)
+        local clicked=newClickCnt~=clickCnt and clickCnt~=nil
+        clickCnt=newClickCnt
+        local pt,n,o=rayCast(orig,dir,clicked)
+        clearInfo()
+        if pt then
+            displayPointInfo(pt,n,o)
+            if showTriangleInfo and sim.getObjectType(o)==sim.object_shape_type then
+                displayTriangleInfo(pt,n,o)
             end
-            if simIGL and showTriangleInfo and sim.getObjectType(o)==sim.object_shape_type then
-                if not meshInfo then meshInfo={} end
-                if not meshInfo[o] then
-                    meshInfo[o]={}
-                    meshInfo[o].mesh=simIGL.getMesh(o)
-                    meshInfo[o].f=Matrix(-1,3,meshInfo[o].mesh.indices)
-                    meshInfo[o].v=Matrix(-1,3,meshInfo[o].mesh.vertices)
-                    meshInfo[o].e,meshInfo[o].ue,meshInfo[o].emap,meshInfo[o].uec,meshInfo[o].uee=simIGL.uniqueEdgeMap(meshInfo[o].f:totable{})
-                end
-                local r,s=simIGL.closestFacet(meshInfo[o].mesh,Matrix(1,3,pt):totable{},meshInfo[o].emap,meshInfo[o].uec,meshInfo[o].uee)
-                local tri=meshInfo[o].f[1+r[1]]
-                simUI.setWidgetVisibility(ui,18,true)
-                simUI.setLabelText(ui,17,string.format("%d (<font color='red'>%d</font> <font color='green'>%d</font> <font color='blue'>%d</font>)",r[1],tri[1],tri[2],tri[3]))
-                local v={
-                    meshInfo[o].v[1+tri[1]],
-                    meshInfo[o].v[1+tri[2]],
-                    meshInfo[o].v[1+tri[3]],
-                }
-                local c=Matrix:eye(3)
-                for _,i in ipairs{1,2,3,1} do sim.addDrawingObjectItem(triangles,v[i]:data()) end
-                for i=1,3 do sim.addDrawingObjectItem(trianglesv,Matrix:vertcat(v[i],c[i]):data()) end
-            end
-
-            local c=sim.getInt32Param(sim.intparam_mouseclickcounterdown)
-            if c~=clickCnt and createDummies then
-                clickCnt=c
-                local h=sim.createDummy(0.02)
-                sim.setObjectColor(h,0,sim.colorcomponent_ambient_diffuse,{0,1,0})
-                local m=sim.buildIdentityMatrix()
-                m[4]=pt[1]
-                m[8]=pt[2]
-                m[12]=pt[3]
-                if n[1]<0.99 then
-                    local z=Vector3(n)
-                    local x=Vector3({1,0,0})
-                    local y=z:cross(x):normalized()
-                    local x=y:cross(z)
-                    m[1]=x[1]  m[5]=x[2]  m[9]=x[3]
-                    m[2]=y[1]  m[6]=y[2]  m[10]=y[3]
-                    m[3]=z[1]  m[7]=z[2]  m[11]=z[3]
-                else
-                    m[1]=0  m[5]=1  m[9]=0
-                    m[2]=0  m[6]=0  m[10]=1
-                    m[3]=1  m[7]=0  m[11]=0
-                end
-                sim.setObjectMatrix(h,sim.handle_world,m)
-                sim.setObjectParent(h,parent or -1)
-                sim.setObjectPose(h,h,{0,0,simUI.getSpinboxValue(ui,8),0,0,0,1})
+            if clicked and createDummies then
+                createDummy(pt,n)
             end
         end
     end
-    clickCnt=sim.getInt32Param(sim.intparam_mouseclickcounterdown)
 end
 
 function sysCall_beforeSimulation()
@@ -141,18 +59,135 @@ function sysCall_afterInstanceSwitch()
     showDlg()
 end
 
+function distanceToCamera(pt)
+    return (Vector(pt)-Vector(currentCameraPos)):norm()
+end
+
+function rayCast(orig,dir,clicked)
+    local coll=sim.createCollection(1)
+    local objs=sim.getObjectsInTree(sim.handle_scene)
+    for i=1,#objs,1 do
+        local t=sim.getObjectType(objs[i])
+        if t==sim.object_shape_type or t==sim.object_octree_type then
+            if sim.getObjectInt32Param(objs[i],sim.objintparam_visible)~=0 then
+                sim.addItemToCollection(coll,sim.handle_single,objs[i],0)
+            end
+        end
+    end
+    local m=sim.buildIdentityMatrix()
+    m[4]=orig[1]
+    m[8]=orig[2]
+    m[12]=orig[3]
+    local z=Vector3(dir)
+    local up=Vector3({0,0,1})
+    local x=up:cross(z):normalized()
+    local y=z:cross(x)
+    m[1]=x[1]  m[5]=x[2]  m[9]=x[3]
+    m[2]=y[1]  m[6]=y[2]  m[10]=y[3]
+    m[3]=z[1]  m[7]=z[2]  m[11]=z[3]
+    local sensor=sim.createProximitySensor(sim.proximitysensor_ray_subtype,16,1,{3,3,2,2,1,1,0,0},{0,2000,0.01,0.01,0.01,0.01,0,0,0,0,0,0,0.01,0,0})
+    sim.setObjectMatrix(sensor,sim.handle_world,m)
+    local r,d,pt,o,n=sim.checkProximitySensor(sensor,coll)
+    sim.removeObjects({sensor})
+    sim.destroyCollection(coll)
+    if r>0 then
+        pt=sim.multiplyVector(m,pt)
+        m[4]=0
+        m[8]=0
+        m[12]=0
+        n=sim.multiplyVector(m,n)
+        return pt,n,o
+    end
+end
+
+function clearInfo()
+    sim.addDrawingObjectItem(pts,nil)
+    sim.addDrawingObjectItem(lines,nil)
+    sim.addDrawingObjectItem(triangles,nil)
+    sim.addDrawingObjectItem(trianglesv,nil)
+    simUI.setLabelText(ui,11,'N/A')
+    simUI.setLabelText(ui,13,'N/A')
+    simUI.setLabelText(ui,15,'N/A')
+    simUI.setLabelText(ui,17,'N/A')
+end
+
+function displayPointInfo(pt,n,o)
+    local d=distanceToCamera(pt)
+    sim.addDrawingObjectItem(pts,{pt[1],pt[2],pt[3],0.005*d})
+    sim.addDrawingObjectItem(lines,{pt[1],pt[2],pt[3],pt[1]+n[1]*0.1*d,pt[2]+n[2]*0.1*d,pt[3]+n[3]*0.1*d})
+    simUI.setLabelText(ui,11,string.format('(%.3f, %.3f, %.3f)',pt[1],pt[2],pt[3]))
+    simUI.setLabelText(ui,13,string.format('(%.3f, %.3f, %.3f)',n[1],n[2],n[3]))
+    simUI.setLabelText(ui,15,string.format('%s',sim.getObjectAlias(o,9)))
+end
+
+function displayTriangleInfo(pt,n,o)
+    if not simIGL then return end
+    if not meshInfo then meshInfo={} end
+    if not meshInfo[o] then
+        meshInfo[o]={}
+        meshInfo[o].mesh=simIGL.getMesh(o)
+        meshInfo[o].f=Matrix(-1,3,meshInfo[o].mesh.indices)
+        meshInfo[o].v=Matrix(-1,3,meshInfo[o].mesh.vertices)
+        meshInfo[o].e,meshInfo[o].ue,meshInfo[o].emap,meshInfo[o].uec,meshInfo[o].uee=simIGL.uniqueEdgeMap(meshInfo[o].f:totable{})
+    end
+    print(pt)
+    local r,s=simIGL.closestFacet(meshInfo[o].mesh,Matrix(1,3,pt):totable{},meshInfo[o].emap,meshInfo[o].uec,meshInfo[o].uee)
+    local tri=meshInfo[o].f[1+r[1]]
+    simUI.setWidgetVisibility(ui,18,true)
+    simUI.setLabelText(ui,17,string.format('%d (<font color="red">%d</font> <font color="green">%d</font> <font color="blue">%d</font>)',r[1],tri[1],tri[2],tri[3]))
+    local v={
+        meshInfo[o].v[1+tri[1]],
+        meshInfo[o].v[1+tri[2]],
+        meshInfo[o].v[1+tri[3]],
+    }
+    local c=Matrix:eye(3)
+    for _,i in ipairs{1,2,3,1} do
+        sim.addDrawingObjectItem(triangles,v[i]:data())
+    end
+    for i=1,3 do
+        local itemData=Matrix:vertcat(v[i],c[i]):data()
+        table.insert(itemData,0.0025*distanceToCamera(v[i]))
+        sim.addDrawingObjectItem(trianglesv,itemData)
+    end
+end
+
+function createDummy(pt,n)
+    local h=sim.createDummy(0.02)
+    sim.setObjectColor(h,0,sim.colorcomponent_ambient_diffuse,{0,1,0})
+    local m=sim.buildIdentityMatrix()
+    m[4]=pt[1]
+    m[8]=pt[2]
+    m[12]=pt[3]
+    if n[1]<0.99 then
+        local z=Vector3(n)
+        local x=Vector3({1,0,0})
+        local y=z:cross(x):normalized()
+        local x=y:cross(z)
+        m[1]=x[1]  m[5]=x[2]  m[9]=x[3]
+        m[2]=y[1]  m[6]=y[2]  m[10]=y[3]
+        m[3]=z[1]  m[7]=z[2]  m[11]=z[3]
+    else
+        m[1]=0  m[5]=1  m[9]=0
+        m[2]=0  m[6]=0  m[10]=1
+        m[3]=1  m[7]=0  m[11]=0
+    end
+    sim.setObjectMatrix(h,sim.handle_world,m)
+    sim.setObjectParent(h,parent or -1)
+    local zOffset=simUI.getSpinboxValue(ui,8)
+    sim.setObjectPose(h,h,{0,0,zOffset,0,0,0,1})
+end
+
 function showDlg()
     if not ui then
-        pts=sim.addDrawingObject(sim.drawing_spherepts,0.01,0,-1,1,{0,1,0})
+        pts=sim.addDrawingObject(sim.drawing_spherepts|sim.drawing_itemsizes,0.01,0,-1,1,{0,1,0})
         lines=sim.addDrawingObject(sim.drawing_lines,2,0,-1,1,{0,1,0})
         triangles=sim.addDrawingObject(sim.drawing_linestrip,4,0,-1,4,{0,1,0})
-        trianglesv=sim.addDrawingObject(sim.drawing_spherepts|sim.drawing_itemcolors,0.0025,0,-1,3)
-        clickCnt=sim.getInt32Param(sim.intparam_mouseclickcounterdown)
+        trianglesv=sim.addDrawingObject(sim.drawing_spherepts|sim.drawing_itemcolors|sim.drawing_itemsizes,0.0025,0,-1,3)
         local pos='position="-50,50" placement="relative"'
         if uiPos then
             pos='position="'..uiPos[1]..','..uiPos[2]..'" placement="absolute"'
         end
-        local xml ='<ui title="Point sampler" activate="false" closeable="true" on-close="close_callback" '..pos..[[>
+        local xml='<ui title="Point sampler" activate="false" closeable="true" on-close="close_callback" '..pos..[[>
             <group layout="form" flat="true" content-margins="0,0,0,0">
                 <label id="10" text="Position:"/>
                 <label id="11" text="N/A"/>
@@ -181,6 +216,10 @@ function showDlg()
         ui=simUI.create(xml)
         populateParentCombobox()
         simUI.setCheckboxValue(ui,1,createDummies and 2 or 0)
+        if not simIGL then
+            simUI.setWidgetVisibility(ui,19,false)
+            simUI.adjustSize(ui)
+        end
     end
 end
 
@@ -192,6 +231,8 @@ function hideDlg()
         ui=nil
         sim.removeDrawingObject(pts)
         sim.removeDrawingObject(lines)
+        sim.removeDrawingObject(triangles)
+        sim.removeDrawingObject(trianglesv)
     end
 end
 
