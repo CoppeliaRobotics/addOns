@@ -28,12 +28,28 @@ function sysCall_nonSimulation()
         local pt,n,o=rayCast(orig,dir)
         clearDrawingInfo()
         if pt then
+            local event={
+                ray={
+                    orig=orig,
+                    dir=dir,
+                },
+                handle=o,
+                point=pt,
+                normal=n,
+            }
             displayPointInfo(pt,n,o)
             if showTriangleInfo and sim.getObjectType(o)==sim.object_shape_type then
-                displayTriangleInfo(pt,n,o)
+                local fi,vi=displayTriangleInfo(pt,n,o)
+                event.shape={
+                    face=fi,
+                    vertex=vi,
+                }
             end
-            if clicked and createDummies then
-                createDummy(pt,n)
+            if clicked then
+                sim.broadcastMsg{id='click',data=event}
+                if createDummies then
+                    createDummy(pt,n)
+                end
             end
         else
             clearTextInfo()
@@ -153,9 +169,11 @@ function displayTriangleInfo(pt,n,o)
     local closest,d=nil,nil
     for i=1,4 do if not d or dist[i]<d then closest,d=i,dist[i] end end
     simUI.setWidgetVisibility(ui,18,true)
-    simUI.setLabelText(ui,31,string.format('%d',r[1]))
+    local faceIndex,vertexIndex=r[1],-1
+    simUI.setLabelText(ui,31,string.format('%d',faceIndex))
     if closest~=4 then
-        simUI.setLabelText(ui,33,string.format('%d (%.3f, %.3f, %.3f)',tri[closest],unpack(v[closest]:data())))
+        vertexIndex=tri[closest]
+        simUI.setLabelText(ui,33,string.format('%d (%.3f, %.3f, %.3f)',vertexIndex,unpack(v[closest]:data())))
         local itemData=v[closest]:data()
         table.insert(itemData,0.0025*distanceToCamera(v[closest]))
         sim.addDrawingObjectItem(trianglesv,itemData)
@@ -163,6 +181,7 @@ function displayTriangleInfo(pt,n,o)
     for _,i in ipairs{1,2,3,1} do
         sim.addDrawingObjectItem(triangles,v[i]:data())
     end
+    return faceIndex,vertexIndex
 end
 
 function createDummy(pt,n)
