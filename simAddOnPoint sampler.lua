@@ -20,6 +20,8 @@ function sysCall_nonSimulation()
 
     sim.addDrawingObjectItem(pts,nil)
     sim.addDrawingObjectItem(lines,nil)
+    sim.addDrawingObjectItem(triangles,nil)
+    sim.addDrawingObjectItem(trianglesv,nil)
     if sim.getBoolParam(sim.boolparam_rayvalid) then
         local coll=sim.createCollection(1)
         local objs=sim.getObjectsInTree(sim.handle_scene)
@@ -58,9 +60,35 @@ function sysCall_nonSimulation()
             n=sim.multiplyVector(m,n)
             sim.addDrawingObjectItem(pts,pt)
             sim.addDrawingObjectItem(lines,{pt[1],pt[2],pt[3],pt[1]+n[1]*0.1,pt[2]+n[2]*0.1,pt[3]+n[3]*0.1})
-
-            simUI.setLabelText(ui,2,string.format("Position: (%.3f, %.3f, %.3f)",pt[1],pt[2],pt[3]))
-            simUI.setLabelText(ui,3,string.format("Normal vector: (%.3f, %.3f, %.3f)",n[1],n[2],n[3]))
+            simUI.setLabelText(ui,11,string.format("(%.3f, %.3f, %.3f)",pt[1],pt[2],pt[3]))
+            simUI.setLabelText(ui,13,string.format("(%.3f, %.3f, %.3f)",n[1],n[2],n[3]))
+            simUI.setLabelText(ui,15,string.format("%s",sim.getObjectAlias(o,9)))
+            if not simIGL then
+                simUI.setWidgetVisibility(ui,19,false)
+                simUI.adjustSize(ui)
+            end
+            if simIGL and showTriangleInfo and sim.getObjectType(o)==sim.object_shape_type then
+                if not meshInfo then meshInfo={} end
+                if not meshInfo[o] then
+                    meshInfo[o]={}
+                    meshInfo[o].mesh=simIGL.getMesh(o)
+                    meshInfo[o].f=Matrix(-1,3,meshInfo[o].mesh.indices)
+                    meshInfo[o].v=Matrix(-1,3,meshInfo[o].mesh.vertices)
+                    meshInfo[o].e,meshInfo[o].ue,meshInfo[o].emap,meshInfo[o].uec,meshInfo[o].uee=simIGL.uniqueEdgeMap(meshInfo[o].f:totable{})
+                end
+                local r,s=simIGL.closestFacet(meshInfo[o].mesh,Matrix(1,3,pt):totable{},meshInfo[o].emap,meshInfo[o].uec,meshInfo[o].uee)
+                local tri=meshInfo[o].f[1+r[1]]
+                simUI.setWidgetVisibility(ui,18,true)
+                simUI.setLabelText(ui,17,string.format("%d (<font color='red'>%d</font> <font color='green'>%d</font> <font color='blue'>%d</font>)",r[1],tri[1],tri[2],tri[3]))
+                local v={
+                    meshInfo[o].v[1+tri[1]],
+                    meshInfo[o].v[1+tri[2]],
+                    meshInfo[o].v[1+tri[3]],
+                }
+                local c=Matrix:eye(3)
+                for _,i in ipairs{1,2,3,1} do sim.addDrawingObjectItem(triangles,v[i]:data()) end
+                for i=1,3 do sim.addDrawingObjectItem(trianglesv,Matrix:vertcat(v[i],c[i]):data()) end
+            end
 
             local c=sim.getInt32Param(sim.intparam_mouseclickcounterdown)
             if c~=clickCnt and createDummies then
@@ -117,19 +145,38 @@ function showDlg()
     if not ui then
         pts=sim.addDrawingObject(sim.drawing_spherepts,0.01,0,-1,1,{0,1,0})
         lines=sim.addDrawingObject(sim.drawing_lines,2,0,-1,1,{0,1,0})
+        triangles=sim.addDrawingObject(sim.drawing_linestrip,4,0,-1,4,{0,1,0})
+        trianglesv=sim.addDrawingObject(sim.drawing_spherepts|sim.drawing_itemcolors,0.0025,0,-1,3)
         clickCnt=sim.getInt32Param(sim.intparam_mouseclickcounterdown)
         local pos='position="-50,50" placement="relative"'
         if uiPos then
             pos='position="'..uiPos[1]..','..uiPos[2]..'" placement="absolute"'
         end
         local xml ='<ui title="Point sampler" activate="false" closeable="true" on-close="close_callback" '..pos..[[>
-            <label text="Position:" id="2"/>
-            <label text="Normal vector:" id="3"/>
-            <checkbox checked="false" text="Create a dummy with each click" on-change="createDummy_callback" id="1" />
-            <label id="6" enabled="false" text="Parent:" style="margin-left: 2em"/>
-            <combobox id="4" enabled="false" on-change="parentChange_callback" style="margin-left: 2em"/>
-            <label id="7" enabled="false" text="Offset: [m]" style="margin-left: 2em"/>
-            <spinbox id="8" enabled="false" value="0.0" step="0.01" style="margin-left: 2em"/>
+            <group layout="form" flat="true" content-margins="0,0,0,0">
+                <label id="10" text="Position:"/>
+                <label id="11" text="N/A"/>
+                <label id="12" text="Normal:"/>
+                <label id="13" text="N/A"/>
+                <label id="14" text="Object:"/>
+                <label id="15" text="N/A"/>
+            </group>
+            <group id="19" layout="vbox" flat="true" content-margins="0,0,0,0">
+                <checkbox checked="false" text="Display triangle/vertex info (only for shapes)" on-change="showTriangleInfo_callback" id="20" />
+                <group id="18" visible="false" layout="form" flat="true" content-margins="20,0,0,0">
+                    <label id="16" text="Triangle:"/>
+                    <label id="17" text="N/A"/>
+                </group>
+            </group>
+            <group layout="vbox" flat="true" content-margins="0,0,0,0">
+                <checkbox checked="false" text="Create a dummy with each click" on-change="createDummy_callback" id="1" />
+                <group id="5" enabled="false" layout="form" flat="true" content-margins="20,0,0,0">
+                    <label id="6" text="Parent:"/>
+                    <combobox id="4" on-change="parentChange_callback"/>
+                    <label id="7" text="Offset: [m]"/>
+                    <spinbox id="8" value="0.0" step="0.01"/>
+                </group>
+            </group>
         </ui>]]
         ui=simUI.create(xml)
         populateParentCombobox()
@@ -148,9 +195,15 @@ function hideDlg()
     end
 end
 
+function showTriangleInfo_callback(ui,id,v)
+    showTriangleInfo=v>0
+    simUI.setWidgetVisibility(ui,18,showTriangleInfo)
+    simUI.adjustSize(ui)
+end
+
 function createDummy_callback(ui,id,v)
     createDummies=v>0
-    for id=4,8 do simUI.setEnabled(ui,id,createDummies) end
+    simUI.setEnabled(ui,5,createDummies)
     if createDummies then populateParentCombobox() end
 end
 
