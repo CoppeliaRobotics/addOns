@@ -8,7 +8,6 @@ end
 
 function sysCall_init()
     createDummies=false
-    parent=-1
     sim.addLog(sim.verbosity_scriptinfos,"This tool allows to sample points in the scene, and optionally create dummies from them")
     showDlg()
     sim.broadcastMsg{id='pointSampler.enable',data={hover=true,surfacePoint=true,surfaceNormal=true,triangle=true,vertex=true}}
@@ -16,6 +15,9 @@ end
 
 function sysCall_msg(event)
     if event.id=='pointSampler.click' then
+        if createDummies then
+            createDummy(event.data.point,event.data.normal)
+        end
     elseif event.id=='pointSampler.hover' then
         if event.data.point then
             simUI.setLabelText(ui,11,string.format('(%.3f, %.3f, %.3f)',unpack(event.data.point)))
@@ -97,7 +99,6 @@ function createDummy(pt,n)
     local h=sim.createDummy(0.02)
     sim.setObjectColor(h,0,sim.colorcomponent_ambient_diffuse,{0,1,0})
     sim.setObjectMatrix(h,sim.handle_world,pointNormalToMatrix(pt,n))
-    sim.setObjectParent(h,parent or -1)
     local zOffset=simUI.getSpinboxValue(ui,8)
     sim.setObjectPose(h,h,{0,0,zOffset,0,0,0,1})
 end
@@ -108,7 +109,7 @@ function showDlg()
         if uiPos then
             pos='position="'..uiPos[1]..','..uiPos[2]..'" placement="absolute"'
         end
-        local xml='<ui title="Point sampler" activate="false" closeable="true" on-close="close_callback" '..pos..[[>
+        local xml='<ui title="Point sampler" style="min-width: 9em;" activate="false" closeable="true" resizable="true" on-close="close_callback" '..pos..[[>
             <group layout="form" flat="true" content-margins="0,0,0,0">
                 <label id="10" text="Position:"/>
                 <label id="11" text="N/A"/>
@@ -121,18 +122,15 @@ function showDlg()
                 <label id="32" text="Vertex:"/>
                 <label id="33" text="N/A"/>
             </group>
-            <group layout="vbox" flat="true" content-margins="0,0,0,0" visible="]]..tostring(sim.getNamedBoolParam("pointSampler.createDummy") or false)..[[">
+            <group layout="vbox" flat="true" content-margins="0,0,0,0">
                 <checkbox checked="false" text="Create a dummy with each click" on-change="createDummy_callback" id="1" />
-                <group id="5" visible="false" layout="form" flat="true" content-margins="20,0,0,0">
-                    <label id="6" text="Parent:"/>
-                    <combobox id="4" on-change="parentChange_callback"/>
+                <group id="5" enabled="false" layout="form" flat="true" content-margins="20,0,0,0">
                     <label id="7" text="Offset: [m]"/>
                     <spinbox id="8" value="0.0" step="0.01"/>
                 </group>
             </group>
         </ui>]]
         ui=simUI.create(xml)
-        populateParentCombobox()
         simUI.setCheckboxValue(ui,1,createDummies and 2 or 0)
     end
 end
@@ -148,27 +146,7 @@ end
 
 function createDummy_callback(ui,id,v)
     createDummies=v>0
-    simUI.setWidgetVisibility(ui,5,createDummies)
-    simUI.adjustSize(ui)
-    if createDummies then populateParentCombobox() end
-end
-
-function populateParentCombobox()
-    local items,sel={},simUI.getComboboxSelectedIndex(ui,4)
-    local seln=simUI.getComboboxItemText(ui,4,sel)
-    for i,h in ipairs(sim.getObjectsInTree(sim.handle_scene)) do
-        local n=sim.getObjectAlias(h,1)
-        table.insert(items,n)
-        if n==seln then sel=i-1 end
-    end
-    simUI.setComboboxItems(ui,4,items,sel)
-end
-
-function parentChange_callback(ui,id,v)
-    if v<0 then parent=-1; return end
-    local txt=simUI.getComboboxItemText(ui,id,v)
-    local h=sim.getObject(txt)
-    parent=h
+    simUI.setEnabled(ui,5,createDummies)
 end
 
 function close_callback()
