@@ -15,32 +15,27 @@ end
 
 function sysCall_msg(event)
     if event.id=='pointSampler.click' then
-        if createDummies then
+        if createDummies and event.data.point and event.data.normal then
             createDummy(event.data.point,event.data.normal)
         end
     elseif event.id=='pointSampler.hover' then
+        local txt={[11]='N/A',[13]='N/A',[15]='N/A',[31]='N/A',[33]='N/A'}
         if event.data.point then
-            simUI.setLabelText(ui,11,string.format('(%.3f, %.3f, %.3f)',unpack(event.data.point)))
-        else
-            simUI.setLabelText(ui,11,'N/A')
+            txt[11]=string.format('(%.3f, %.3f, %.3f)',unpack(event.data.point))
         end
         if event.data.normal then
-            simUI.setLabelText(ui,13,string.format('(%.3f, %.3f, %.3f)',unpack(event.data.normal)))
-        else
-            simUI.setLabelText(ui,13,'N/A')
+            txt[13]=string.format('(%.3f, %.3f, %.3f)',unpack(event.data.normal))
         end
         if event.data.handle then
-            simUI.setLabelText(ui,15,string.format('%s',sim.getObjectAlias(event.data.handle,9)))
-        else
-            simUI.setLabelText(ui,15,'N/A')
+            txt[15]=string.format('%s',sim.getObjectAlias(event.data.handle,9))
         end
-        if event.data.shape then
-            simUI.setLabelText(ui,31,string.format('%d',event.data.shape.triangleIndex))
-            simUI.setLabelText(ui,33,string.format('%d',event.data.shape.vertexIndex))
-        else
-            simUI.setLabelText(ui,31,'N/A')
-            simUI.setLabelText(ui,33,'N/A')
+        if event.data.shape and event.data.shape.triangleIndex~=-1 then
+            txt[31]=string.format('%d',event.data.shape.triangleIndex)
         end
+        if event.data.shape and event.data.shape.vertexIndex~=-1 then
+            txt[33]=string.format('%d',event.data.shape.vertexIndex)
+        end
+        for id,tx in pairs(txt) do simUI.setLabelText(ui,id,tx) end
     end
 end
 
