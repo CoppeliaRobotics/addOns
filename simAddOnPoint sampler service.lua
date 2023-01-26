@@ -24,8 +24,11 @@ function sysCall_nonSimulation()
         local pt,n,o=rayCast(orig,dir)
         local fi,vi=nil,nil
         clearDrawingInfo()
+        local event={ray={orig=orig,dir=dir}}
         if pt then
-            local event={ray={orig=orig,dir=dir},handle=o,point=pt,normal=n}
+            event.handle=o
+            event.point=pt
+            event.normal=n
             displayPointInfo(pt,n,o)
             if sim.getObjectType(o)==sim.object_shape_type then
                 ti,vi=getTriangleAndVertexInfo(pt,n,o)
@@ -37,9 +40,9 @@ function sysCall_nonSimulation()
                 }
                 displayTriangleInfo(o,ti,vi)
             end
-            if clicked or flags[1].hover then
-                sim.broadcastMsg{id='pointSampler.'..(clicked and 'click' or 'hover'),data=event}
-            end
+        end
+        if clicked or flags[1].hover then
+            sim.broadcastMsg{id='pointSampler.'..(clicked and 'click' or 'hover'),data=event}
         end
     end
 end

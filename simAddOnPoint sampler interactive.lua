@@ -17,9 +17,21 @@ end
 function sysCall_msg(event)
     if event.id=='pointSampler.click' then
     elseif event.id=='pointSampler.hover' then
-        simUI.setLabelText(ui,11,string.format('(%.3f, %.3f, %.3f)',unpack(event.data.point)))
-        simUI.setLabelText(ui,13,string.format('(%.3f, %.3f, %.3f)',unpack(event.data.normal)))
-        simUI.setLabelText(ui,15,string.format('%s',sim.getObjectAlias(event.data.handle,9)))
+        if event.data.point then
+            simUI.setLabelText(ui,11,string.format('(%.3f, %.3f, %.3f)',unpack(event.data.point)))
+        else
+            simUI.setLabelText(ui,11,'N/A')
+        end
+        if event.data.normal then
+            simUI.setLabelText(ui,13,string.format('(%.3f, %.3f, %.3f)',unpack(event.data.normal)))
+        else
+            simUI.setLabelText(ui,13,'N/A')
+        end
+        if event.data.handle then
+            simUI.setLabelText(ui,15,string.format('%s',sim.getObjectAlias(event.data.handle,9)))
+        else
+            simUI.setLabelText(ui,15,'N/A')
+        end
         if event.data.shape then
             simUI.setLabelText(ui,31,string.format('%d',event.data.shape.triangleIndex))
             simUI.setLabelText(ui,33,string.format('%d',event.data.shape.vertexIndex))
