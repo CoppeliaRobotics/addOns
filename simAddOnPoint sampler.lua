@@ -28,22 +28,11 @@ function sysCall_nonSimulation()
         local pt,n,o=rayCast(orig,dir)
         clearDrawingInfo()
         if pt then
-            local event={
-                ray={
-                    orig=orig,
-                    dir=dir,
-                },
-                handle=o,
-                point=pt,
-                normal=n,
-            }
+            local event={ray={orig=orig,dir=dir},handle=o,point=pt,normal=n}
             displayPointInfo(pt,n,o)
             if showTriangleInfo and sim.getObjectType(o)==sim.object_shape_type then
                 local fi,vi=displayTriangleInfo(pt,n,o)
-                event.shape={
-                    face=fi,
-                    vertex=vi,
-                }
+                if fi and vi then event.shape={face=fi,vertex=vi} end
             end
             if clicked then
                 sim.broadcastMsg{id='click',data=event}
@@ -153,7 +142,14 @@ function displayTriangleInfo(pt,n,o)
         meshInfo[o].v=Matrix(-1,3,meshInfo[o].mesh.vertices)
         meshInfo[o].e,meshInfo[o].ue,meshInfo[o].emap,meshInfo[o].uec,meshInfo[o].uee=simIGL.uniqueEdgeMap(meshInfo[o].f:totable{})
     end
-    local r,s=simIGL.closestFacet(meshInfo[o].mesh,pt:totable{},meshInfo[o].emap,meshInfo[o].uec,meshInfo[o].uee)
+    local r,s=nil,nil
+    local succ,errMsg=pcall(function()
+        r,s=simIGL.closestFacet(meshInfo[o].mesh,pt:totable{},meshInfo[o].emap,meshInfo[o].uec,meshInfo[o].uee)
+    end)
+    if not succ then
+        sim.addLog(sim.verbosity_errors,'IGL: '..errMsg)
+        return
+    end
     local tri=meshInfo[o].f[1+r[1]]
     local v={
         meshInfo[o].v[1+tri[1]],
@@ -177,6 +173,8 @@ function displayTriangleInfo(pt,n,o)
         local itemData=v[closest]:data()
         table.insert(itemData,0.0025*distanceToCamera(v[closest]))
         sim.addDrawingObjectItem(trianglesv,itemData)
+    else
+        simUI.setLabelText(ui,33,'N/A')
     end
     for _,i in ipairs{1,2,3,1} do
         sim.addDrawingObjectItem(triangles,v[i]:data())
@@ -184,9 +182,7 @@ function displayTriangleInfo(pt,n,o)
     return faceIndex,vertexIndex
 end
 
-function createDummy(pt,n)
-    local h=sim.createDummy(0.02)
-    sim.setObjectColor(h,0,sim.colorcomponent_ambient_diffuse,{0,1,0})
+function pointNormalToMatrix(pt,n)
     local m=sim.buildIdentityMatrix()
     m[4]=pt[1]
     m[8]=pt[2]
@@ -204,7 +200,13 @@ function createDummy(pt,n)
         m[2]=0  m[6]=0  m[10]=1
         m[3]=1  m[7]=0  m[11]=0
     end
-    sim.setObjectMatrix(h,sim.handle_world,m)
+    return m
+end
+
+function createDummy(pt,n)
+    local h=sim.createDummy(0.02)
+    sim.setObjectColor(h,0,sim.colorcomponent_ambient_diffuse,{0,1,0})
+    sim.setObjectMatrix(h,sim.handle_world,pointNormalToMatrix(pt,n))
     sim.setObjectParent(h,parent or -1)
     local zOffset=simUI.getSpinboxValue(ui,8)
     sim.setObjectPose(h,h,{0,0,zOffset,0,0,0,1})
