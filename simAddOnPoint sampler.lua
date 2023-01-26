@@ -85,18 +85,8 @@ function rayCast(orig,dir)
             end
         end
     end
-    local m=sim.buildIdentityMatrix()
-    m[4]=orig[1]
-    m[8]=orig[2]
-    m[12]=orig[3]
-    local z=Vector3(dir)
-    local up=Vector3({0,0,1})
-    local x=up:cross(z):normalized()
-    local y=z:cross(x)
-    m[1]=x[1]  m[5]=x[2]  m[9]=x[3]
-    m[2]=y[1]  m[6]=y[2]  m[10]=y[3]
-    m[3]=z[1]  m[7]=z[2]  m[11]=z[3]
     local sensor=sim.createProximitySensor(sim.proximitysensor_ray_subtype,16,1,{3,3,2,2,1,1,0,0},{0,2000,0.01,0.01,0.01,0.01,0,0,0,0,0,0,0.01,0,0})
+    local m=pointNormalToMatrix(orig,dir)
     sim.setObjectMatrix(sensor,sim.handle_world,m)
     local r,d,pt,o,n=sim.checkProximitySensor(sensor,coll)
     sim.removeObjects({sensor})
