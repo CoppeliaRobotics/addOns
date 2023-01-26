@@ -26,13 +26,17 @@ function sysCall_nonSimulation()
         local clicked=newClickCnt~=clickCnt and clickCnt~=nil
         clickCnt=newClickCnt
         local pt,n,o=rayCast(orig,dir)
+        local fi,vi=nil,nil
         clearDrawingInfo()
         if pt then
             local event={ray={orig=orig,dir=dir},handle=o,point=pt,normal=n}
             displayPointInfo(pt,n,o)
             if sim.getObjectType(o)==sim.object_shape_type then
-                local fi,vi=displayTriangleInfo(pt,n,o)
-                if fi and vi then event.shape={face=fi,vertex=vi} end
+                fi,vi=getTriangleAndVertexInfo(pt,n,o)
+            end
+            if fi and vi then
+                event.shape={face=fi,vertex=vi}
+                displayTriangleInfo(o,fi,vi)
             end
             if clicked then
                 sim.broadcastMsg{id='click',data=event}
@@ -131,7 +135,7 @@ function displayPointInfo(pt,n,o)
     simUI.setLabelText(ui,15,string.format('%s',sim.getObjectAlias(o,9)))
 end
 
-function displayTriangleInfo(pt,n,o)
+function getTriangleAndVertexInfo(pt,n,o)
     pt=Matrix(1,3,pt)
     if not simIGL then return end
     if not meshInfo then meshInfo={} end
@@ -150,7 +154,8 @@ function displayTriangleInfo(pt,n,o)
         sim.addLog(sim.verbosity_errors,'IGL: '..errMsg)
         return
     end
-    local tri=meshInfo[o].f[1+r[1]]
+    local faceIndex,vertexIndex=r[1],-1
+    local tri=meshInfo[o].f[1+faceIndex]
     local v={
         meshInfo[o].v[1+tri[1]],
         meshInfo[o].v[1+tri[2]],
@@ -163,22 +168,31 @@ function displayTriangleInfo(pt,n,o)
         ((v[1]+v[2]+v[3])/3-pt):t():norm(),
     }
     local closest,d=nil,nil
-    for i=1,4 do if not d or dist[i]<d then closest,d=i,dist[i] end end
-    local faceIndex,vertexIndex=r[1],-1
-    simUI.setLabelText(ui,31,string.format('%d',faceIndex))
+    for i=1,4 do
+        if not d or dist[i]<d then
+            closest,d=i,dist[i]
+        end
+    end
     if closest~=4 then
         vertexIndex=tri[closest]
-        simUI.setLabelText(ui,33,string.format('%d (%.3f, %.3f, %.3f)',vertexIndex,unpack(v[closest]:data())))
-        local itemData=v[closest]:data()
-        table.insert(itemData,0.0025*distanceToCamera(v[closest]))
-        sim.addDrawingObjectItem(trianglesv,itemData)
+    end
+    return faceIndex,vertexIndex
+end
+
+function displayTriangleInfo(o,faceIndex,vertexIndex)
+    simUI.setLabelText(ui,31,string.format('%d',faceIndex))
+    if vertexIndex~=-1 then
+        local vertexPos=meshInfo[o].v[1+vertexIndex]:data()
+        simUI.setLabelText(ui,33,string.format('%d (%.3f, %.3f, %.3f)',vertexIndex,unpack(vertexPos)))
+        table.insert(vertexPos,0.0025*distanceToCamera(vertexPos))
+        sim.addDrawingObjectItem(trianglesv,vertexPos)
     else
         simUI.setLabelText(ui,33,'N/A')
     end
+    local tri=meshInfo[o].f[1+faceIndex]
     for _,i in ipairs{1,2,3,1} do
-        sim.addDrawingObjectItem(triangles,v[i]:data())
+        sim.addDrawingObjectItem(triangles,meshInfo[o].v[1+tri[i]]:data())
     end
-    return faceIndex,vertexIndex
 end
 
 function pointNormalToMatrix(pt,n)
