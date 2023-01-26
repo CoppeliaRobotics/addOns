@@ -30,7 +30,7 @@ function sysCall_nonSimulation()
         if pt then
             local event={ray={orig=orig,dir=dir},handle=o,point=pt,normal=n}
             displayPointInfo(pt,n,o)
-            if showTriangleInfo and sim.getObjectType(o)==sim.object_shape_type then
+            if sim.getObjectType(o)==sim.object_shape_type then
                 local fi,vi=displayTriangleInfo(pt,n,o)
                 if fi and vi then event.shape={face=fi,vertex=vi} end
             end
@@ -164,7 +164,6 @@ function displayTriangleInfo(pt,n,o)
     }
     local closest,d=nil,nil
     for i=1,4 do if not d or dist[i]<d then closest,d=i,dist[i] end end
-    simUI.setWidgetVisibility(ui,18,true)
     local faceIndex,vertexIndex=r[1],-1
     simUI.setLabelText(ui,31,string.format('%d',faceIndex))
     if closest~=4 then
@@ -230,17 +229,12 @@ function showDlg()
                 <label id="13" text="N/A"/>
                 <label id="14" text="Object:"/>
                 <label id="15" text="N/A"/>
+                <label id="30" text="Triangle:"/>
+                <label id="31" text="N/A"/>
+                <label id="32" text="Vertex:"/>
+                <label id="33" text="N/A"/>
             </group>
-            <group id="19" layout="vbox" flat="true" content-margins="0,0,0,0">
-                <checkbox checked="false" text="Display triangle/vertex info (only for shapes)" on-change="showTriangleInfo_callback" id="20" />
-                <group id="18" visible="false" layout="form" flat="true" content-margins="20,0,0,0">
-                    <label id="30" text="Triangle:"/>
-                    <label id="31" text="N/A"/>
-                    <label id="32" text="Vertex:"/>
-                    <label id="33" text="N/A"/>
-                </group>
-            </group>
-            <group layout="vbox" flat="true" content-margins="0,0,0,0">
+            <group layout="vbox" flat="true" content-margins="0,0,0,0" visible="]]..tostring(sim.getNamedBoolParam("pointSampler.createDummy") or false)..[[">
                 <checkbox checked="false" text="Create a dummy with each click" on-change="createDummy_callback" id="1" />
                 <group id="5" visible="false" layout="form" flat="true" content-margins="20,0,0,0">
                     <label id="6" text="Parent:"/>
@@ -253,10 +247,6 @@ function showDlg()
         ui=simUI.create(xml)
         populateParentCombobox()
         simUI.setCheckboxValue(ui,1,createDummies and 2 or 0)
-        if not simIGL then
-            simUI.setWidgetVisibility(ui,19,false)
-            simUI.adjustSize(ui)
-        end
     end
 end
 
@@ -271,12 +261,6 @@ function hideDlg()
         sim.removeDrawingObject(triangles)
         sim.removeDrawingObject(trianglesv)
     end
-end
-
-function showTriangleInfo_callback(ui,id,v)
-    showTriangleInfo=v>0
-    simUI.setWidgetVisibility(ui,18,showTriangleInfo)
-    simUI.adjustSize(ui)
 end
 
 function createDummy_callback(ui,id,v)
