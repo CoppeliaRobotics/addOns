@@ -1,5 +1,5 @@
 function sysCall_info()
-    return {autoStart=false,menu='Exporters\nEvents dump exporter'}
+    return {autoStart=false,menu='Exporters\nEvents dump exporter...'}
 end
 
 function sysCall_init()

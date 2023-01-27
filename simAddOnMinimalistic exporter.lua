@@ -1,6 +1,6 @@
 -- this add-on function is a minimalistic scene content exporter, meant as an example.
 function sysCall_info()
-    return {autoStart=false,menu='Exporters\nMinimalistic exporter'}
+    return {autoStart=false,menu='Exporters\nMinimalistic exporter...'}
 end
 
 function sysCall_init()
