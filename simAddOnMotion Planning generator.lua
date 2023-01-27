@@ -1,5 +1,5 @@
 function sysCall_info()
-    return {autoStart=false,menu='Kinematics\nMotion planning generator'}
+    return {autoStart=false,menu='Kinematics\nMotion planning generator...'}
 end
 
 function sysCall_init()
