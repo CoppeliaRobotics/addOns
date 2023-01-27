@@ -162,12 +162,18 @@ function displayPointInfo(pt,n,o)
     end
 end
 
+function positionHash(p)
+    return table.join(map(function(x) return math.floor(x*1000000) end,p),'-')
+end
+
 function getTriangleAndVertexInfo(pt,n,o)
     pt=Matrix(1,3,pt)
     if not simIGL then return end
     if not meshInfo then meshInfo={} end
-    if not meshInfo[o] then
+    local posHash=positionHash(sim.getObjectPosition(o,sim.handle_world))
+    if not meshInfo[o] or meshInfo[o].posHash~=posHash then
         meshInfo[o]={}
+        meshInfo[o].posHash=posHash
         meshInfo[o].mesh=simIGL.getMesh(o)
         meshInfo[o].f=Matrix(-1,3,meshInfo[o].mesh.indices)
         meshInfo[o].v=Matrix(-1,3,meshInfo[o].mesh.vertices)
