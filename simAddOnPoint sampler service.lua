@@ -208,7 +208,8 @@ end
 function displayTriangleInfo(o,triangleIndex,vertexIndex)
     if vertexIndex~=-1 and currentFlags().vertex then
         local vertexPos=meshInfo[o].v[1+vertexIndex]:data()
-        table.insert(vertexPos,0.0025*distanceToCamera(vertexPos))
+        local k=currentFlags().surfacePoint and 0.5 or 1
+        table.insert(vertexPos,k*0.005*distanceToCamera(vertexPos))
         sim.addDrawingObjectItem(trianglesv,vertexPos)
     end
     if triangleIndex~=-1 and currentFlags().triangle then
