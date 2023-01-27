@@ -10,10 +10,11 @@ function sysCall_init()
     createDummies=false
     sim.addLog(sim.verbosity_scriptinfos,"This tool allows to sample points in the scene, and optionally create dummies from them")
     showDlg()
-    sim.broadcastMsg{id='pointSampler.enable',data={hover=true,surfacePoint=true,surfaceNormal=true,triangle=true,vertex=true}}
+    sim.broadcastMsg{id='pointSampler.enable',data={key='pointSampler.interactive',hover=true,surfacePoint=true,surfaceNormal=true,triangle=true,vertex=true}}
 end
 
 function sysCall_msg(event)
+    if not event.data or not event.data.key or event.data.key~='pointSampler.interactive' then return end
     if event.id=='pointSampler.click' then
         if createDummies and event.data.point and event.data.normal then
             createDummy(event.data.point,event.data.normal)
@@ -41,7 +42,7 @@ end
 
 function sysCall_nonSimulation()
     if leaveNow then
-        sim.broadcastMsg{id='pointSampler.disable'}
+        sim.broadcastMsg{id='pointSampler.disable',data={key='pointSampler.interactive'}}
         return {cmd='cleanup'}
     end
 end

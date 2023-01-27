@@ -9,6 +9,7 @@ end
 function sysCall_init()
     enabled=0
     flags={}
+    flagsStack={}
 end
 
 function sysCall_nonSimulation()
@@ -24,7 +25,7 @@ function sysCall_nonSimulation()
         local pt,n,o=rayCast(orig,dir)
         local fi,vi=nil,nil
         clearDrawingInfo()
-        local event={ray={orig=orig,dir=dir}}
+        local event={key=flagsStack[1],ray={orig=orig,dir=dir}}
         if pt then
             event.handle=o
             event.point=pt
@@ -41,7 +42,7 @@ function sysCall_nonSimulation()
                 displayTriangleInfo(o,ti,vi)
             end
         end
-        if clicked or flags[1].hover then
+        if clicked or currentFlags().hover then
             sim.broadcastMsg{id='pointSampler.'..(clicked and 'click' or 'hover'),data=event}
         end
     end
@@ -49,10 +50,24 @@ end
 
 function sysCall_msg(event)
     if event.id=='pointSampler.enable' then
-        table.insert(flags,1,event.data)
+        if not event.data.key then
+            sim.addLog(sim.verbosity_errors,'missing required field data.key')
+            return
+        end
+        if flags[event.data.key] then
+            sim.addLog(sim.verbosity_warnings,'already enabled')
+            return
+        end
+        flags[event.data.key]=event.data
+        table.insert(flagsStack,1,event.data.key)
         enable()
     elseif event.id=='pointSampler.disable' then
-        table.remove(flags,1)
+        if not event.data.key then
+            sim.addLog(sim.verbosity_errors,'missing required field data.key')
+            return
+        end
+        flags[event.data.key]=nil
+        table.remove(flagsStack,1)
         disable()
     end
 end
@@ -65,6 +80,10 @@ end
 function sysCall_afterInstanceSwitch()
     if enabled==0 then return end
     createDrawingObjects()
+end
+
+function currentFlags()
+    return flags[flagsStack[1]]
 end
 
 function createDrawingObjects()
@@ -132,10 +151,10 @@ end
 
 function displayPointInfo(pt,n,o)
     local d=distanceToCamera(pt)
-    if flags[1].surfacePoint then
+    if currentFlags().surfacePoint then
         sim.addDrawingObjectItem(pts,{pt[1],pt[2],pt[3],0.005*d})
     end
-    if flags[1].surfaceNormal then
+    if currentFlags().surfaceNormal then
         sim.addDrawingObjectItem(lines,{pt[1],pt[2],pt[3],pt[1]+n[1]*0.1*d,pt[2]+n[2]*0.1*d,pt[3]+n[3]*0.1*d})
     end
 end
@@ -185,12 +204,12 @@ function getTriangleAndVertexInfo(pt,n,o)
 end
 
 function displayTriangleInfo(o,triangleIndex,vertexIndex)
-    if vertexIndex~=-1 and flags[1].vertex then
+    if vertexIndex~=-1 and currentFlags().vertex then
         local vertexPos=meshInfo[o].v[1+vertexIndex]:data()
         table.insert(vertexPos,0.0025*distanceToCamera(vertexPos))
         sim.addDrawingObjectItem(trianglesv,vertexPos)
     end
-    if triangleIndex~=-1 and flags[1].triangle then
+    if triangleIndex~=-1 and currentFlags().triangle then
         local tri=meshInfo[o].f[1+triangleIndex]
         for _,i in ipairs{1,2,3,1} do
             sim.addDrawingObjectItem(triangles,meshInfo[o].v[1+tri[i]]:data())
