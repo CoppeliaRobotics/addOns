@@ -7,7 +7,11 @@ function sysCall_init()
     sim.test('sim.mergeEvents',true)
     sim.test('sim.cborEvents',true)
     data=string.char(159)
-    sim.addLog(sim.verbosity_infos+sim.verbosity_undecorated,'Recording events... (stop the add-on to save to file)')
+    if simUI.msgBox(simUI.msgbox_type.info,simUI.msgbox_buttons.okcancel,"Events capture add-on",'This add-on allows to record events for a given time period. Recording will start after pressing Ok, and will end by selecting the add-on menu item again. After stopping, the location where to save the file can be selected.\n\nPress Ok to start recording, or Cancel to abort.')==simUI.msgbox_result.ok then
+        sim.addLog(sim.verbosity_scriptinfos,'Recording events... (stop the add-on to save to file)')
+    else
+        return {cmd='cleanup'}
+    end
 end
 
 function sysCall_addOnScriptSuspend()
@@ -34,5 +38,5 @@ function export()
     data=data..string.char(255)
     file:write(data)
     file:close()
-    sim.addLog(sim.verbosity_infos+sim.verbosity_undecorated,'Exported events to '..fileName)
+    sim.addLog(sim.verbosity_scriptinfos,'Exported events to '..fileName)
 end
