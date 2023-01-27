@@ -1,5 +1,5 @@
 function sysCall_info()
-    return {autoStart=false}
+    return {autoStart=false,menu='Developer tools\nPlugin enumerator'}
 end
 
 function sysCall_init()

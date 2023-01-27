@@ -1,5 +1,5 @@
 function sysCall_info()
-    return {autoStart=false}
+    return {autoStart=false,menu='Geometry / Mesh\nPoint sampler (interactive)'}
 end
 
 function sysCall_addOnScriptSuspend()

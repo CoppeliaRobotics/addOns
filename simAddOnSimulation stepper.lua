@@ -1,5 +1,5 @@
 function sysCall_info()
-    return {autoStart=false}
+    return {autoStart=false,menu='Tools\nSimulation stepper'}
 end
 
 function sysCall_addOnScriptSuspend()

@@ -1,5 +1,5 @@
 function sysCall_info()
-    return {autoStart=false}
+    return {autoStart=false,menu='Geometry / Mesh\nDistance check'}
 end
 
 function sysCall_addOnScriptSuspend()

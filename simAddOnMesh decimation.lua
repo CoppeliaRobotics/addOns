@@ -1,5 +1,5 @@
 function sysCall_info()
-    return {autoStart=false,menu='Mesh tools\nDecimation'}
+    return {autoStart=false,menu='Geometry / Mesh\nMesh decimation'}
 end
 
 function sysCall_init()

@@ -1,5 +1,5 @@
 function sysCall_info()
-    return {autoStart=false}
+    return {autoStart=false,menu='Kinematics\nJoint tool'}
 end
 
 function sysCall_addOnScriptSuspend()

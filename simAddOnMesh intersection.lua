@@ -1,7 +1,7 @@
 require'addon_booleanMesh'
 
 function sysCall_info()
-    return {autoStart=false,menu='Mesh tools\nIntersection'}
+    return {autoStart=false,menu='Geometry / Mesh\nMesh intersection'}
 end
 
 function op()

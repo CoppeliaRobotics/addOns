@@ -1,5 +1,5 @@
 function sysCall_info()
-    return {autoStart=false}
+    return {autoStart=false,menu='Geometry / Mesh\nIsometric scaling'}
 end
 
 function sysCall_init()

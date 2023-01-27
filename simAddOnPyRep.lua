@@ -1,3 +1,7 @@
+function sysCall_info()
+    return {autoStart=true,menu='Connectivity\nPyRep'}
+end
+
 function sysCall_addOnScriptSuspend()
     return {cmd='cleanup'} -- the clean-up section will be called and the add-on stopped
 end

@@ -14,5 +14,5 @@ function sysCall_init()
 end
 
 function sysCall_info()
-    return {autoStart=false,menu='Mesh tools\nSubdivide'}
+    return {autoStart=false,menu='Geometry / Mesh\nMesh subdivide'}
 end

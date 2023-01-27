@@ -9,7 +9,7 @@ end
 function sysCall_init()
     size=1
     col={255,255,255}
-    
+
     if sim.getSimulationState()==sim.simulation_stopped then
         showDlg()
     end

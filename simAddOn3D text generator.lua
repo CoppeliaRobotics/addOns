@@ -1,5 +1,5 @@
 function sysCall_info()
-    return {autoStart=false,menu='Mesh tools\n3D text generator'}
+    return {autoStart=false,menu='Geometry / Mesh\n3D text generator'}
 end
 
 function sysCall_addOnScriptSuspend()

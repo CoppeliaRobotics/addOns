@@ -1,5 +1,5 @@
 function sysCall_info()
-    return {autoStart=false,menu='Mesh tools\nConvex hull'}
+    return {autoStart=false,menu='Geometry / Mesh\nMesh convex hull'}
 end
 
 function sysCall_init()

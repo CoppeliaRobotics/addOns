@@ -1,5 +1,5 @@
 function sysCall_info()
-    return {autoStart=false,menu='Denavit-Hartenberg\nExtractor'}
+    return {autoStart=false,menu='Kinematics\nDenavit-Hartenberg Extractor'}
 end
 
 function sysCall_addOnScriptSuspend()

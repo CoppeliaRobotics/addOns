@@ -1,5 +1,5 @@
 function sysCall_info()
-    return {autoStart=false}
+    return {autoStart=false,menu='Developer tools\nReferenced handles explorer'}
 end
 
 function sysCall_init()

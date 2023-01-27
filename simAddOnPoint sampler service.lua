@@ -1,5 +1,5 @@
 function sysCall_info()
-    return {autoStart=true}
+    return {autoStart=true,menu='Misc\nPoint sampler service'}
 end
 
 function sysCall_addOnScriptSuspend()

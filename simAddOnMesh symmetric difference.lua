@@ -1,7 +1,7 @@
 require'addon_booleanMesh'
 
 function sysCall_info()
-    return {autoStart=false,menu='Mesh tools\nSymmetric difference'}
+    return {autoStart=false,menu='Geometry / Mesh\nMesh symmetric difference'}
 end
 
 function op()

@@ -1,5 +1,5 @@
 function sysCall_info()
-    return {autoStart=false,menu='Mesh tools\nSurface reconstruction'}
+    return {autoStart=false,menu='Geometry / Mesh\nSurface reconstruction'}
 end
 
 function sysCall_addOnScriptSuspend()

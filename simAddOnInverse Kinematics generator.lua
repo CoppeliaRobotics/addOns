@@ -1,5 +1,5 @@
 function sysCall_info()
-    return {autoStart=false}
+    return {autoStart=false,menu='Kinematics\nInverse kinematics generator'}
 end
 
 function sysCall_init()

@@ -1,5 +1,5 @@
 function sysCall_info()
-    return {autoStart=false}
+    return {autoStart=false,menu='Tools\nCollision check'}
 end
 
 function sysCall_addOnScriptSuspend()
