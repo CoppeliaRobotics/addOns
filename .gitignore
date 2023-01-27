@@ -1,13 +1,14 @@
 simAdd_OnPythonTest.lua
 simAddOnPythonTest.lua
-*Hibot*
-*hibot*
+simAddOnHibot Visualization.lua
 simAddOnWork on models from list.lua
 simAddOnWork on scenes from list.lua
-*GLTF*
-*SDF*
-*URDF*
-*WS*
-*ZMQ*
+simAddOnGLTF animation exporter.lua
+simAddOnGLTF exporter.lua
+simAddOnSDF importer.lua
+simAddOnURDF exporter.lua
+simAddOnURDF importer.lua
+simAddOnWS remote API server.lua
+simAddOnZMQ remote API server.lua
 simAddOnVisualization stream.lua
 simAddOnButton code action.lua
