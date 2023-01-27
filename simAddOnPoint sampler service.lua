@@ -23,21 +23,24 @@ function sysCall_nonSimulation()
         local clicked=newClickCnt~=clickCnt and clickCnt~=nil
         clickCnt=newClickCnt
         local pt,n,o=rayCast(orig,dir)
-        local fi,vi=nil,nil
+        local ti,vi,tc,vc=nil,nil,nil,nil
         clearDrawingInfo()
         local event={key=flagsStack[1],ray={orig=orig,dir=dir}}
         if pt then
             event.handle=o
             event.point=pt
             event.normal=n
+            event.pointNormalMatrix=pointNormalToMatrix(pt,n)
             displayPointInfo(pt,n,o)
             if sim.getObjectType(o)==sim.object_shape_type then
-                ti,vi=getTriangleAndVertexInfo(pt,n,o)
+                ti,vi,tc,vc=getTriangleAndVertexInfo(pt,n,o)
             end
-            if ti and vi then
+            if ti then
                 event.shape={
                     triangleIndex=ti,
                     vertexIndex=vi,
+                    triangleCoords=tc,
+                    vertexCoords=vc,
                 }
                 displayTriangleInfo(o,ti,vi)
             end
@@ -178,7 +181,7 @@ function getTriangleAndVertexInfo(pt,n,o)
         sim.addLog(sim.verbosity_errors,'IGL: '..errMsg)
         return
     end
-    local triangleIndex,vertexIndex=r[1],-1
+    local triangleIndex,vertexIndex=r[1],nil
     local tri=meshInfo[o].f[1+triangleIndex]
     local v={
         meshInfo[o].v[1+tri[1]],
@@ -199,20 +202,23 @@ function getTriangleAndVertexInfo(pt,n,o)
             closest,d=i,dist[i]
         end
     end
+    local triangleCoords=Matrix:vertcat(unpack(v)):data()
+    local vertexCoords=nil
     if closest~=4 then
         vertexIndex=tri[closest]
+        vertexCoords=meshInfo[o].v[1+vertexIndex]:data()
     end
-    return triangleIndex,vertexIndex
+    return triangleIndex,vertexIndex,triangleCoords,vertexCoords
 end
 
 function displayTriangleInfo(o,triangleIndex,vertexIndex)
-    if vertexIndex~=-1 and currentFlags().vertex then
+    if vertexIndex and currentFlags().vertex then
         local vertexPos=meshInfo[o].v[1+vertexIndex]:data()
         local k=currentFlags().surfacePoint and 0.5 or 1
         table.insert(vertexPos,k*0.005*distanceToCamera(vertexPos))
         sim.addDrawingObjectItem(trianglesv,vertexPos)
     end
-    if triangleIndex~=-1 and currentFlags().triangle then
+    if triangleIndex and currentFlags().triangle then
         local tri=meshInfo[o].f[1+triangleIndex]
         for _,i in ipairs{1,2,3,1} do
             sim.addDrawingObjectItem(triangles,meshInfo[o].v[1+tri[i]]:data())
