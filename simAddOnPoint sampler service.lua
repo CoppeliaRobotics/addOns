@@ -189,10 +189,12 @@ function getTriangleAndVertexInfo(pt,n,o)
         (v[1]-pt):t():norm(),
         (v[2]-pt):t():norm(),
         (v[3]-pt):t():norm(),
-        ((v[1]+v[2]+v[3])/3-pt):t():norm(),
     }
+    if currentFlags().triangle and currentFlags().vertex then
+        table.insert(dist,((v[1]+v[2]+v[3])/3-pt):t():norm())
+    end
     local closest,d=nil,nil
-    for i=1,4 do
+    for i=1,#dist do
         if not d or dist[i]<d then
             closest,d=i,dist[i]
         end
