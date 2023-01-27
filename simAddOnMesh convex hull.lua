@@ -22,13 +22,13 @@ function sysCall_init()
             end
         end
         if numShapesFound==0 then
-            sim.addLog(sim.verbosity_scripterrors,'Select at least one shape.')
+            simUI.msgBox(simUI.msgbox_type.critical,simUI.msgbox_buttons.ok,'Mesh convex hull add-on','Select at least one shape.')
         else
             local v,i=simQHull.compute(vert,true)
             local h=sim.createMeshShape(3,math.pi/8,v,i)
         end
     else
-        sim.addLog(sim.verbosity_scripterrors,'This tool requires the QHull plugin.')
+        simUI.msgBox(simUI.msgbox_type.critical,simUI.msgbox_buttons.ok,'Mesh convex hull add-on','This tool requires the QHull plugin.')
     end
     return {cmd='cleanup'}
 end
