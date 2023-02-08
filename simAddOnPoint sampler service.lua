@@ -124,28 +124,15 @@ function distanceToCamera(pt)
 end
 
 function rayCast(orig,dir)
-    local coll=sim.createCollection(1)
-    local objs=sim.getObjectsInTree(sim.handle_scene)
-    for i=1,#objs,1 do
-        local t=sim.getObjectType(objs[i])
-        if t==sim.object_shape_type or t==sim.object_octree_type then
-            if sim.getObjectInt32Param(objs[i],sim.objintparam_visible)~=0 then
-                sim.addItemToCollection(coll,sim.handle_single,objs[i],0)
-            end
-        end
-    end
     local sensor=sim.createProximitySensor(sim.proximitysensor_ray_subtype,16,1,{3,3,2,2,1,1,0,0},{0,2000,0.01,0.01,0.01,0.01,0,0,0,0,0,0,0.01,0,0})
     local m=pointNormalToMatrix(orig,dir)
     sim.setObjectMatrix(sensor,sim.handle_world,m)
+    local coll=allVisibleObjectsColl()
     local r,d,pt,o,n=sim.checkProximitySensor(sensor,coll)
-    sim.removeObjects({sensor})
     sim.destroyCollection(coll)
+    sim.removeObjects({sensor})
     if r>0 then
-        pt=sim.multiplyVector(m,pt)
-        m[4]=0
-        m[8]=0
-        m[12]=0
-        n=sim.multiplyVector(m,n)
+        pt,n=pointNormalToGlobal(pt,n,m)
         return pt,n,o
     end
 end
@@ -238,6 +225,19 @@ function displayTriangleInfo(o,triangleIndex,vertexIndex)
     end
 end
 
+function allVisibleObjectsColl()
+    local coll=sim.createCollection(1)
+    for i,obj in ipairs(sim.getObjectsInTree(sim.handle_scene)) do
+        local t=sim.getObjectType(obj)
+        if t==sim.object_shape_type or t==sim.object_octree_type then
+            if sim.getObjectInt32Param(obj,sim.objintparam_visible)~=0 then
+                sim.addItemToCollection(coll,sim.handle_single,obj,0)
+            end
+        end
+    end
+    return coll
+end
+
 function pointNormalToMatrix(pt,n)
     local m=sim.buildIdentityMatrix()
     m[4]=pt[1]
@@ -257,4 +257,10 @@ function pointNormalToMatrix(pt,n)
         m[3]=1  m[7]=0  m[11]=0
     end
     return m
+end
+
+function pointNormalToGlobal(pt,n,m)
+    pt=sim.multiplyVector(m,pt)
+    n=sim.multiplyVector({m[1],m[2],m[3],0,m[5],m[6],m[7],0,m[9],m[10],m[11],0},n)
+    return pt,n
 end
