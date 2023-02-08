@@ -17,35 +17,109 @@ function sysCall_nonSimulation()
 
     if sim.getBoolParam(sim.boolparam_rayvalid) then
         currentCameraPos=sim.getObjectPosition(sim.adjustView(0,-1,512),sim.handle_world)
+
         local orig=sim.getArrayParam(sim.arrayparam_rayorigin)
         local dir=sim.getArrayParam(sim.arrayparam_raydirection)
+
         local newClickCnt=sim.getInt32Param(sim.intparam_mouseclickcounterdown)
         local clicked=newClickCnt~=clickCnt and clickCnt~=nil
         clickCnt=newClickCnt
+
         local pt,n,o=rayCast(orig,dir)
         local ti,vi,tc,vc=nil,nil,nil,nil
-        clearDrawingInfo()
-        local event={key=flagsStack[1],ray={orig=orig,dir=dir}}
+        local event={key=flagsStack[1],rayOrigin=orig,rayDirection=dir}
         if pt then
-            event.handle=o
-            event.point=pt
-            event.normal=n
-            event.pointNormalMatrix=pointNormalToMatrix(pt,n)
-            displayPointInfo(pt,n,o)
-            if sim.getObjectType(o)==sim.object_shape_type then
-                ti,vi,tc,vc=getTriangleAndVertexInfo(pt,n,o)
+            if currentFlags().handle then
+                event.handle=o
             end
-            if ti then
-                event.shape={
-                    triangleIndex=ti,
-                    vertexIndex=vi,
-                    triangleCoords=tc,
-                    vertexCoords=vc,
-                }
-                displayTriangleInfo(o,ti,vi)
+            if currentFlags().surfacePoint then
+                event.point=pt
+                if currentFlags().surfaceNormal then
+                    event.normal=n
+                    event.pointNormalMatrix=pointNormalToMatrix(pt,n)
+                end
+            end
+            if (currentFlags().vertex or currentFlags().triangle) and sim.getObjectType(o)==sim.object_shape_type then
+                ti,vi,tc,vc=getTriangleAndVertexInfo(pt,n,o)
+                if currentFlags().triangle and ti then
+                    event.triangleIndex=ti
+                    event.triangleCoords=tc
+                end
+                if currentFlags().vertex and vi then
+                    event.vertexIndex=vi
+                    event.vertexCoords=vc
+                end
             end
         end
-        event.dummy=rayCastDummies(orig,dir)
+        if currentFlags().dummy then
+            event.dummy=rayCastDummies(orig,dir)
+        end
+        
+        if currentFlags().snapToClosest then
+            if event.dummy and event.vertexCoords then
+                local dummyPos=sim.getObjectPosition(event.dummy,sim.handle_world)
+                local dd=distanceToRay(dummyPos,orig,dir)
+                local dv=distanceToRay(event.vertexCoords,orig,dir)
+                if dd<dv then
+                    event.triangleIndex=nil
+                    event.vertexIndex=nil
+                    event.triangleCoords=nil
+                    event.vertexCoords=nil
+                else
+                    event.dummy=nil
+                end
+            end
+            if event.dummy and not simUI.getKeyboardModifiers().shift then
+                event.point=nil
+                event.normal=nil
+                event.pointNormalMatrix=nil
+                event.triangleIndex=nil
+                event.vertexIndex=nil
+                event.triangleCoords=nil
+                event.vertexCoords=nil
+            end
+            if event.vertexCoords and not simUI.getKeyboardModifiers().shift then
+                local p=Vector(pt)
+                local v=Vector(event.vertexCoords)
+                local d=distanceToCamera((p+v)/2)
+                if (p-v):norm()/d<0.015 then
+                    event.point=nil
+                    event.normal=nil
+                    event.pointNormalMatrix=nil
+                    event.dummy=nil
+                end
+            end
+        end
+
+        sim.addDrawingObjectItem(pts,nil)
+        sim.addDrawingObjectItem(lines,nil)
+        sim.addDrawingObjectItem(triangles,nil)
+        sim.addDrawingObjectItem(trianglesv,nil)
+        if event.dummy then
+            local pt=sim.getObjectPosition(event.dummy,sim.handle_world)
+            local d=distanceToCamera(pt)
+            sim.addDrawingObjectItem(pts,{pt[1],pt[2],pt[3],0.005*d})
+        end
+        if event.point then
+            local d=distanceToCamera(event.point)
+            sim.addDrawingObjectItem(pts,{event.point[1],event.point[2],event.point[3],0.005*d})
+            if event.normal then
+                local off=Vector(event.normal)*0.1*d
+                sim.addDrawingObjectItem(lines,{pt[1],pt[2],pt[3],pt[1]+off[1],pt[2]+off[2],pt[3]+off[3]})
+            end
+        end
+        if event.vertexCoords then
+            local vertexPos=table.slice(event.vertexCoords)
+            table.insert(vertexPos,0.005*distanceToCamera(event.vertexCoords))
+            sim.addDrawingObjectItem(trianglesv,vertexPos)
+        end
+        if event.triangleCoords then
+            local c=Matrix(3,3,event.triangleCoords)
+            for _,i in ipairs{1,2,3,1} do
+                sim.addDrawingObjectItem(triangles,c[i]:data())
+            end
+        end
+
         if clicked or currentFlags().hover then
             sim.broadcastMsg{id='pointSampler.'..(clicked and 'click' or 'hover'),data=event}
         end
@@ -124,6 +198,12 @@ function distanceToCamera(pt)
     return (Vector(pt)-Vector(currentCameraPos)):norm()
 end
 
+function distanceToRay(pt,orig,dir)
+    local p,o,d=Vector(pt),Vector(orig),Vector(dir)
+    local t0=d:dot(p-o)/d:norm()
+    return (p-(o+t0*d)):norm()
+end
+
 function rayCast(orig,dir)
     local sensor=sim.createProximitySensor(sim.proximitysensor_ray_subtype,16,1,{3,3,2,2,1,1,0,0},{0,2000,0.01,0.01,0.01,0.01,0,0,0,0,0,0,0.01,0,0})
     local m=pointNormalToMatrix(orig,dir)
@@ -139,7 +219,7 @@ function rayCast(orig,dir)
 end
 
 function rayCastDummies(orig,dir)
-    local a=1*math.pi/180
+    local a=3*math.pi/180
     local sensor=sim.createProximitySensor(sim.proximitysensor_cone_subtype,16,1,{3,3,2,2,1,1,0,0},{0,2000,0.01,0.01,0.01,0.01,0,0,0,a,0,0,0.01,0,0})
     local m=pointNormalToMatrix(orig,dir)
     sim.setObjectMatrix(sensor,sim.handle_world,m)
@@ -149,24 +229,6 @@ function rayCastDummies(orig,dir)
     sim.removeObjects({sensor})
     if r>0 then
         return o
-    end
-end
-
-function clearDrawingInfo()
-    sim.addDrawingObjectItem(pts,nil)
-    sim.addDrawingObjectItem(lines,nil)
-    sim.addDrawingObjectItem(triangles,nil)
-    sim.addDrawingObjectItem(trianglesv,nil)
-end
-
-function displayPointInfo(pt,n,o)
-    local d=distanceToCamera(pt)
-    if currentFlags().surfacePoint then
-        sim.addDrawingObjectItem(pts,{pt[1],pt[2],pt[3],0.005*d})
-    end
-    if currentFlags().surfaceNormal then
-        local off=Vector(n)*0.1*d
-        sim.addDrawingObjectItem(lines,{pt[1],pt[2],pt[3],pt[1]+off[1],pt[2]+off[2],pt[3]+off[3]})
     end
 end
 
@@ -223,21 +285,6 @@ function getTriangleAndVertexInfo(pt,n,o)
         vertexCoords=meshInfo[o].v[1+vertexIndex]:data()
     end
     return triangleIndex,vertexIndex,triangleCoords,vertexCoords
-end
-
-function displayTriangleInfo(o,triangleIndex,vertexIndex)
-    if vertexIndex and currentFlags().vertex then
-        local vertexPos=meshInfo[o].v[1+vertexIndex]:data()
-        local k=currentFlags().surfacePoint and 0.5 or 1
-        table.insert(vertexPos,k*0.005*distanceToCamera(vertexPos))
-        sim.addDrawingObjectItem(trianglesv,vertexPos)
-    end
-    if triangleIndex and currentFlags().triangle then
-        local tri=meshInfo[o].f[1+triangleIndex]
-        for _,i in ipairs{1,2,3,1} do
-            sim.addDrawingObjectItem(triangles,meshInfo[o].v[1+tri[i]]:data())
-        end
-    end
 end
 
 function allVisibleObjectsColl(types)
