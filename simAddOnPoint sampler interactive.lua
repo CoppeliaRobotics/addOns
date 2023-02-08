@@ -26,11 +26,11 @@ function sysCall_msg(event)
         if event.data.handle then
             txt[15]=string.format('%s',sim.getObjectAlias(event.data.handle,9))
         end
-        if event.data.shape and event.data.shape.triangleIndex then
-            txt[31]=string.format('%d',event.data.shape.triangleIndex)
+        if event.data.triangleIndex then
+            txt[31]=string.format('%d',event.data.triangleIndex)
         end
-        if event.data.shape and event.data.shape.vertexIndex then
-            txt[33]=string.format('%d (%.3f, %.3f, %.3f)',event.data.shape.vertexIndex,unpack(event.data.shape.vertexCoords))
+        if event.data.vertexIndex then
+            txt[33]=string.format('%d (%.3f, %.3f, %.3f)',event.data.vertexIndex,unpack(event.data.vertexCoords))
         end
         for id,tx in pairs(txt) do simUI.setLabelText(ui,id,tx) end
     end
