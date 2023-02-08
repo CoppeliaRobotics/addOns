@@ -105,13 +105,18 @@ end
 
 function enable()
     enabled=enabled+1
-    if enabled==1 then createDrawingObjects() end
+    if enabled==1 then
+        createDrawingObjects()
+        clickCnt=sim.getInt32Param(sim.intparam_mouseclickcounterdown)
+    end
 end
 
 function disable()
     if enabled==0 then return end
     enabled=enabled-1
-    if enabled==0 then removeDrawingObjects() end
+    if enabled==0 then
+        removeDrawingObjects()
+    end
 end
 
 function distanceToCamera(pt)
@@ -158,11 +163,12 @@ function displayPointInfo(pt,n,o)
         sim.addDrawingObjectItem(pts,{pt[1],pt[2],pt[3],0.005*d})
     end
     if currentFlags().surfaceNormal then
-        sim.addDrawingObjectItem(lines,{pt[1],pt[2],pt[3],pt[1]+n[1]*0.1*d,pt[2]+n[2]*0.1*d,pt[3]+n[3]*0.1*d})
+        local off=Vector(n)*0.1*d
+        sim.addDrawingObjectItem(lines,{pt[1],pt[2],pt[3],pt[1]+off[1],pt[2]+off[2],pt[3]+off[3]})
     end
 end
 
-function positionHash(p)
+function poseHash(p)
     return table.join(map(function(x) return math.floor(x*1000000) end,p),'-')
 end
 
@@ -170,10 +176,10 @@ function getTriangleAndVertexInfo(pt,n,o)
     pt=Matrix(1,3,pt)
     if not simIGL then return end
     if not meshInfo then meshInfo={} end
-    local posHash=positionHash(sim.getObjectPosition(o,sim.handle_world))
-    if not meshInfo[o] or meshInfo[o].posHash~=posHash then
+    local hash=poseHash(sim.getObjectPose(o,sim.handle_world))
+    if not meshInfo[o] or meshInfo[o].hash~=hash then
         meshInfo[o]={}
-        meshInfo[o].posHash=posHash
+        meshInfo[o].hash=hash
         meshInfo[o].mesh=simIGL.getMesh(o)
         meshInfo[o].f=Matrix(-1,3,meshInfo[o].mesh.indices)
         meshInfo[o].v=Matrix(-1,3,meshInfo[o].mesh.vertices)

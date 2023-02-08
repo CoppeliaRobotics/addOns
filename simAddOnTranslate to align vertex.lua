@@ -22,8 +22,9 @@ function sysCall_msg(event)
     if not event.data or not event.data.key or event.data.key~='translateToAlignVertex' then return end
     if event.id=='pointSampler.click' and event.data.shape then
         if firstShape then
-            delta=Vector(event.data.shape.vertexCoords)-Vector(firstVertex)
-            sim.setObjectPosition(firstShape,firstShape,delta:data())
+            local p=sim.getObjectPosition(firstShape,sim.handle_world)
+            p=Vector(p)+Vector(event.data.shape.vertexCoords)-Vector(firstVertex)
+            sim.setObjectPosition(firstShape,sim.handle_world,p:data())
             return {cmd='cleanup'}
         else
             firstShape=event.data.handle
