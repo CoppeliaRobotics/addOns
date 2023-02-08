@@ -45,6 +45,7 @@ function sysCall_nonSimulation()
                 displayTriangleInfo(o,ti,vi)
             end
         end
+        event.dummy=rayCastDummies(orig,dir)
         if clicked or currentFlags().hover then
             sim.broadcastMsg{id='pointSampler.'..(clicked and 'click' or 'hover'),data=event}
         end
@@ -127,13 +128,27 @@ function rayCast(orig,dir)
     local sensor=sim.createProximitySensor(sim.proximitysensor_ray_subtype,16,1,{3,3,2,2,1,1,0,0},{0,2000,0.01,0.01,0.01,0.01,0,0,0,0,0,0,0.01,0,0})
     local m=pointNormalToMatrix(orig,dir)
     sim.setObjectMatrix(sensor,sim.handle_world,m)
-    local coll=allVisibleObjectsColl()
+    local coll=allVisibleObjectsColl({sim.object_shape_type,sim.object_octree_type})
     local r,d,pt,o,n=sim.checkProximitySensor(sensor,coll)
     sim.destroyCollection(coll)
     sim.removeObjects({sensor})
     if r>0 then
         pt,n=pointNormalToGlobal(pt,n,m)
         return pt,n,o
+    end
+end
+
+function rayCastDummies(orig,dir)
+    local a=1*math.pi/180
+    local sensor=sim.createProximitySensor(sim.proximitysensor_cone_subtype,16,1,{3,3,2,2,1,1,0,0},{0,2000,0.01,0.01,0.01,0.01,0,0,0,a,0,0,0.01,0,0})
+    local m=pointNormalToMatrix(orig,dir)
+    sim.setObjectMatrix(sensor,sim.handle_world,m)
+    local coll=allVisibleObjectsColl({sim.object_dummy_type})
+    local r,d,pt,o,n=sim.checkProximitySensor(sensor,coll)
+    sim.destroyCollection(coll)
+    sim.removeObjects({sensor})
+    if r>0 then
+        return o
     end
 end
 
@@ -225,14 +240,11 @@ function displayTriangleInfo(o,triangleIndex,vertexIndex)
     end
 end
 
-function allVisibleObjectsColl()
+function allVisibleObjectsColl(types)
     local coll=sim.createCollection(1)
     for i,obj in ipairs(sim.getObjectsInTree(sim.handle_scene)) do
-        local t=sim.getObjectType(obj)
-        if t==sim.object_shape_type or t==sim.object_octree_type then
-            if sim.getObjectInt32Param(obj,sim.objintparam_visible)~=0 then
-                sim.addItemToCollection(coll,sim.handle_single,obj,0)
-            end
+        if (types==nil or table.find(types,sim.getObjectType(obj))) and sim.getObjectInt32Param(obj,sim.objintparam_visible)~=0 then
+            sim.addItemToCollection(coll,sim.handle_single,obj,0)
         end
     end
     return coll
