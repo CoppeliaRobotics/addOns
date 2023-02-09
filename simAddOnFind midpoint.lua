@@ -28,6 +28,7 @@ function sysCall_msg(event)
         end
         if not firstPoint then
             firstPoint=Vector(point)
+            sim.broadcastMsg{id='pointSampler.setFlags',data={key='findMidpoint',segmentSource=point}}
         else
             secondPoint=Vector(point)
             n=simUI.getKeyboardModifiers().shift and math.max(1,sim.getNamedInt32Param('findMidpoint.n') or 2) or 1
