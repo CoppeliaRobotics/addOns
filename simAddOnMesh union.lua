@@ -7,3 +7,7 @@ end
 function op()
     return simIGL.boolean_op.union
 end
+
+function acceptsMoreThan2()
+    return true
+end
