@@ -10,7 +10,7 @@ function sysCall_init()
     createDummies=false
     sim.addLog(sim.verbosity_scriptinfos,"This tool allows to sample points in the scene")
     showDlg()
-    sim.broadcastMsg{id='pointSampler.enable',data={key='pointSampler.interactive',hover=true,surfacePoint=true,surfaceNormal=true,triangle=true,vertex=true}}
+    sim.broadcastMsg{id='pointSampler.enable',data={key='pointSampler.interactive',hover=true,surfacePoint=true,surfaceNormal=true,handle=true,triangle=true,vertex=true}}
 end
 
 function sysCall_msg(event)
