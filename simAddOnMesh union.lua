@@ -1,4 +1,4 @@
-require'addon_booleanMesh'
+require'addOns.booleanMesh'
 
 function sysCall_info()
     return {autoStart=false,menu='Geometry / Mesh\nMesh union'}
