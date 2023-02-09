@@ -33,12 +33,12 @@ function sysCall_msg(event)
             targetObject=event.data.handle
             phase=2
             updateUi()
-            sim.broadcastMsg{id='pointSampler.disable',data={key='translateToAlignVertex'}}
-            sim.broadcastMsg{id='pointSampler.enable',data={key='translateToAlignVertex',vertex=true}}
+            sim.broadcastMsg{id='pointSampler.setFlags',data={key='translateToAlignVertex',vertex=true}}
         elseif phase==2 then
             firstVertex=event.data.vertexCoords
             phase=3
             updateUi()
+            sim.broadcastMsg{id='pointSampler.setFlags',data={key='translateToAlignVertex',arrowSource=firstVertex}}
         elseif phase==3 then
             local p=sim.getObjectPosition(targetObject,sim.handle_world)
             p=Vector(p)+Vector(event.data.vertexCoords)-Vector(firstVertex)
