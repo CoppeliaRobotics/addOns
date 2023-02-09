@@ -120,6 +120,35 @@ function sysCall_nonSimulation()
             end
         end
 
+        if currentFlags().arrowSource or currentFlags().segmentSource then
+            local src=currentFlags().arrowSource or currentFlags().segmentSource
+            local tgt=nil
+            if event.dummy then
+                tgt=sim.getObjectPosition(event.dummy,sim.handle_world)
+            elseif event.vertexCoords then
+                tgt=event.vertexCoords
+            elseif event.point then
+                tgt=event.point
+            end
+            sim.addDrawingObjectItem(arrow,nil)
+            if tgt then
+                local a=Vector(src)
+                local b=Vector(tgt)
+                if currentFlags().arrowSource then
+                    local c=Vector(currentCameraPos)
+                    local up=(b-a):cross(c-b):normalized()
+                    local d=distanceToCamera((a+b)/2)
+                    local n=(a-b):normalized()
+                    local k=d*0.01
+                    local p1=b+k*(n+up)
+                    local p2=b+k*(n-up)
+                    sim.addDrawingObjectItem(arrow|sim.handleflag_addmultiple,Matrix:horzcat(a,b,b,p1,b,p2):t():data())
+                else
+                    sim.addDrawingObjectItem(arrow,Matrix:horzcat(a,b):t():data())
+                end
+            end
+        end
+
         if clicked or currentFlags().hover then
             sim.broadcastMsg{id='pointSampler.'..(clicked and 'click' or 'hover'),data=event}
         end
@@ -147,6 +176,18 @@ function sysCall_msg(event)
         flags[event.data.key]=nil
         table.remove(flagsStack,1)
         disable()
+    elseif event.id=='pointSampler.setFlags' then
+        if not event.data.key then
+            sim.addLog(sim.verbosity_errors,'missing required field data.key')
+            return
+        end
+        if not flags[event.data.key] then
+            sim.addLog(sim.verbosity_warnings,'invalid key')
+            return
+        end
+        for k,v in pairs(event.data) do
+            flags[event.data.key][k]=v
+        end
     end
 end
 
@@ -169,6 +210,7 @@ function createDrawingObjects()
     lines=sim.addDrawingObject(sim.drawing_lines,2,0,-1,1,{0,1,0})
     triangles=sim.addDrawingObject(sim.drawing_linestrip,4,0,-1,4,{0,1,0})
     trianglesv=sim.addDrawingObject(sim.drawing_spherepts|sim.drawing_itemsizes,0.0025,0,-1,1,{0,1,0})
+    arrow=sim.addDrawingObject(sim.drawing_lines|sim.drawing_overlay,4,0,-1,3,{1,0,0})
 end
 
 function removeDrawingObjects()
@@ -176,6 +218,7 @@ function removeDrawingObjects()
     sim.removeDrawingObject(lines)
     sim.removeDrawingObject(triangles)
     sim.removeDrawingObject(trianglesv)
+    sim.removeDrawingObject(arrow)
 end
 
 function enable()
