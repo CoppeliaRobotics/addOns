@@ -7,10 +7,12 @@ function sysCall_init()
         return {cmd='cleanup'}
     end
     sim.addLog(sim.verbosity_scriptinfos,"This tool finds midpoint between first clicked vertex/dummy and second clicked vertex/dummy. Hold shift to create two evenly spaced midpoints. Use sim.setNamedInt32Param('findMidpoint.n',3) to change the number of midpoints created when shift is held to e.g. 3.")
-    sim.broadcastMsg{id='pointSampler.enable',data={key='findMidpoint',vertex=true,dummy=true,snapToClosest=true}}
+    sim.broadcastMsg{id='pointSampler.enable',data={key='findMidpoint',vertex=true,dummy=true,snapToClosest=true,hover=true}}
+    pts=sim.addDrawingObject(sim.drawing_spherepts,0.01,0,-1,100,{1,0,0})
 end
 
 function sysCall_cleanup()
+    sim.removeDrawingObject(pts)
     sim.broadcastMsg{id='pointSampler.disable',data={key='findMidpoint'}}
 end
 
@@ -20,28 +22,31 @@ end
 
 function sysCall_msg(event)
     if not event.data or not event.data.key or event.data.key~='findMidpoint' then return end
-    if event.id=='pointSampler.click' then
+    if event.id=='pointSampler.click' or event.id=='pointSampler.hover' then
         if event.data.dummy then
             point=sim.getObjectPosition(event.data.dummy,sim.handle_world)
         else
             point=event.data.vertexCoords
         end
+    end
+    if event.id=='pointSampler.click' then
         if not firstPoint then
             firstPoint=Vector(point)
             sim.broadcastMsg{id='pointSampler.setFlags',data={key='findMidpoint',segmentSource=point}}
         else
             secondPoint=Vector(point)
-            d=secondPoint-firstPoint
-            n=simUI.getKeyboardModifiers().shift and math.max(1,sim.getNamedInt32Param('findMidpoint.n') or 2) or 1
-            for i=1,n do
-                midPoint=firstPoint+d*i/(n+1)
+            for i,m in ipairs(getMidpoints(firstPoint,secondPoint)) do
                 dummy=sim.createDummy(0.01)
                 sim.setObjectAlias(dummy,'Midpoint')
-                m=pointNormalToMatrix(midPoint,d:normalized())
                 sim.setObjectMatrix(dummy,sim.handle_world,m)
             end
             sim.announceSceneContentChange()
             return {cmd='cleanup'}
+        end
+    elseif event.id=='pointSampler.hover' and firstPoint then
+        sim.addDrawingObjectItem(pts,nil)
+        for i,m in ipairs(getMidpoints(firstPoint,Vector(point))) do
+            sim.addDrawingObjectItem(pts,{m[4],m[8],m[12]})
         end
     end
 end
@@ -73,4 +78,15 @@ function pointNormalToMatrix(pt,n)
         m[3]=1  m[7]=0  m[11]=0
     end
     return m
+end
+
+function getMidpoints(a,b)
+    local d=b-a
+    local n=simUI.getKeyboardModifiers().shift and math.max(1,sim.getNamedInt32Param('findMidpoint.n') or 2) or 1
+    local midPoints={}
+    for i=1,n do
+        local midPoint=a+d*i/(n+1)
+        table.insert(midPoints,pointNormalToMatrix(midPoint,d:normalized()))
+    end
+    return midPoints
 end
