@@ -31,12 +31,14 @@ function sysCall_msg(event)
             sim.broadcastMsg{id='pointSampler.setFlags',data={key='findMidpoint',segmentSource=point}}
         else
             secondPoint=Vector(point)
+            d=secondPoint-firstPoint
             n=simUI.getKeyboardModifiers().shift and math.max(1,sim.getNamedInt32Param('findMidpoint.n') or 2) or 1
             for i=1,n do
-                midPoint=firstPoint+(secondPoint-firstPoint)*i/(n+1)
+                midPoint=firstPoint+d*i/(n+1)
                 dummy=sim.createDummy(0.01)
                 sim.setObjectAlias(dummy,'Midpoint')
-                sim.setObjectPosition(dummy,sim.handle_world,midPoint:data())
+                m=pointNormalToMatrix(midPoint,d:normalized())
+                sim.setObjectMatrix(dummy,sim.handle_world,m)
             end
             return {cmd='cleanup'}
         end
@@ -49,4 +51,25 @@ end
 
 function sysCall_beforeInstanceSwitch()
     return {cmd='cleanup'}
+end
+
+function pointNormalToMatrix(pt,n)
+    local m=sim.buildIdentityMatrix()
+    m[4]=pt[1]
+    m[8]=pt[2]
+    m[12]=pt[3]
+    if n[1]<0.99 then
+        local z=Vector3(n)
+        local x=Vector3({1,0,0})
+        local y=z:cross(x):normalized()
+        local x=y:cross(z)
+        m[1]=x[1]  m[5]=x[2]  m[9]=x[3]
+        m[2]=y[1]  m[6]=y[2]  m[10]=y[3]
+        m[3]=z[1]  m[7]=z[2]  m[11]=z[3]
+    else
+        m[1]=0  m[5]=1  m[9]=0
+        m[2]=0  m[6]=0  m[10]=1
+        m[3]=1  m[7]=0  m[11]=0
+    end
+    return m
 end
