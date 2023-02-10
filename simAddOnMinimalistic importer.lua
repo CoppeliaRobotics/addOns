@@ -166,6 +166,7 @@ function sysCall_init()
         for i=1,#newHandlesAndIds/3,1 do
             sim.addObjectToSelection(sim.handle_single,newHandlesAndIds[3*(i-1)+1])
         end
+        sim.announceSceneContentChange()
     end
     return {cmd='cleanup'}
 end

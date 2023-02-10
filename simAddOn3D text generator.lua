@@ -152,6 +152,7 @@ function update(generateNew)
         local h=textUtils.generateTextShape(config.text,config.color,config.height,config.centered,nil,parentDummy)
         sim.writeCustomTableData(h,'__info__',{type='3dText'})
         sim.writeCustomTableData(h,'__config__',config)
+        sim.announceSceneContentChange()
     end
 end
 

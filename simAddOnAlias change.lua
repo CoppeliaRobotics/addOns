@@ -79,6 +79,7 @@ function replace_callback(ui,id,v)
                 sim.setObjectAlias(selectedObjects[i],newName)
             end
         end
+        sim.announceSceneContentChange()
     end
 end
 

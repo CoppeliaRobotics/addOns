@@ -221,6 +221,7 @@ model=sim.getObject'::']])
 model=sim.getObject'::'
 color={0,1,0}]])
     sim.associateScriptWithObject(goalStateScript,goalStateDummy)
+    sim.announceSceneContentChange()
 
     leaveNow=true
 end

@@ -41,6 +41,7 @@ importClicked_callback=function()
             end
             sim.insertPointsIntoPointCloud(pc,opt,pts,ccol)
         end
+        sim.announceSceneContentChange()
     end
     leaveNow=true
 end

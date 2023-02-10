@@ -17,6 +17,7 @@ function setJointPos(ui,id,val)
     local h=idToJointMap[id]
     local p=val*math.pi/180
     sim.setJointPosition(h,p)
+    sim.announceSceneContentChange()
 end
 
 function closeUi()

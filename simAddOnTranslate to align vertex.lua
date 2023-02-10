@@ -43,6 +43,7 @@ function sysCall_msg(event)
             local p=sim.getObjectPosition(targetObject,sim.handle_world)
             p=Vector(p)+Vector(event.data.vertexCoords)-Vector(firstVertex)
             sim.setObjectPosition(targetObject,sim.handle_world,p:data())
+            sim.announceSceneContentChange()
             return {cmd='cleanup'}
         end
     end

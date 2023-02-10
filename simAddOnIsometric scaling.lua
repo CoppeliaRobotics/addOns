@@ -127,4 +127,5 @@ function scale()
         p[3]=p[3]*scaleFact
     end
     sim.setObjectPosition(obj,sim.handle_parent,p)
+    sim.announceSceneContentChange()
 end

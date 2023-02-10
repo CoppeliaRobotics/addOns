@@ -429,5 +429,7 @@ function generate()
         sim.writeCustomDataBlock(simTarget,'ikTarget',sim.packInt32Table{1})
     end
 
+    sim.announceSceneContentChange()
+
     leaveNow=true
 end

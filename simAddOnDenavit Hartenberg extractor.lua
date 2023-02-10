@@ -132,7 +132,7 @@ computeDhParams=function(mPreviousJoint,currentJoint)
         r=math.sqrt(lp[1]*lp[1]+lp[2]*lp[2])
         if r<0.00001 then
             -- the two axes are coincident
-            theta=0 
+            theta=0
         else
             -- the two axes are NOT coincident
             theta=math.atan2(lp[2]/r,lp[1]/r)
@@ -190,7 +190,7 @@ displayDhParams=function(firstJoint)
         table.remove(toExplore_prevMatrix,1)
         local prevName=toExplore_prevName[1]
         table.remove(toExplore_prevName,1)
-        
+
         local attachedJoints={}
         if sim.getObjectType(h)==sim.object_joint_type then
             attachedJoints[1]=h

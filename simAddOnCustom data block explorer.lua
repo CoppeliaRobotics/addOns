@@ -151,6 +151,7 @@ end
 function onClearClicked(ui,id)
     if selectedTag then
         sim.writeCustomDataBlock(object,selectedTag,'')
+        sim.announceSceneContentChange()
         hideDlg()
     end
 end

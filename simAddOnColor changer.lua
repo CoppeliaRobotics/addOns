@@ -172,6 +172,7 @@ function sliderMoved(ui,id,v)
         sim.setShapeColor(selectedObjects[i],colName,sim.colorcomponent_specular,specular)
         sim.setShapeColor(selectedObjects[i],colName,sim.colorcomponent_emission,emission)
     end
+    sim.announceSceneContentChange()
 end
 
 function close2_callback()

@@ -140,6 +140,7 @@ function sysCall_init()
         sim.reorientShapeBoundingBox(handle,-1)
         sim.setObjectSpecialProperty(handle,sim.objectspecialproperty_collidable|sim.objectspecialproperty_measurable|sim.objectspecialproperty_detectable_all|sim.objectspecialproperty_renderable)
         sim.setObjectSelection({handle})
+        sim.announceSceneContentChange()
         closeUi()
     end
     chooseColor=function()

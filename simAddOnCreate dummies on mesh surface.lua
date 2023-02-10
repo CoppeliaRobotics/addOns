@@ -17,6 +17,7 @@ function sysCall_msg(event)
     if event.id=='pointSampler.click' then
         if event.data.pointNormalMatrix then
             createDummy(event.data.pointNormalMatrix)
+            sim.announceSceneContentChange()
         end
     end
 end

@@ -6,6 +6,7 @@ function sysCall_init()
         else
             local m=simIGL.upsample(simIGL.getMesh(sel[1]))
             local h=sim.createMeshShape(3,math.pi/8,m.vertices,m.indices)
+            sim.announceSceneContentChange()
         end
     else
         simUI.msgBox(simUI.msgbox_type.critical,simUI.msgbox_buttons.ok,'Mesh subdivision add-on','This tool requires the IGL plugin.')

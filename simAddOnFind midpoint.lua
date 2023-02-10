@@ -40,6 +40,7 @@ function sysCall_msg(event)
                 m=pointNormalToMatrix(midPoint,d:normalized())
                 sim.setObjectMatrix(dummy,sim.handle_world,m)
             end
+            sim.announceSceneContentChange()
             return {cmd='cleanup'}
         end
     end

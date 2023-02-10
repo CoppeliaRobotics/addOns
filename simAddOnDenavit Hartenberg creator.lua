@@ -148,4 +148,5 @@ function buildJoint(revoluteJoint)
     sim.setObjectParent(newJoint,selectedObjects[1],true)
     sim.removeObjectFromSelection(sim.handle_all,-1)
     sim.addObjectToSelection(sim.handle_single,newJoint)
+    sim.announceSceneContentChange()
 end

@@ -26,6 +26,7 @@ function sysCall_init()
         else
             local v,i=simQHull.compute(vert,true)
             local h=sim.createMeshShape(3,math.pi/8,v,i)
+            sim.announceSceneContentChange()
         end
     else
         simUI.msgBox(simUI.msgbox_type.critical,simUI.msgbox_buttons.ok,'Mesh convex hull add-on','This tool requires the QHull plugin.')
