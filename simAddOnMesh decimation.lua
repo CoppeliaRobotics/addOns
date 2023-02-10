@@ -3,21 +3,12 @@ function sysCall_info()
 end
 
 function sysCall_init()
-    sim.addLog(sim.verbosity_scriptinfos,"This tool allows you to simplify a shape (i.e. decimate the mesh). Simply select the shape you wish to decimate, then adjust the decimation factor and press 'Decimated shape!'.")
-    local moduleName=0
-    local index=0
-    openMeshModulePresent=false
-    while moduleName do
-        moduleName=sim.getModuleName(index)
-        if (moduleName=='OpenMesh') then
-            openMeshModulePresent=true
-            break
-        end
-        index=index+1
-    end
-    if not openMeshModulePresent then
+    if not sim.isPluginLoaded('OpenMesh') then
         sim.addLog(sim.verbosity_scripterrors,'OpenMesh plugin was not found. (simExtOpenMesh.dll or similar). This tool will not run properly.')
+        return {cmd='cleanup'}
     end
+
+    sim.addLog(sim.verbosity_scriptinfos,"This tool allows you to simplify a shape (i.e. decimate the mesh). Simply select the shape you wish to decimate, then adjust the decimation factor and press 'Decimated shape!'.")
     prop=0.2
 end
 
@@ -73,16 +64,14 @@ function sysCall_nonSimulation()
     if leaveNow then
         return {cmd='cleanup'}
     end
-    if openMeshModulePresent then
-        local s=sim.getObjectSelection()
-        local show=(s and #s==1 and sim.getObjectType(s[1])==sim.object_shape_type)
-        if show then
-            currentShape=s[1]
-            showDlg()
-        else
-            currentShape=nil
-            hideDlg()
-        end
+    local s=sim.getObjectSelection()
+    local show=(s and #s==1 and sim.getObjectType(s[1])==sim.object_shape_type)
+    if show then
+        currentShape=s[1]
+        showDlg()
+    else
+        currentShape=nil
+        hideDlg()
     end
 end
 
