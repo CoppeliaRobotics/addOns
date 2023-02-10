@@ -54,7 +54,7 @@ function sysCall_nonSimulation()
         if currentFlags().dummy then
             event.dummy=rayCastDummies(orig,dir)
         end
-        
+
         if currentFlags().snapToClosest then
             if event.dummy and event.vertexCoords then
                 local dummyPos=sim.getObjectPosition(event.dummy,sim.handle_world)
@@ -222,8 +222,12 @@ function removeDrawingObjects()
 end
 
 function enable()
+    if enabled==0 then
+        savedNavigationMode=sim.getNavigationMode()
+    end
     enabled=enabled+1
     if enabled==1 then
+        sim.setNavigationMode(sim.navigation_camerashift|sim.navigation_camerarotatemiddlebutton)
         createDrawingObjects()
         clickCnt=sim.getInt32Param(sim.intparam_mouseclickcounterdown)
     end
@@ -234,6 +238,7 @@ function disable()
     enabled=enabled-1
     if enabled==0 then
         removeDrawingObjects()
+        sim.setNavigationMode(savedNavigationMode)
     end
 end
 
