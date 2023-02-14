@@ -71,6 +71,7 @@ function editorClosed()
 end
 
 function onObjectAdded(handle)
+    if not sim.isHandle(handle) then return end
     trackedHandles[handle]={}
     local code=''
     local objType=sim.getObjectType(handle)
@@ -111,6 +112,7 @@ function onObjectAdded(handle)
 end
 
 function onObjectChanged(handle)
+    if not sim.isHandle(handle) then return end
     if not trackedHandles[handle] then return end
     
     if simUI.getCheckboxValue(ui,102)>0 then
@@ -168,11 +170,7 @@ end
 function updateCode()
     consolidateLog()
     code='-- Script capture is running. Close this window to stop.\n\n'
-    for i,entry in ipairs(log) do
-        if i==#log or entry.type~=log[i+1].type or entry.handle~=log[i+1].handle then
-            code=code..entry.code..'\n'
-        end
-    end
+    for i,entry in ipairs(log) do code=code..entry.code..'\n' end
     simUI.setText(ui,1,code)
 end
 
