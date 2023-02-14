@@ -22,6 +22,7 @@ end
 
 function sysCall_msg(event)
     if not event.data or not event.data.key or event.data.key~='findMidpoint' then return end
+    local point=nil
     if event.id=='pointSampler.click' or event.id=='pointSampler.hover' then
         if event.data.dummy then
             point=sim.getObjectPosition(event.data.dummy,sim.handle_world)
@@ -29,6 +30,7 @@ function sysCall_msg(event)
             point=event.data.vertexCoords
         end
     end
+    if not point then return end
     if event.id=='pointSampler.click' then
         if not firstPoint then
             firstPoint=Vector(point)
