@@ -60,6 +60,19 @@ function sysCall_event(es)
     end
 end
 
+function sysCall_msg(e)
+    if e.id=='systemCall' then
+        local descr=sim.getScriptStringParam(e.data.script,sim.scriptstringparam_description)
+        if captureAddonStart and e.data.callType==sim.syscb_init then
+            table.insert(log,{code='-- Started '..descr})
+            updateCode()
+        elseif captureAddonStop and e.data.callType==sim.syscb_cleanup then
+            table.insert(log,{code='-- Stopped '..descr})
+            updateCode()
+        end
+    end
+end
+
 function insertComment()
     table.insert(log,{code='-- '..simUI.getEditValue(ui,edtComment)})
     simUI.setEditValue(ui,edtComment,'')
