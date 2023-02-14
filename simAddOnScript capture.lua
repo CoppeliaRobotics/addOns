@@ -7,6 +7,11 @@ function sysCall_init()
     sim.test('sim.mergeEvents',true)
     sim.test('sim.cborEvents',true)
     cbor=require'org.conman.cbor'
+    captureObjPose=true
+    captureObjParent=true
+    captureObjAlias=false
+    captureAddonStart=true
+    captureAddonStop=false
     ui=simUI.create[[<ui
         title="Script capture"
         resizable="true"
@@ -18,16 +23,11 @@ function sysCall_init()
         on-close="editorClosed"
     >
         <group flat="true" content-margins="1,1,1,1" layout="hbox">
-            <label text="Capture:" />
-            <checkbox id="101" text="Pose" checked="true" />
-            <checkbox id="102" text="Parent" checked="true" />
-            <checkbox id="103" text="Alias" />
+            <edit id="${edtComment}" />
+            <button id="${btnInsertComment}" text="Insert comment" on-click="insertComment" />
         </group>
-        <group flat="true" content-margins="1,1,1,1" layout="hbox">
-            <edit id="2" />
-            <button text="Insert comment" on-click="insertComment" />
-        </group>
-        <text-browser id="1" text="" html="false" />
+        <text-browser id="${txtCode}" text="" html="false" />
+        <label id="${lblCapturing}" text="Capturing: N/A" wordwrap="true" on-link-activated="editSettings" />
     </ui>]]
     trackedHandles={}
     log={}
@@ -61,8 +61,8 @@ function sysCall_event(es)
 end
 
 function insertComment()
-    table.insert(log,{code='-- '..simUI.getEditValue(ui,2)})
-    simUI.setEditValue(ui,2,'')
+    table.insert(log,{code='-- '..simUI.getEditValue(ui,edtComment)})
+    simUI.setEditValue(ui,edtComment,'')
     updateCode()
 end
 
@@ -114,8 +114,8 @@ end
 function onObjectChanged(handle)
     if not sim.isHandle(handle) then return end
     if not trackedHandles[handle] then return end
-    
-    if simUI.getCheckboxValue(ui,102)>0 then
+
+    if captureObjParent then
         local parent=sim.getObjectParent(handle)
         if parent~=sim.handle_world and parent~=trackedHandles[handle].parent then
             trackedHandles[handle].parent=parent
@@ -126,8 +126,8 @@ function onObjectChanged(handle)
             })
         end
     end
-    
-    if simUI.getCheckboxValue(ui,103)>0 then
+
+    if captureObjAlias then
         local alias=sim.getObjectAlias(handle)
         if alias~=trackedHandles[handle].alias then
             trackedHandles[handle].alias=alias
@@ -139,7 +139,7 @@ function onObjectChanged(handle)
         end
     end
 
-    if simUI.getCheckboxValue(ui,101)>0 then
+    if captureObjPose then
         local pose=sim.getObjectPose(handle,sim.handle_parent)
         if not table.eq(pose,trackedHandles[handle].pose) then
             trackedHandles[handle].pose=pose
@@ -150,7 +150,7 @@ function onObjectChanged(handle)
             })
         end
     end
-    
+
     updateCode()
 end
 
@@ -163,7 +163,7 @@ function onObjectRemoved(handle)
         code=string.format('sim.removeObjects{%s}',objectId(handle)),
     })
     trackedHandles[handle]=nil
-    
+
     updateCode()
 end
 
@@ -171,7 +171,14 @@ function updateCode()
     consolidateLog()
     code='-- Script capture is running. Close this window to stop.\n\n'
     for i,entry in ipairs(log) do code=code..entry.code..'\n' end
-    simUI.setText(ui,1,code)
+    simUI.setText(ui,txtCode,code)
+
+    local capturing={}
+    for _,k in ipairs{'ObjPose','ObjParent','ObjAlias','AddonStart','AddonStop'} do
+        if _G['capture'..k] then table.insert(capturing,k) end
+    end
+    capturing='Capturing: '..(#capturing>0 and table.join(capturing) or 'none')..' <a href="#">[Edit...]</a>'
+    simUI.setLabelText(ui,lblCapturing,capturing)
 end
 
 function getConstantName(v,prefix,suffix)
@@ -207,4 +214,30 @@ function consolidateLog()
         i=i+1
     end
     log=newLog
+end
+
+function editSettings()
+    ui2=simUI.create[[<ui modal="true" title="Script capture settings" closeable="true" on-close="saveSettings">
+        <label text="Script capture settings:" />
+        <group flat="false" content-margins="5,5,5,5">
+            <checkbox id="${chkObjPose}" text="Object pose" checked="${captureObjPose}" />
+            <checkbox id="${chkObjParent}" text="Object parent" checked="${captureObjParent}" />
+            <checkbox id="${chkObjAlias}" text="Object alias" checked="${captureObjAlias}" />
+        </group>
+        <group flat="false" content-margins="5,5,5,5">
+            <checkbox id="${chkAddonStart}" text="Add-on start" checked="${captureAddonStart}" />
+            <checkbox id="${chkAddonStop}" text="Add-on stop" checked="${captureAddonStop}" />
+        </group>
+    </ui>]]
+end
+
+function saveSettings()
+    captureObjPose=simUI.getCheckboxValue(ui2,chkObjPose)>0
+    captureObjParent=simUI.getCheckboxValue(ui2,chkObjParent)>0
+    captureObjAlias=simUI.getCheckboxValue(ui2,chkObjAlias)>0
+    captureAddonStart=simUI.getCheckboxValue(ui2,chkAddonStart)>0
+    captureAddonStop=simUI.getCheckboxValue(ui2,chkAddonStop)>0
+    simUI.destroy(ui2)
+    ui2=nil
+    updateCode()
 end
