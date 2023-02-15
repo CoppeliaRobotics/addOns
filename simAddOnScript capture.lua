@@ -64,18 +64,25 @@ function sysCall_msg(e)
     if e.id=='systemCall' then
         local descr=sim.getScriptStringParam(e.data.script,sim.scriptstringparam_description)
         if captureAddonStart and e.data.callType==sim.syscb_init then
-            table.insert(log,{code='-- Started '..descr})
+            insertComment('Started '..descr)
             updateCode()
         elseif captureAddonStop and e.data.callType==sim.syscb_cleanup then
-            table.insert(log,{code='-- Stopped '..descr})
+            insertComment('Stopped '..descr)
             updateCode()
         end
     end
 end
 
-function insertComment()
-    table.insert(log,{code='-- '..simUI.getEditValue(ui,edtComment)})
-    simUI.setEditValue(ui,edtComment,'')
+function insertComment(txt)
+    if txt==ui then
+        txt=simUI.getEditValue(ui,edtComment)
+        simUI.setEditValue(ui,edtComment,'')
+    end
+    table.insert(log,{
+        type='comment',
+        handles=sim.getObjectSel(),
+        code='-- '..txt
+    })
     updateCode()
 end
 
@@ -221,7 +228,7 @@ function consolidateLog()
                 handles=r,
                 code=string.format('sim.removeObjects%s',table.tostring(map(objectId,r),',')),
             })
-        elseif i==#log or log[i].type~=log[i+1].type or log[i].handle~=log[i+1].handle then
+        elseif log[i].type=='comment' or (i==#log or log[i].type~=log[i+1].type or log[i].handle~=log[i+1].handle) then
             table.insert(newLog,log[i])
         end
         i=i+1
