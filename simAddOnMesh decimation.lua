@@ -94,29 +94,7 @@ end
 
 function decimate_callback()
     if currentShape then
-        local vertices,indices=sim.getShapeMesh(currentShape)
-        local m=sim.getObjectMatrix(currentShape,-1)
-        for i=1,#vertices/3,1 do
-            local v={vertices[3*(i-1)+1],vertices[3*(i-1)+2],vertices[3*(i-1)+3]}
-            v=sim.multiplyVector(m,v)
-            vertices[3*(i-1)+1]=v[1]
-            vertices[3*(i-1)+2]=v[2]
-            vertices[3*(i-1)+3]=v[3]
-        end
-        local currentTriangleCount,afterTriangleCount=getCurrentAndAfterTriangleCnt()
-        local nvertices,nindices=simOpenMesh.getDecimated(vertices,indices,0,afterTriangleCount)
-        local newShape=sim.createMeshShape(0,0,nvertices,nindices)
-        sim.setShapeColor(newShape,nil,sim.colorcomponent_ambient_diffuse,{0.7,0.7,1.0})
-        sim.reorientShapeBoundingBox(newShape,currentShape)
-        local nm=sim.getObjectAlias(currentShape)
-        local p=sim.getObjectParent(currentShape)
-        sim.setObjectParent(newShape,p,true)
-        local children=sim.getObjectsInTree(currentShape,sim.handle_all,1+2)
-        for i=1,#children,1 do
-            sim.setObjectParent(children[i],newShape,true)
-        end
-        sim.removeObject(currentShape)
-        sim.setObjectAlias(newShape,nm)
+        local newShape=simOpenMesh.getDecimatedShape(currentShape,prop)
         sim.removeObjectFromSelection(sim.handle_all,-1)
         sim.addObjectToSelection(sim.handle_single,newShape)
         currentShape=newShape
