@@ -5,7 +5,7 @@ end
 function sysCall_init()
     if sim.isPluginLoaded('QHull') then
         local sel=sim.getObjectSelection()
-        local ok,err=pcall(simQHull.computeShape,table.unpack(sel))
+        local ok,err=pcall(simQHull.computeShape,sel)
         if not ok then
             simUI.msgBox(simUI.msgbox_type.critical,simUI.msgbox_buttons.ok,'Mesh convex hull add-on','simQHull error: '..err)
         else
