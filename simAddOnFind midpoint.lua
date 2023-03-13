@@ -8,7 +8,7 @@ function sysCall_init()
     end
     sim.addLog(sim.verbosity_scriptinfos,"This tool finds midpoint between first clicked vertex/dummy and second clicked vertex/dummy. Hold shift to create two evenly spaced midpoints. Use sim.setNamedInt32Param('findMidpoint.n',3) to change the number of midpoints created when shift is held to e.g. 3.")
     sim.broadcastMsg{id='pointSampler.enable',data={key='findMidpoint',vertex=true,dummy=true,snapToClosest=true,hover=true}}
-    pts=sim.addDrawingObject(sim.drawing_spherepts,0.01,0,-1,100,{1,0,0})
+    pts=sim.addDrawingObject(sim.drawing_spherepts|sim.drawing_itemsizes,0.01,0,-1,100,{1,0,0})
 end
 
 function sysCall_cleanup()
@@ -47,8 +47,11 @@ function sysCall_msg(event)
         end
     elseif event.id=='pointSampler.hover' and firstPoint then
         sim.addDrawingObjectItem(pts,nil)
-        for i,m in ipairs(getMidpoints(firstPoint,Vector(point))) do
-            sim.addDrawingObjectItem(pts,{m[4],m[8],m[12]})
+        local p=Vector(point)
+        local n=simUI.getKeyboardModifiers().shift and math.max(1,sim.getNamedInt32Param('findMidpoint.n') or 2) or 1
+        local sz=math.min(0.01,(p-firstPoint):norm()/n/4)
+        for i,m in ipairs(getMidpoints(firstPoint,p)) do
+            sim.addDrawingObjectItem(pts,{m[4],m[8],m[12],sz})
         end
     end
 end
