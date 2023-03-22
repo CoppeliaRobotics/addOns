@@ -1,5 +1,5 @@
 function sysCall_info()
-    return {autoStart=false,menu='Tools\nCollision check'}
+    return {autoStart=false,menu='Geometry / Mesh\nCollision check'}
 end
 
 function sysCall_addOnScriptSuspend()
