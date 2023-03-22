@@ -50,6 +50,7 @@ function sysCall_init()
                     local objType=value
                     if objType=='object' then
                         objHandle=sim.createDummy(0.01)
+                        sim.setObjectMatrix(objHandle,-1,objMatr)
                     end
                     if objType=='shape' then
                         l=l+1
