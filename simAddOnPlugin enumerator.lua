@@ -3,13 +3,12 @@ function sysCall_info()
 end
 
 function sysCall_init()
-    h=sim.auxiliaryConsoleOpen('CoppeliaSim Plugins',100,4,{100,100},{800,300})
-    sim.auxiliaryConsolePrint(h,'Following CoppeliaSim plugins are loaded and operational:'..'\n\n')
+    print('Following CoppeliaSim plugins are loaded and operational:')
     i=0
     while (true) do
         name,version=sim.getModuleName(i)
         if (name) then
-            str='-'..name..' (version: '..version
+            str='  - '..name..' (version: '..version
             if sim.getInt32Param(sim.intparam_program_version)>=30500 then
                 local extVer=sim.getModuleInfo(name,0)
                 if #extVer>0 then
@@ -20,8 +19,8 @@ function sysCall_init()
                     str=str..', build date: '..buildDate
                 end
             end
-            str=str..')\n'
-            sim.auxiliaryConsolePrint(h,str)
+            str=str..')'
+            print(str)
         else
             break
         end
