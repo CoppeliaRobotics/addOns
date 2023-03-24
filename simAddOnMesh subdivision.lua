@@ -6,7 +6,13 @@ function sysCall_init()
         else
             local m=simIGL.upsample(simIGL.getMesh(sel[1]))
             local h=sim.createMeshShape(3,math.pi/8,m.vertices,m.indices)
+            sim.setObjectColor(h,0,sim.colorcomponent_ambient_diffuse,{0.85,0.96,1.0})
+            sim.setObjectFloatParam(h,sim.shapefloatparam_edge_angle,0)
+            sim.setObjectFloatParam(h,sim.shapefloatparam_shading_angle,0)
+            sim.setObjectInt32Param(h,sim.shapeintparam_edge_visibility,1)
+            sim.setObjectInt32Param(h,sim.shapeintparam_culling,0)
             sim.announceSceneContentChange()
+            sim.setObjectSel({h})
         end
     else
         simUI.msgBox(simUI.msgbox_type.critical,simUI.msgbox_buttons.ok,'Mesh subdivision add-on','This tool requires the IGL plugin.')
