@@ -1,6 +1,6 @@
 function sysCall_init()
     if sim.isPluginLoaded('IGL') then
-        local sel=sim.getObjectSelection()
+        local sel=sim.getObjectSel()
         if #sel~=1 or sim.getObjectType(sel[1])~=sim.object_shape_type then
             simUI.msgBox(simUI.msgbox_type.critical,simUI.msgbox_buttons.ok,'Mesh subdivision add-on','This tool requires exactly one shape to be selected.')
         else
