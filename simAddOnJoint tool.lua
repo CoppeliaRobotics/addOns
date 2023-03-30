@@ -35,8 +35,9 @@ function onSelectionChanged()
     closeUi()
     for i,sh in ipairs(sel) do
         for j,h in ipairs(sim.getObjectsInTree(sh,sim.object_joint_type)) do
+            local isSpherical=sim.getJointType(h)==sim.joint_spherical_subtype
             local mh,a,b=sim.getJointDependency(h)
-            if mh==-1 and not jointToIdMap[h] then
+            if not isSpherical and mh==-1 and not jointToIdMap[h] then
                 jointToIdMap[h]=nid
                 idToJointMap[nid]=h
                 nid=nid+1
