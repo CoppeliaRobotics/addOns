@@ -25,6 +25,7 @@ function closeUi()
     uiPos=table.pack(simUI.getPosition(ui))
     simUI.destroy(ui)
     ui=nil
+    leaveNow=true
 end
 
 function onSelectionChanged()
@@ -69,6 +70,9 @@ function checkSelectionChanged()
 end
 
 function sysCall_nonSimulation()
+    if leaveNow then
+        return {cmd='cleanup'}
+    end
     checkSelectionChanged()
 end
 
