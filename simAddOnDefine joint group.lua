@@ -8,8 +8,9 @@ function sysCall_init()
     end
 
     -- get selection, expand selected models:
-    local sel=sim.getObjectSel()
-    for _,handle in ipairs(sel) do
+    local sel={}
+    for _,handle in ipairs(sim.getObjectSel()) do
+        table.insert(sel,handle)
         if sim.getModelProperty(handle)&sim.modelproperty_not_model==0 then
             for _,handle1 in ipairs(sim.getObjectsInTree(handle,sim.handle_all,1)) do
                 table.insert(sel,handle1)
@@ -19,7 +20,7 @@ function sysCall_init()
 
     -- filter by joints:
     local joints={}
-    for _,handle in ipairs(sim.getObjectSel()) do
+    for _,handle in ipairs(sel) do
         if sim.getObjectType(handle)==sim.object_joint_type then
             if sim.getJointType(handle)~=sim.joint_spherical_subtype then
                 table.insert(joints,handle)
