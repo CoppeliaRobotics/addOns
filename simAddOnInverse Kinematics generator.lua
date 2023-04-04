@@ -1,3 +1,5 @@
+require'addOns.jointGroup'
+
 function sysCall_info()
     return {autoStart=false,menu='Kinematics\nInverse kinematics generator...'}
 end
@@ -14,6 +16,8 @@ function sysCall_init()
             <combobox id="${ui_comboRobotTip}" on-change="updateUi" />
             <label text="Robot target:" />
             <combobox id="${ui_comboRobotTarget}" on-change="updateUi" />
+            <label text="Joint group: (leave empty for 'all')" />
+            <combobox id="${ui_comboJointGroup}" on-change="updateUi" />
             <label text="Constraint:" />
             <group flat="true" content-margins="0,0,0,0" layout="form">
                 <label text="Position:" />
@@ -45,9 +49,7 @@ function sysCall_init()
             </group>
             <label text="Script:" />
             <group flat="true" content-margins="0,0,0,0" layout="vbox">
-                <checkbox id="${ui_chkGenSimJoints}" text="Table of joints" checked="true" on-change="updateUi" />
-                <checkbox id="${ui_chkGenGetSetConfig}" text="Functions to get/set config" on-change="updateUi" />
-                <checkbox id="${ui_chkGenIKVars}" text="IK variables (ikBase, ikTip, ikTarget, ikJoints)" on-change="updateUi" />
+                <checkbox id="${ui_chkGenIKVars}" text="IK variables (ikBase, ikTip, ikTarget, ...)" on-change="updateUi" />
             </group>
             <label text="" />
             <button id="${ui_btnGenerate}" text="Generate" on-click="generate" />
@@ -106,6 +108,8 @@ function onModelChanged()
                 needsUpdateUi=true
             end
         end
+
+        simUI.setComboboxSelectedIndex(ui,ui_comboJointGroup,-1)
 
         if needsUpdateUi then
             updateUi()
@@ -196,6 +200,27 @@ function populateComboRobotTarget()
     simUI.setComboboxItems(ui,ui_comboRobotTarget,comboRobotTargetName,idx-1)
 end
 
+function getJointGroupHandle()
+    if comboJointGroupHandle then
+        return comboJointGroupHandle[1+simUI.getComboboxSelectedIndex(ui,ui_comboJointGroup)]
+    end
+end
+
+function populateComboJointGroup()
+    local robotModel=getRobotModelHandle()
+    local oldJointGroup,idx=getJointGroupHandle(),0
+    comboJointGroupName={}
+    comboJointGroupHandle={}
+    if robotModel then
+        for _,h in ipairs(getJointGroups(robotModel)) do
+            table.insert(comboJointGroupName,sim.getObjectAlias(h))
+            table.insert(comboJointGroupHandle,h)
+            if h==oldJointGroup then idx=#comboJointGroupHandle end
+        end
+    end
+    simUI.setComboboxItems(ui,ui_comboJointGroup,comboJointGroupName,idx-1)
+end
+
 function getConstraint()
     return 0
         +(simUI.getCheckboxValue(ui,ui_chkConstraintX)>0 and simIK.constraint_x or 0)
@@ -231,13 +256,11 @@ function updateUi()
     populateComboRobotBase()
     populateComboRobotTip()
     populateComboRobotTarget()
+    populateComboJointGroup()
     simUI.setEnabled(ui,ui_btnGenerate,not not (
         getRobotModelHandle() and getRobotBaseHandle() and getRobotTipHandle() and getRobotTargetHandle()
         and getConstraint()~=0
     ))
-    if simUI.getCheckboxValue(ui,ui_chkGenGetSetConfig)>0 and simUI.getCheckboxValue(ui,ui_chkGenSimJoints)==0 then
-        simUI.setCheckboxValue(ui,ui_chkGenSimJoints,2)
-    end
 end
 
 function onClose()
@@ -251,6 +274,7 @@ function generate()
     local simBase=getRobotBaseHandle()
     local simTip=getRobotTipHandle()
     local simTarget=getRobotTargetHandle()
+    local jointGroup=getJointGroupHandle()
     local existingIK=sim.getObject('./IK',{proxy=robotModel,noError=true})
     if existingIK~=-1 then
         if simUI.msgbox_result.ok~=simUI.msgBox(simUI.msgbox_type.warning,simUI.msgbox_buttons.okcancel,'IK already exists','The specified model already contains an \'IK\' object. By proceeding, it will be replaced!') then return end
@@ -262,8 +286,6 @@ function generate()
     local handleInSim=simUI.getCheckboxValue(ui,ui_chkHandleInSimulation)>0
     local handleInNonSim=simUI.getCheckboxValue(ui,ui_chkHandleInNonSimulation)>0
     local abortOnJointLimitsHit=simUI.getCheckboxValue(ui,ui_chkAbortOnJointLimitsHit)>0
-    local genSimJoints=simUI.getCheckboxValue(ui,ui_chkGenSimJoints)>0
-    local genGetSetConfig=simUI.getCheckboxValue(ui,ui_chkGenGetSetConfig)>0
     local genIKVars=simUI.getCheckboxValue(ui,ui_chkGenIKVars)>0
 
     appendLine("function sysCall_init()")
@@ -272,26 +294,9 @@ function generate()
     appendLine("    simBase=sim.getObject'%s'",sim.getObjectAliasRelative(simBase,robotModel,1))
     appendLine("    simTip=sim.getObject'%s'",sim.getObjectAliasRelative(simTip,robotModel,1))
     appendLine("    simTarget=sim.getObject'%s'",sim.getObjectAliasRelative(simTarget,robotModel,1))
-    if genSimJoints then
-        local tmp=simTip
-        local jointAliases={}
-        while true do
-            if sim.getObjectType(tmp)==sim.object_joint_type then
-                table.insert(jointAliases,1,sim.getObjectAliasRelative(tmp,robotModel,8))
-            end
-            if tmp==simBase then break end
-            tmp=sim.getObjectParent(tmp)
-            if tmp==-1 then break end
-        end
-        appendLine("    simJoints={")
-        for _,a in ipairs(jointAliases) do
-            appendLine("        sim.getObject'%s',",a)
-        end
-        appendLine("    }")
-        if genGetSetConfig then
-            appendLine("    getConfig=partial(map,sim.getJointPosition,simJoints)")
-            appendLine("    setConfig=partial(foreach,sim.setJointPosition,simJoints)")
-        end
+    if jointGroup then
+        appendLine("    jointGroup=sim.getObject'%s'",sim.getObjectAliasRelative(jointGroup,robotModel,1))
+        appendLine("    simJoints=sim.getReferencedHandles(jointGroup)")
     end
     appendLine("")
     appendLine("    enabledWhenSimulationRunning=%s",handleInSim)
@@ -316,19 +321,20 @@ function generate()
         appendLine("    flags=flags|16 -- abort on joint limits hit")
         appendLine("    simIK.setGroupFlags(ikEnv,ikGroup,flags)")
     end
-    appendLine("    _,ikHandleMap=simIK.addElementFromScene(ikEnv,ikGroup,simBase,simTip,simTarget,constraint)")
+    appendLine("    _,ikHandleMap,simHandleMap=simIK.addElementFromScene(ikEnv,ikGroup,simBase,simTip,simTarget,constraint)")
+    if jointGroup then
+        appendLine("    -- a joint group is defined --> disable joints not part of the joint group")
+        appendLine("    for i,joint in ipairs(simIK.getGroupJoints(ikEnv,ikGroup)) do")
+        appendLine("        if not table.find(simJoints,simHandleMap[joint]) then")
+        appendLine("            simIK.setJointMode(ikEnv,joint,simIK.jointmode_passive)")
+        appendLine("        end")
+        appendLine("    end")
+    end
     if genIKVars then
         appendLine("")
         appendLine("    ikBase=ikHandleMap[simBase]")
         appendLine("    ikTip=ikHandleMap[simTip]")
         appendLine("    ikTarget=ikHandleMap[simTarget]")
-        if genSimJoints then
-            appendLine("    ikJoints=map(table.index(ikHandleMap),simJoints)")
-            if genGetSetConfig then
-                appendLine("    getIkConfig=partial(map,partial(simIK.getJointPosition,ikEnv),ikJoints)")
-                appendLine("    setIkConfig=partial(foreach,partial(simIK.setJointPosition,ikEnv),ikJoints)")
-            end
-        end
     end
     appendLine("end")
 
@@ -404,13 +410,6 @@ function generate()
     appendLine("function setEnabledWhenSimulationStopped(enabled)")
     appendLine("    enabledWhenSimulationStopped=not not enabled")
     appendLine("end")
-
-    if genSimJoints then
-        appendLine("")
-        appendLine("function getJoints()")
-        appendLine("    return simJoints")
-        appendLine("end")
-    end
 
     local ikDummy=sim.createDummy(0.01)
     local script=sim.addScript(handleInNonSim and sim.scripttype_customizationscript or sim.scripttype_childscript)
