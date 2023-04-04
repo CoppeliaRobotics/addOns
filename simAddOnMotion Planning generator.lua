@@ -1,3 +1,5 @@
+require'addOns.jointGroup'
+
 function sysCall_info()
     return {autoStart=false,menu='Kinematics\nMotion planning generator...'}
 end
@@ -12,6 +14,8 @@ function sysCall_init()
             <combobox id="${ui_comboAlgorithm}" on-change="updateUi" />
             <label text="Planning time:" />
             <spinbox id="${ui_spinPlanningTime}" minimum="1" maximum="60" value="10" step="1" suffix="s" on-change="updateUi" />
+            <label text="Joint group:" />
+            <combobox id="${ui_comboJointGroup}" on-change="updateUi" />
             <label text="" />
             <button id="${ui_btnGenerate}" text="Generate" on-click="generate" />
         </group>
@@ -87,11 +91,33 @@ function populateComboAlgorithm()
     simUI.setComboboxItems(ui,ui_comboAlgorithm,algorithmName,idx-1)
 end
 
+function getJointGroupHandle()
+    if comboJointGroupHandle then
+        return comboJointGroupHandle[1+simUI.getComboboxSelectedIndex(ui,ui_comboJointGroup)]
+    end
+end
+
+function populateComboJointGroup()
+    local robotModel=getRobotModelHandle()
+    local oldJointGroup,idx=getJointGroupHandle(),0
+    comboJointGroupName={}
+    comboJointGroupHandle={}
+    if robotModel then
+        for _,h in ipairs(getJointGroups(robotModel)) do
+            table.insert(comboJointGroupName,sim.getObjectAlias(h))
+            table.insert(comboJointGroupHandle,h)
+            if h==oldJointGroup then idx=#comboJointGroupHandle end
+        end
+    end
+    simUI.setComboboxItems(ui,ui_comboJointGroup,comboJointGroupName,idx-1)
+end
+
 function updateUi()
     populateComboRobotModel()
     populateComboAlgorithm()
+    populateComboJointGroup()
     simUI.setEnabled(ui,ui_btnGenerate,not not (
-        getRobotModelHandle() and getAlgorithm()
+        getRobotModelHandle() and getAlgorithm() and getJointGroupHandle()
     ))
 end
 
@@ -104,89 +130,12 @@ function generate()
     local function appendLine(...) scriptText=scriptText..string.format(...)..'\n' end
     local robotModel=getRobotModelHandle()
     local algorithmName=getAlgorithmName()
+    local jointGroup=getJointGroupHandle()
     local existingMotionPlanning=sim.getObject('./MotionPlanning',{proxy=robotModel,noError=true})
-    local existingIK=sim.getObject('./IK',{proxy=robotModel,noError=true})
     if existingMotionPlanning~=-1 then
         if simUI.msgbox_result.ok~=simUI.msgBox(simUI.msgbox_type.warning,simUI.msgbox_buttons.okcancel,'MotionPlanning already exists','The specified model already contains a \'MotionPlanning\' object. By proceeding, it will be replaced!') then return end
         if simUI.msgbox_result.yes~=simUI.msgBox(simUI.msgbox_type.question,simUI.msgbox_buttons.yesno,'Confirm object removal','Are you sure you want to remove object '..sim.getObjectAlias(existingMotionPlanning,1)..'?') then return end
         sim.removeObjects{existingMotionPlanning}
-    end
-    local getIK=''
-    if existingIK~=-1 then
-        getIK="\n    IK=ObjectProxy'::/IK'\n\n"
-    end
-
-    scriptText=[===[robotConfigPath=require'models.robotConfigPath'
-
-function sysCall_init()
-    model=sim.getObject'::'
-]===]..getIK..[===[
-    joints=getJoints()
-
-    robotCollection=sim.createCollection()
-    sim.addItemToCollection(robotCollection,sim.handle_tree,model,0)
-
-    startState=ObjectProxy'./StartState'
-    goalState=ObjectProxy'./GoalState'
-
-    task=simOMPL.createTask'main'
-
-    -- wrap simOMPL.* functions with task argument:
-    for k,v in pairs(simOMPL) do
-        if type(v)=='function' and not _G[k] then
-            _G[k]=function(...) return simOMPL[k](task,...) end
-        end
-    end
-
-    setStateSpaceForJoints(joints,{1,1,1})
-    setCollisionPairs({robotCollection,sim.handle_all})
-    setAlgorithm(simOMPL.Algorithm.]===]..algorithmName..[===[)
-end
-
-function sysCall_cleanup()
-    destroyTask()
-end
-
-function compute()
-    setStartState(startState:getConfig())
-    setGoalState(goalState:getConfig())
-    setup()
-    solved,path=simOMPL.compute(task,10)
-    path=Matrix(-1,getStateSpaceDimension(),path)
-    printf('solved: %s (%s)',solved,hasApproximateSolution() and 'approximate' or 'exact')
-    printf('path: %d states',#path)
-    if solved then
-        robotConfigPath.create(path,model)
-    end
-end
-
-function ObjectProxy(p,t)
-    t=t or sim.scripttype_customizationscript
-    return sim.getScriptFunctions(sim.getScript(t,sim.getObject(p)))
-end
-]===]
-
-    if existingIK~=-1 then
-        appendLine[[
-
-function getJoints()
-    return IK:getJoints()
-end
-]]
-    else
-        appendLine[[
-
-function getJoints()
-    local joints={}
-    sim.visitTree(model,function(h)
-        if h~=model and sim.getModelProperty(h)&sim.modelproperty_not_model==0 then return false end
-        if sim.getObjectType(h)==sim.object_joint_type then
-            table.insert(joints,h)
-        end
-    end)
-    return joints
-end
-]]
     end
 
     local motionPlanningDummy=sim.createDummy(0.01)
@@ -196,6 +145,56 @@ end
     sim.setObjectPose(motionPlanningDummy,robotModel,{0,0,0,0,0,0,1})
     sim.setObjectInt32Param(motionPlanningDummy,sim.objintparam_visibility_layer,0)
     sim.setObjectInt32Param(motionPlanningDummy,sim.objintparam_manipulation_permissions,0)
+
+    appendLine("robotConfigPath=require'models.robotConfigPath'")
+    appendLine("")
+    appendLine("function sysCall_init()")
+    appendLine("    model=sim.getObject'::'")
+    appendLine("    jointGroup=sim.getObject'%s'",sim.getObjectAliasRelative(jointGroup,motionPlanningDummy,1))
+    appendLine("    joints=sim.getReferencedHandles(jointGroup)")
+    appendLine("")
+    appendLine("    robotCollection=sim.createCollection()")
+    appendLine("    sim.addItemToCollection(robotCollection,sim.handle_tree,model,0)")
+    appendLine("")
+    appendLine("    startState=ObjectProxy'./StartState'")
+    appendLine("    goalState=ObjectProxy'./GoalState'")
+    appendLine("")
+    appendLine("    task=simOMPL.createTask'main'")
+    appendLine("")
+    appendLine("    -- wrap simOMPL.* functions with task argument:")
+    appendLine("    for k,v in pairs(simOMPL) do")
+    appendLine("        if type(v)=='function' and not _G[k] then")
+    appendLine("            _G[k]=function(...) return simOMPL[k](task,...) end")
+    appendLine("        end")
+    appendLine("    end")
+    appendLine("")
+    appendLine("    setStateSpaceForJoints(joints,{1,1,1})")
+    appendLine("    setCollisionPairs({robotCollection,sim.handle_all})")
+    appendLine("    setAlgorithm(simOMPL.Algorithm.%s)",algorithmName)
+    appendLine("end")
+    appendLine("")
+    appendLine("function sysCall_cleanup()")
+    appendLine("    destroyTask()")
+    appendLine("end")
+    appendLine("")
+    appendLine("function compute()")
+    appendLine("    setStartState(startState:getConfig())")
+    appendLine("    setGoalState(goalState:getConfig())")
+    appendLine("    setup()")
+    appendLine("    solved,path=simOMPL.compute(task,10)")
+    appendLine("    path=Matrix(-1,getStateSpaceDimension(),path)")
+    appendLine('%s',"    printf('solved: %s (%s)',solved,hasApproximateSolution() and 'approximate' or 'exact')")
+    appendLine('%s',"    printf('path: %d states',#path)")
+    appendLine("    if solved then")
+    appendLine("        robotConfigPath.create(path,model)")
+    appendLine("    end")
+    appendLine("end")
+    appendLine("")
+    appendLine("function ObjectProxy(p,t)")
+    appendLine("    t=t or sim.scripttype_customizationscript")
+    appendLine("    return sim.getScriptFunctions(sim.getScript(t,sim.getObject(p)))")
+    appendLine("end")
+
     local startStateDummy=sim.createDummy(0.01)
     sim.setObjectAlias(startStateDummy,'StartState')
     sim.setObjectParent(startStateDummy,motionPlanningDummy,false)
