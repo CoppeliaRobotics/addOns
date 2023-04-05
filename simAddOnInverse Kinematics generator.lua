@@ -16,8 +16,11 @@ function sysCall_init()
             <combobox id="${ui_comboRobotTip}" on-change="updateUi" />
             <label text="Robot target:" />
             <combobox id="${ui_comboRobotTarget}" on-change="updateUi" />
-            <label text="Joint group: (leave empty for 'all')" />
-            <combobox id="${ui_comboJointGroup}" on-change="updateUi" />
+            <label text="Joint group:" />
+            <group flat="true" content-margins="0,0,0,0" layout="vbox">
+                <combobox id="${ui_comboJointGroup}" on-change="updateUi" />
+                <label text="(leave empty to use all joints)" />
+            </group>
             <label text="Constraint:" />
             <group flat="true" content-margins="0,0,0,0" layout="form">
                 <label text="Position:" />
