@@ -41,16 +41,16 @@ function sysCall_init()
                     <label text="Max. iterations:" />
                     <spinbox id="${ui_spinMaxIterations}" minimum="1" maximum="1000" value="10" on-change="updateUi" />
                     <label text="Damping factor:" />
-                    <spinbox id="${ui_spinDampingFactor}" minimum="0" maximum="10" value="0.01" step="0.01" on-change="updateUi" />
+                    <spinbox id="${ui_spinDampingFactor}" minimum="0" maximum="10" value="0.1" step="0.01" on-change="updateUi" />
                 </group>
                 <checkbox id="${ui_chkAvoidJointLimits}" text="Actively avoid joint limits" on-change="updateUi" />
                 <checkbox id="${ui_chkAbortOnJointLimitsHit}" text="Abort on joint limits hit" on-change="updateUi" />
-                <checkbox id="${ui_chkAllowError}" text="Allow error" on-change="updateUi" />
+                <checkbox id="${ui_chkAllowError}" text="Allow error" checked="true" on-change="updateUi" />
             </group>
             <label text="Handling:" />
             <group flat="true" content-margins="0,0,0,0" layout="vbox">
                 <checkbox id="${ui_chkHandleInSimulation}" text="During simulation" checked="true" on-change="updateUi" />
-                <checkbox id="${ui_chkHandleInNonSimulation}" text="When not simulating" on-change="updateUi" />
+                <checkbox id="${ui_chkHandleInNonSimulation}" text="When not simulating" checked="true" on-change="updateUi" />
             </group>
             <label text="Script:" />
             <group flat="true" content-margins="0,0,0,0" layout="vbox">
