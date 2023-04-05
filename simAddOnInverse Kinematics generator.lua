@@ -43,7 +43,9 @@ function sysCall_init()
                     <label text="Damping factor:" />
                     <spinbox id="${ui_spinDampingFactor}" minimum="0" maximum="10" value="0.01" step="0.01" on-change="updateUi" />
                 </group>
+                <checkbox id="${ui_chkAvoidJointLimits}" text="Actively avoid joint limits" on-change="updateUi" />
                 <checkbox id="${ui_chkAbortOnJointLimitsHit}" text="Abort on joint limits hit" on-change="updateUi" />
+                <checkbox id="${ui_chkAllowError}" text="Allow error" on-change="updateUi" />
             </group>
             <label text="Handling:" />
             <group flat="true" content-margins="0,0,0,0" layout="vbox">
@@ -288,7 +290,9 @@ function generate()
     local maxIterations=simUI.getSpinboxValue(ui,ui_spinMaxIterations)
     local handleInSim=simUI.getCheckboxValue(ui,ui_chkHandleInSimulation)>0
     local handleInNonSim=simUI.getCheckboxValue(ui,ui_chkHandleInNonSimulation)>0
+    local avoidJointLimits=simUI.getCheckboxValue(ui,ui_chkAvoidJointLimits)>0
     local abortOnJointLimitsHit=simUI.getCheckboxValue(ui,ui_chkAbortOnJointLimitsHit)>0
+    local allowError=simUI.getCheckboxValue(ui,ui_chkAllowError)>0
     local genIKVars=simUI.getCheckboxValue(ui,ui_chkGenIKVars)>0
 
     appendLine("function sysCall_init()")
@@ -314,14 +318,19 @@ function generate()
     appendLine("    constraint=%s",getConstraintVar())
     appendLine("    ikOptions={")
     appendLine("        syncWorlds=true,")
-    appendLine("        allowError=false,")
+    appendLine("        allowError=%s,",allowError)
     appendLine("    }")
     appendLine("    ikEnv=simIK.createEnvironment()")
     appendLine("    ikGroup=simIK.createGroup(ikEnv)")
     appendLine("    simIK.setGroupCalculation(ikEnv,ikGroup,method,dampingFactor,maxIterations)")
-    if abortOnJointLimitsHit then
+    if avoidJointLimits or abortOnJointLimitsHit then
         appendLine("    local flags=simIK.getGroupFlags(ikEnv,ikGroup)")
-        appendLine("    flags=flags|16 -- abort on joint limits hit")
+        if avoidJointLimits then
+            appendLine("    flags=flags|simIK.group_avoidlimits")
+        end
+        if abortOnJointLimitsHit then
+            appendLine("    flags=flags|simIK.group_stoponlimithit")
+        end
         appendLine("    simIK.setGroupFlags(ikEnv,ikGroup,flags)")
     end
     appendLine("    _,ikHandleMap,simHandleMap=simIK.addElementFromScene(ikEnv,ikGroup,simBase,simTip,simTarget,constraint)")
