@@ -295,14 +295,21 @@ function generate()
     local allowError=simUI.getCheckboxValue(ui,ui_chkAllowError)>0
     local genIKVars=simUI.getCheckboxValue(ui,ui_chkGenIKVars)>0
 
+    local ikDummy=sim.createDummy(0.01)
+    sim.setObjectAlias(ikDummy,'IK')
+    sim.setObjectParent(ikDummy,robotModel,false)
+    sim.setObjectPose(ikDummy,robotModel,{0,0,0,0,0,0,1})
+    sim.setObjectInt32Param(ikDummy,sim.objintparam_visibility_layer,0)
+    sim.setObjectInt32Param(ikDummy,sim.objintparam_manipulation_permissions,0)
+
     appendLine("function sysCall_init()")
     appendLine("    self=sim.getObject'.'")
     appendLine("")
-    appendLine("    simBase=sim.getObject'%s'",sim.getObjectAliasRelative(simBase,robotModel,1))
-    appendLine("    simTip=sim.getObject'%s'",sim.getObjectAliasRelative(simTip,robotModel,1))
-    appendLine("    simTarget=sim.getObject'%s'",sim.getObjectAliasRelative(simTarget,robotModel,1))
+    appendLine("    simBase=sim.getObject'%s'",sim.getObjectAliasRelative(simBase,ikDummy,1))
+    appendLine("    simTip=sim.getObject'%s'",sim.getObjectAliasRelative(simTip,ikDummy,1))
+    appendLine("    simTarget=sim.getObject'%s'",sim.getObjectAliasRelative(simTarget,ikDummy,1))
     if jointGroup then
-        appendLine("    jointGroup=sim.getObject'%s'",sim.getObjectAliasRelative(jointGroup,robotModel,1))
+        appendLine("    jointGroup=sim.getObject'%s'",sim.getObjectAliasRelative(jointGroup,ikDummy,1))
         appendLine("    simJoints=sim.getReferencedHandles(jointGroup)")
     end
     appendLine("")
@@ -334,14 +341,15 @@ function generate()
         appendLine("    simIK.setGroupFlags(ikEnv,ikGroup,flags)")
     end
     appendLine("    _,ikHandleMap,simHandleMap=simIK.addElementFromScene(ikEnv,ikGroup,simBase,simTip,simTarget,constraint)")
-    if jointGroup then
-        appendLine("    -- a joint group is defined --> disable joints not part of the joint group")
-        appendLine("    for i,joint in ipairs(simIK.getGroupJoints(ikEnv,ikGroup)) do")
-        appendLine("        if not table.find(simJoints,simHandleMap[joint]) then")
-        appendLine("            simIK.setJointMode(ikEnv,joint,simIK.jointmode_passive)")
-        appendLine("        end")
-        appendLine("    end")
-    end
+    appendLine("")
+    appendLine("    if jointGroup then")
+    appendLine("        -- a joint group is defined --> disable joints not part of the joint group")
+    appendLine("        for i,joint in ipairs(simIK.getGroupJoints(ikEnv,ikGroup)) do")
+    appendLine("            if not table.find(simJoints,simHandleMap[joint]) then")
+    appendLine("                simIK.setJointMode(ikEnv,joint,simIK.jointmode_passive)")
+    appendLine("            end")
+    appendLine("        end")
+    appendLine("    end")
     if genIKVars then
         appendLine("")
         appendLine("    ikBase=ikHandleMap[simBase]")
@@ -423,15 +431,9 @@ function generate()
     appendLine("    enabledWhenSimulationStopped=not not enabled")
     appendLine("end")
 
-    local ikDummy=sim.createDummy(0.01)
-    local script=sim.addScript(handleInNonSim and sim.scripttype_customizationscript or sim.scripttype_childscript)
+    local script=sim.addScript(sim.scripttype_customizationscript)
     sim.setScriptStringParam(script,sim.scriptstringparam_text,scriptText)
     sim.associateScriptWithObject(script,ikDummy)
-    sim.setObjectAlias(ikDummy,'IK')
-    sim.setObjectParent(ikDummy,robotModel,false)
-    sim.setObjectPose(ikDummy,robotModel,{0,0,0,0,0,0,1})
-    sim.setObjectInt32Param(ikDummy,sim.objintparam_visibility_layer,0)
-    sim.setObjectInt32Param(ikDummy,sim.objintparam_manipulation_permissions,0)
 
     if not sim.readCustomDataBlock(simTip,'ikTip') then
         sim.writeCustomDataBlock(simTip,'ikTip',sim.packInt32Table{1})
