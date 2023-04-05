@@ -146,11 +146,12 @@ function generate()
     sim.setObjectInt32Param(motionPlanningDummy,sim.objintparam_visibility_layer,0)
     sim.setObjectInt32Param(motionPlanningDummy,sim.objintparam_manipulation_permissions,0)
 
+    local jointGroupPath=sim.getObjectAliasRelative(jointGroup,motionPlanningDummy,1)
     appendLine("robotConfigPath=require'models.robotConfigPath'")
     appendLine("")
     appendLine("function sysCall_init()")
     appendLine("    model=sim.getObject'::'")
-    appendLine("    jointGroup=sim.getObject'%s'",sim.getObjectAliasRelative(jointGroup,motionPlanningDummy,1))
+    appendLine("    jointGroup=sim.getObject'%s'",jointGroupPath)
     appendLine("    joints=sim.getReferencedHandles(jointGroup)")
     appendLine("")
     appendLine("    robotCollection=sim.createCollection()")
@@ -213,11 +214,13 @@ function generate()
     sim.associateScriptWithObject(script,motionPlanningDummy)
     local startStateScript=sim.addScript(sim.scripttype_customizationscript)
     sim.setScriptStringParam(startStateScript,sim.scriptstringparam_text,[[require'models.robotConfig_customization'
-model=sim.getObject'::']])
+model=sim.getObject'::'
+jointGroupPath=']]..jointGroupPath.."'")
     sim.associateScriptWithObject(startStateScript,startStateDummy)
     local goalStateScript=sim.addScript(sim.scripttype_customizationscript)
     sim.setScriptStringParam(goalStateScript,sim.scriptstringparam_text,[[require'models.robotConfig_customization'
 model=sim.getObject'::'
+jointGroupPath=']]..jointGroupPath..[['
 color={0,1,0}]])
     sim.associateScriptWithObject(goalStateScript,goalStateDummy)
     sim.announceSceneContentChange()
