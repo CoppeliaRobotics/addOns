@@ -86,8 +86,9 @@ function stopCapture()
             local br=tonumber(simUI.getEditValue(ui,editBitrate))
             local inf=string.format('%s/%s_%s.png',outputDir,filePrefix,'%08d')
             local outf=string.format('%s/%s.mp4',outputDir,filePrefix)
-            sim.addLog(sim.verbosity_scriptinfos,string.format('will run: ffmpeg -r %d -i \"%s\" -c:v libx264 -b:v %dk \"%s\"',fps,inf,br,outf))
-            local exitCode,output=simSubprocess.exec('ffmpeg',{'-r',tostring(fps),'-i',inf,'-c:v','libx264','-b:v',br..'k',outf},'',{useSearchPath=true,openNewConsole=false})
+            local args={'-r',tostring(fps),'-i',inf,'-c:v','libx264','-b:v',br..'k',outf}
+            sim.addLog(sim.verbosity_scriptinfos,'Running: ffmpeg '..table.join(args,' '))
+            local exitCode,output=simSubprocess.exec('ffmpeg',args,'',{useSearchPath=true,openNewConsole=false})
             if exitCode~=0 then
                 simUI.msgBox(simUI.msgbox_type.critical,simUI.msgbox_buttons.ok,'Error','Failed to execute ffmpeg:\n\n'..output)
             else
