@@ -23,17 +23,11 @@ function sysCall_init()
     config.povray.blurSamples=10
     config.nearClipping=0.01
     config.farClipping=250
-    
-    local moduleName=0
-    local index=0
-    while moduleName do
-        moduleName=sim.getModuleName(index)
-        if moduleName=='PovRay' then
-            config.povray.available=true
-            break
-        end
-        index=index+1
-    end
+
+    pcall(function()
+        simPovRay=require'simPovRay'
+        config.povray.available=true
+    end)
 end
 
 function sysCall_addOnScriptSuspend()
