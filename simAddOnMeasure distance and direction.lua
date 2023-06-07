@@ -1,3 +1,5 @@
+sim=require'sim'
+
 function sysCall_info()
     return {autoStart=false,menu='Geometry / Mesh\nMeasure distance/direction'}
 end

@@ -1,8 +1,11 @@
+sim=require'sim'
+
 function sysCall_info()
     return {autoStart=false,menu='Geometry / Mesh\nFind midpoint'}
 end
 
 function sysCall_init()
+    simUI=require'simUI'
     if sim.getSimulationState()~=sim.simulation_stopped then
         return {cmd='cleanup'}
     end

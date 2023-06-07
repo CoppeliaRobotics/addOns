@@ -1,3 +1,5 @@
+sim=require'sim'
+
 function sysCall_info()
     return {autoStart=false,menu='Kinematics\nJoint tool'}
 end
@@ -7,6 +9,7 @@ function sysCall_addOnScriptSuspend()
 end
 
 function sysCall_init()
+    simUI=require'simUI'
     sim.addLog(sim.verbosity_scriptinfos,"Select an object to use the Joint tool.")
     sel={}
     idToJointMap={}

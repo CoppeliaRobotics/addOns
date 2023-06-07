@@ -1,3 +1,5 @@
+sim=require'sim'
+
 function sysCall_info()
     return {autoStart=false,menu='Geometry / Mesh\nDistance check'}
 end
@@ -51,6 +53,7 @@ function dist(ui,id)
 end
 
 function sysCall_init()
+    simUI=require'simUI'
     sim.addLog(sim.verbosity_scriptinfos,"This add-on allows to quickly measure the distance between two entities, or between one entity and the environment. Just select one or two entities.")
     obj1=-1
     obj2=-1

@@ -1,8 +1,11 @@
+sim=require'sim'
+
 function sysCall_info()
     return {autoStart=false,menu='Tools\nAnimation capture'}
 end
 
 function sysCall_init()
+    simUI=require'simUI'
     sim.addLog(sim.verbosity_scriptinfos,"Before simulation starts, select an object/model: its movement (including all of its hierarchy) will be recorded and a self-sufficient model created from it at simulation end.")
     selectedObject=-1
 end

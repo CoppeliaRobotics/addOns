@@ -1,3 +1,5 @@
+sim=require'sim'
+
 function sysCall_info()
     return {autoStart=false,menu='Misc\nButton action'}
 end
@@ -11,6 +13,7 @@ function close_callback()
 end
 
 function sysCall_init()
+    simUI=require'simUI'
     sim.addLog(sim.verbosity_scriptinfos,"This add-on allows to quickly apply an action to selected objects/models.")
     selectedObjects={}
 end

@@ -1,8 +1,12 @@
+sim=require'sim'
+
 function sysCall_info()
     return {autoStart=false,menu='Kinematics\nDefine joint group...'}
 end
 
 function sysCall_init()
+    simUI=require'simUI'
+
     if sim.getSimulationState()~=sim.simulation_stopped then
         return {cmd='cleanup'}
     end

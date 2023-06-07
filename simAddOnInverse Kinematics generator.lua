@@ -1,3 +1,5 @@
+sim=require'sim'
+
 require'addOns.jointGroup'
 
 function sysCall_info()
@@ -5,6 +7,8 @@ function sysCall_info()
 end
 
 function sysCall_init()
+    simUI=require'simUI'
+    simIK=require'simIK'
     ui=simUI.create([[<ui title="Inverse Kinematics generator" closeable="true" on-close="onClose" layout="vbox" modal="true">
         <label wordwrap="true" text="This addon generates a script for solving inverse kinematics for the given tip/target/params. The script will be placed in an 'IK' object under the robot model. Choose the params below and click 'Generate'." />
         <group flat="true" content-margins="0,0,0,0" layout="form">

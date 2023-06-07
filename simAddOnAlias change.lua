@@ -1,3 +1,5 @@
+sim=require'sim'
+
 function sysCall_info()
     return {autoStart=false,menu='Developer tools\nAlias change'}
 end
@@ -7,6 +9,7 @@ function sysCall_addOnScriptSuspend()
 end
 
 function sysCall_init()
+    simUI=require'simUI'
     sim.addLog(sim.verbosity_scriptinfos,"This tool allows to replace/change aliases of selected objects.")
     strings={"originalString","replacementString"}
 end

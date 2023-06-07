@@ -1,8 +1,11 @@
+sim=require'sim'
+
 function sysCall_info()
     return {autoStart=false,menu='Tools\nScreenshot tool'}
 end
 
 function sysCall_init()
+    simUI=require'simUI'
     sim.addLog(sim.verbosity_scriptinfos,"Select the camera or vision sensor you wish to generate a high resolution screenshot for. This model is courtesy of Ulrich Schwesinger.")
     config={}
     config.res={4096,2304}

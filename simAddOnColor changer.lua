@@ -1,8 +1,11 @@
+sim=require'sim'
+
 function sysCall_info()
     return {autoStart=false,menu='Tools\nColor changer'}
 end
 
 function sysCall_init()
+    simUI=require'simUI'
     sim.addLog(sim.verbosity_scriptinfos,"This tool allows you to change the color of shapes, when those colors are named. Simply select individual shapes or models.")
     previousSelectedObjects={}
     colorNameIndex=-1

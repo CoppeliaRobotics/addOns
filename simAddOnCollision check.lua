@@ -1,3 +1,5 @@
+sim=require'sim'
+
 function sysCall_info()
     return {autoStart=false,menu='Geometry / Mesh\nCollision check'}
 end
@@ -207,6 +209,7 @@ function coll(ui,id)
 end
 
 function sysCall_init()
+    simUI=require'simUI'
     sim.addLog(sim.verbosity_scriptinfos,"This add-on allows to quickly verify the collision state of one or two entities. Just select one or two entities.")
     obj1=-1
     obj2=-1

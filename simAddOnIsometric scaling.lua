@@ -1,8 +1,11 @@
+sim=require'sim'
+
 function sysCall_info()
     return {autoStart=false,menu='Geometry / Mesh\nIsometric scaling'}
 end
 
 function sysCall_init()
+    simUI=require'simUI'
     sim.addLog(sim.verbosity_scriptinfos,"With this tool you are able to easily scale objects and models in an isometric fashion. Simply select a single object/model for the scaling dialog to appear.")
     factor=1
     currentFactor=1

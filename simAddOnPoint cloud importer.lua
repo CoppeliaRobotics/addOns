@@ -1,3 +1,5 @@
+sim=require'sim'
+
 function sysCall_info()
     return {autoStart=false,menu='Importers\nPoint cloud importer...'}
 end
@@ -7,9 +9,9 @@ function sysCall_addOnScriptSuspend()
 end
 
 function sysCall_init()
+    simUI=require'simUI'
     size=1
     col={255,255,255}
-
     if sim.getSimulationState()==sim.simulation_stopped then
         showDlg()
     end

@@ -1,3 +1,5 @@
+sim=require'sim'
+
 function sysCall_info()
     return {autoStart=false,menu='Geometry / Mesh\nSurface reconstruction'}
 end
@@ -7,6 +9,8 @@ function sysCall_addOnScriptSuspend()
 end
 
 function sysCall_init()
+    simUI=require'simUI'
+    simSurfRec=require'simSurfRec'
     sim.addLog(sim.verbosity_scriptinfos,"This tool allows to construct a surface from a point cloud.")
 end
 

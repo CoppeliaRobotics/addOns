@@ -1,8 +1,11 @@
+sim=require'sim'
+
 function sysCall_info()
     return {autoStart=false,menu='Exporters\nEvents capture...'}
 end
 
 function sysCall_init()
+    simUI=require'simUI'
     sim.test('sim.enableEvents',true)
     sim.test('sim.mergeEvents',true)
     sim.test('sim.cborEvents',true)

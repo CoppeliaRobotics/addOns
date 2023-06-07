@@ -1,3 +1,5 @@
+sim=require'sim'
+
 function sysCall_info()
     return {autoStart=false,menu='Geometry / Mesh\nPoint sampler'}
 end
@@ -7,6 +9,7 @@ function sysCall_addOnScriptSuspend()
 end
 
 function sysCall_init()
+    simUI=require'simUI'
     createDummies=false
     sim.addLog(sim.verbosity_scriptinfos,"This tool allows to sample points in the scene")
     showDlg()

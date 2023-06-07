@@ -1,3 +1,5 @@
+sim=require'sim'
+
 function sysCall_info()
     return {autoStart=false,menu='Geometry / Mesh\n3D text generator...'}
 end
@@ -7,7 +9,8 @@ function sysCall_addOnScriptSuspend()
 end
 
 function sysCall_init()
-    textUtils=require('textUtils')
+    simUI=require'simUI'
+    textUtils=require'textUtils'
     sim.addLog(sim.verbosity_scriptinfos,"This tool allows to generate 3D text. Courtesy of 'Mechatronics Ninja'")
     prevObj=-1
     showDlg()

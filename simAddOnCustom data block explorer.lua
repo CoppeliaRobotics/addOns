@@ -1,8 +1,11 @@
+sim=require'sim'
+
 function sysCall_info()
     return {autoStart=false,menu='Developer tools\nCustom data block explorer'}
 end
 
 function sysCall_init()
+    simUI=require'simUI'
     cbor=require'org.conman.cbor'
     sim.addLog(sim.verbosity_scriptinfos,"This tool will display the custom data blocks attached to the selected object, or the custom data blocks attached to the scene, if no object is selected. Custom data blocks can be written and read with simWriteCustomDataBlock and simReadCustomDataBlock.")
     object=-1

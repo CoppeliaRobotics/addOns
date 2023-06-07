@@ -1,8 +1,11 @@
+sim=require'sim'
+
 function sysCall_info()
     return {autoStart=false,menu='Developer tools\nReferenced handles explorer'}
 end
 
 function sysCall_init()
+    simUI=require'simUI'
     sim.addLog(sim.verbosity_scriptinfos,"This tool will display the referenced handles stored in the selected object. Referenced handles can be written and read with simSetReferencedHandles and simGetReferencedHandles.")
     object=-1
 end

@@ -1,4 +1,7 @@
 -- this add-on function is a minimalistic scene content importer, meant as an example.
+
+sim=require'sim'
+
 function sysCall_info()
     return {autoStart=false,menu='Importers\nMinimalistic importer...'}
 end

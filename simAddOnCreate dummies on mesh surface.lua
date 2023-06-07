@@ -1,3 +1,5 @@
+sim=require'sim'
+
 function sysCall_info()
     return {autoStart=false,menu='Geometry / Mesh\nCreate dummies on mesh surface'}
 end
@@ -7,6 +9,7 @@ function sysCall_addOnScriptSuspend()
 end
 
 function sysCall_init()
+    simUI=require'simUI'
     sim.addLog(sim.verbosity_scriptinfos,"This tool allows to create dummies from points sampled on mesh surfaces")
     showDlg()
     sim.broadcastMsg{id='pointSampler.enable',data={key='createDummiesOnMeshSurf',surfacePoint=true,surfaceNormal=true}}

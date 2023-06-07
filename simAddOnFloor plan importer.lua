@@ -1,3 +1,5 @@
+sim=require'sim'
+
 function sysCall_info()
     return {autoStart=false,menu='Importers\nFloor plan importer...'}
 end
@@ -53,6 +55,7 @@ function optimize(grid)
 end
 
 function sysCall_init()
+    simUI=require'simUI'
     color={0.95,0.95,0.95}
     colorCSS=function(c) return string.format('rgb(%d,%d,%d)',math.floor(255*c[1]),math.floor(255*c[2]),math.floor(255*c[3])) end
     path=sim.getStringParam(sim.stringparam_scene_path)

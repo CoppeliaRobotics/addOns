@@ -1,8 +1,11 @@
+sim=require'sim'
+
 function sysCall_info()
     return {autoStart=false,menu='Exporters\nVideo recorder...'}
 end
 
 function sysCall_init()
+    simUI=require'simUI'
     capturing=false
     numCapturedFrames=0
     outputDir=sim.getStringParam(sim.stringparam_importexportdir)
@@ -88,6 +91,7 @@ function stopCapture()
             local outf=string.format('%s/%s.mp4',outputDir,filePrefix)
             local args={'-r',tostring(fps),'-i',inf,'-c:v','libx264','-b:v',br..'k',outf}
             sim.addLog(sim.verbosity_scriptinfos,'Running: ffmpeg '..table.join(args,' '))
+            simSubprocess=simSubprocess or require'simSubprocess'
             local exitCode,output=simSubprocess.exec('ffmpeg',args,'',{useSearchPath=true,openNewConsole=false})
             if exitCode~=0 then
                 simUI.msgBox(simUI.msgbox_type.critical,simUI.msgbox_buttons.ok,'Error','Failed to execute ffmpeg:\n\n'..output)

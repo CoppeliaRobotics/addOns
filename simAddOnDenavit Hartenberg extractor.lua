@@ -1,8 +1,11 @@
+sim=require'sim'
+
 function sysCall_info()
     return {autoStart=false,menu='Kinematics\nDenavit-Hartenberg Extractor'}
 end
 
 function sysCall_init()
+    simUI=require'simUI'
     local sel=sim.getObjectSel()
     if #sel~=1 then
         simUI.msgBox(simUI.msgbox_type.critical,simUI.msgbox_buttons.ok,'Denavit-Hartenberg extractor','This tool requires exactly one object, representing a kinematic chain, to be selected.\n\ne.g. select the last joint or the end-effector of a kinematic chain.')

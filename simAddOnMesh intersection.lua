@@ -5,6 +5,7 @@ function sysCall_info()
 end
 
 function op()
+    local simIGL=require'simIGL'
     return simIGL.boolean_op.intersection
 end
 

@@ -1,3 +1,5 @@
+sim=require'sim'
+
 function sysCall_info()
     return {autoStart=true,menu='Connectivity\nPyRep'}
 end
@@ -121,6 +123,8 @@ end
 _findPath=function(goalConfigs,cnt,jointHandles,algorithm,collisionPairs)
     -- Here we do path planning between the specified start and goal configurations. We run the search cnt times,
     -- and return the shortest path, and its length
+
+    simOMPL=simOMPL or require'simOMPL'
 
     local startConfig = _getConfig(jointHandles)
     local task=simOMPL.createTask('task')

@@ -1,3 +1,5 @@
+sim=require'sim'
+
 function sysCall_info()
     return {autoStart=false,menu='Kinematics\nDenavit-Hartenberg Creator'}
 end
@@ -7,6 +9,7 @@ function sysCall_addOnScriptSuspend()
 end
 
 function sysCall_init()
+    simUI=require'simUI'
     sim.addLog(sim.verbosity_scriptinfos,"This tool allows to create joints with the Denavit-Hartenberg notation. Simply select an object in the scene on top of which you wish to create a joint, then adjust the D-H parameters in the dialog.")
     d=0.05
     theta=math.pi/2
