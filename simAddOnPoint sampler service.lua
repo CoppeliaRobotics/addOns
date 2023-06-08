@@ -1,7 +1,7 @@
 sim=require'sim'
 
 function sysCall_info()
-    return {autoStart=true,menu='Misc\nPoint sampler service'}
+    return {autoStart=not sim.getBoolParam(sim.boolparam_headless),menu='Misc\nPoint sampler service'}
 end
 
 function sysCall_addOnScriptSuspend()
