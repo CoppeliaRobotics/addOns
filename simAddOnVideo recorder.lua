@@ -111,8 +111,8 @@ function updateUi()
 end
 
 function capture()
-    local img,res=auxFunc('fetchframe',0)--sim.getScaledImage('\xff\x00\xff',{1,1},{1024,768},0)
-    local fileName=string.format('%s/%s_%08d.png',outputDir,filePrefix,numCapturedFrames)
+    local img,res=auxFunc('fetchframe',-1)--sim.getScaledImage('\xff\x00\xff',{1,1},{1024,768},0)
+    local fileName=string.format('%s/%s_%08d.jpg',outputDir,filePrefix,numCapturedFrames)
     numCapturedFrames=numCapturedFrames+1
     sim.saveImage(img,res,0,fileName,-1)
 end
