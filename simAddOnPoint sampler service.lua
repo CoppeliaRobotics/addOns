@@ -9,8 +9,6 @@ function sysCall_addOnScriptSuspend()
 end
 
 function sysCall_init()
-    simUI=require'simUI'
-    simIGL=require'simIGL'
     enabled=0
     flags={}
     flagsStack={}
@@ -234,6 +232,8 @@ function enable()
         sim.setNavigationMode(sim.navigation_camerashift|sim.navigation_camerarotatemiddlebutton)
         createDrawingObjects()
         clickCnt=sim.getInt32Param(sim.intparam_mouseclickcounterdown)
+        simUI=require'simUI'
+        simIGL=require'simIGL'
     end
 end
 
