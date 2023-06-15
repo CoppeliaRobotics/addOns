@@ -37,9 +37,9 @@ end
 
 function getDHParams(joint1,joint2)
     local dhParams={0,0,0,0} 
-    local m1=sim.getObjectMatrix(joint1,sim.handle_world)
+    local m1=sim.getObjectMatrix(joint1)
     m1=sim.multiplyMatrices(m1,sim.poseToMatrix(sim.getObjectChildPose(joint1))) -- don't forget the joint's intrinsic transformation
-    local m2=sim.getObjectMatrix(joint2,sim.handle_world)
+    local m2=sim.getObjectMatrix(joint2)
     sim.invertMatrix(m1)
     local m=sim.multiplyMatrices(m1,m2)
     -- m is joint2 relative to joint1 frame

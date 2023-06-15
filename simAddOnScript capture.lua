@@ -169,7 +169,7 @@ function onObjectChanged(handle)
             table.insert(log,{
                 type='set-pose',
                 handles={handle},
-                code=string.format('sim.setObjectPose(%s,sim.handle_parent,%s)',objectId(handle),table.tostring(pose,',')),
+                code=string.format('sim.setObjectPose(%s,%s,sim.handle_parent)',objectId(handle),table.tostring(pose,',')),
             })
         end
     end

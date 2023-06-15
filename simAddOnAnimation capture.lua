@@ -162,15 +162,15 @@ function sysCall_afterSimulation()
             if i==1 then
                 if modelData.modelBaseExists then
                     sim.setObjectParent(obj,dummy,true)
-                    sim.setObjectPose(obj,sim.handle_parent,{0,0,0,0,0,0,1})
-                    sim.setObjectPose(dummy,-1,data.initLocalPose)
+                    sim.setObjectPose(obj,{0,0,0,0,0,0,1},sim.handle_parent)
+                    sim.setObjectPose(dummy,data.initLocalPose)
                 else
-                    sim.setObjectPose(obj,sim.handle_parent,data.initLocalPose)
+                    sim.setObjectPose(obj,data.initLocalPose,sim.handle_parent)
                 end
             else
                 local parent=invMap[data.parent]
                 sim.setObjectParent(obj,parent,true)
-                sim.setObjectPose(obj,sim.handle_parent,data.initLocalPose)
+                sim.setObjectPose(obj,data.initLocalPose,sim.handle_parent)
             end
             
         end
@@ -200,10 +200,10 @@ function sysCall_afterSimulation()
         if s==0 then
             s=0.05
         end
-        local p=sim.getObjectPosition(dummy,-1)
+        local p=sim.getObjectPosition(dummy)
         p[1]=p[1]+s
         p[2]=p[2]+s
-        sim.setObjectPosition(dummy,-1,p)
+        sim.setObjectPosition(dummy,p)
         sim.removeObjectFromSelection(sim.handle_all,-1)
         sim.addObjectToSelection(sim.handle_single,dummy)
         local txt="Animation model '"..sim.getObjectAlias(dummy,1).."' was created!"

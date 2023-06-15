@@ -86,7 +86,7 @@ function sysCall_init()
             local objType=sim.getObjectType(allObjects[obji])
             local objId=sim.getObjectAlias(allObjects[obji],4)
             local objAlias=sim.getObjectAlias(allObjects[obji])
-            local matr=sim.getObjectMatrix(allObjects[obji],-1)
+            local matr=sim.getObjectMatrix(allObjects[obji])
             local parentId="*"
             local parentHandle=sim.getObjectParent(allObjects[obji])
             if parentHandle~=-1 then
@@ -112,8 +112,8 @@ function sysCall_init()
                     for j=1,#individualShapes,1 do
                         allIndividualShapesToRemove[#allIndividualShapesToRemove+1]=individualShapes[j]
                         local indivName=sim.getObjectAlias(individualShapes[j],4)
-                        local indivMatr=sim.getObjectMatrix(individualShapes[j],-1)
-                        local totIndivMatrix=sim.getObjectMatrix(allObjects[obji],-1)
+                        local indivMatr=sim.getObjectMatrix(individualShapes[j])
+                        local totIndivMatrix=sim.getObjectMatrix(allObjects[obji])
                         sim.invertMatrix(totIndivMatrix)
                         totIndivMatrix=sim.multiplyMatrices(totIndivMatrix,indivMatr)
                         local vertices,indices=sim.getShapeMesh(individualShapes[j])

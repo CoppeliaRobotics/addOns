@@ -163,7 +163,7 @@ function coll(ui,id)
                                             local copy
                                             if t[i]==sim.object_dummy_type then
                                                 copy=sim.createDummy(0.01,getCol(i))
-                                                sim.setObjectPose(copy,-1,sim.getObjectPose(objPair[i],-1))
+                                                sim.setObjectPose(copy,sim.getObjectPose(objPair[i]))
                                             end
                                             if t[i]==sim.object_shape_type then
                                                 copy=sim.copyPasteObjects({objPair[i]},2+4+8+16+32)[1]
@@ -178,7 +178,7 @@ function coll(ui,id)
                                             end
                                             if t[i]==sim.object_pointcloud_type then
                                                 copy=sim.createPointCloud(0.1,50,8,4)
-                                                sim.setObjectPose(copy,-1,sim.getObjectPose(objPair[i],-1))
+                                                sim.setObjectPose(copy,sim.getObjectPose(objPair[i]))
                                                 sim.insertPointsIntoPointCloud(copy,1,sim.getPointCloudPoints(objPair[i]),getCol(i,true))
                                             end
                                             sim.setObjectSpecialProperty(copy,0)

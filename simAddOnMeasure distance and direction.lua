@@ -24,7 +24,7 @@ function sysCall_msg(event)
     if not event.data or not event.data.key or event.data.key~='measureDistanceDirection' then return end
     if event.id=='pointSampler.click' then
         if event.data.dummy then
-            point=sim.getObjectPosition(event.data.dummy,sim.handle_world)
+            point=sim.getObjectPosition(event.data.dummy)
         else
             point=event.data.vertexCoords
         end

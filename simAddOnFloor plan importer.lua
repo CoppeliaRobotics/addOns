@@ -65,7 +65,7 @@ function sysCall_init()
         local handles={}
         for j,classTbl1 in ipairs(classTbl.zSet) do
             local h=sim.createPureShape(0,1+(respondable and 8 or 0)+16,{x2-x1,y2-y1,classTbl1.zMax-classTbl1.zMin},0)
-            sim.setObjectPosition(h,-1,{(x1+x2)/2,(y1+y2)/2,(classTbl1.zMax+classTbl1.zMin)/2})
+            sim.setObjectPosition(h,{(x1+x2)/2,(y1+y2)/2,(classTbl1.zMax+classTbl1.zMin)/2})
             sim.setShapeColor(h,nil,sim.colorcomponent_ambient_diffuse,color)
             table.insert(handles,h)
         end

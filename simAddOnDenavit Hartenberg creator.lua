@@ -133,7 +133,7 @@ end
 
 function buildJoint(revoluteJoint)
     local sel=sim.getObjectSel()
-    local objMatr=sim.getObjectMatrix(sel[1],-1)
+    local objMatr=sim.getObjectMatrix(sel[1])
     if sim.getObjectType(sel[1])==sim.object_joint_type then
         objMatr=sim.multiplyMatrices(objMatr,sim.poseToMatrix(sim.getObjectChildPose(sel[1]))) -- don't forget the joint's intrinsic transformation
     end
@@ -147,7 +147,7 @@ function buildJoint(revoluteJoint)
     else
         newJoint=sim.createJoint(sim.joint_prismatic_subtype,sim.jointmode_force,0)
     end
-    sim.setObjectMatrix(newJoint,-1,objMatr)
+    sim.setObjectMatrix(newJoint,objMatr)
     sim.setObjectParent(newJoint,sel[1],true)
     sim.setObjectSel({newJoint})
     sim.announceSceneContentChange()

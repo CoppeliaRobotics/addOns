@@ -58,9 +58,9 @@ end
 function createDummy(m)
     local h=sim.createDummy(0.02)
     sim.setObjectColor(h,0,sim.colorcomponent_ambient_diffuse,{0,1,0})
-    sim.setObjectMatrix(h,sim.handle_world,m)
+    sim.setObjectMatrix(h,m,sim.handle_world)
     local zOffset=simUI.getSpinboxValue(ui,8)
-    sim.setObjectPose(h,h,{0,0,zOffset,0,0,0,1})
+    sim.setObjectPose(h,{0,0,zOffset,0,0,0,1},h)
     local alias=simUI.getEditValue(ui,6)
     sim.setObjectAlias(h,alias)
 end

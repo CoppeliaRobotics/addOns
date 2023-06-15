@@ -43,9 +43,9 @@ function sysCall_msg(event)
             updateUi()
             sim.broadcastMsg{id='pointSampler.setFlags',data={key='translateToAlignVertex',arrowSource=firstVertex}}
         elseif phase==3 then
-            local p=sim.getObjectPosition(targetObject,sim.handle_world)
+            local p=sim.getObjectPosition(targetObject)
             p=Vector(p)+Vector(event.data.vertexCoords)-Vector(firstVertex)
-            sim.setObjectPosition(targetObject,sim.handle_world,p:data())
+            sim.setObjectPosition(targetObject,p:data())
             sim.announceSceneContentChange()
             return {cmd='cleanup'}
         end

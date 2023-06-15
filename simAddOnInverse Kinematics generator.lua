@@ -302,7 +302,7 @@ function generate()
     local ikDummy=sim.createDummy(0.01)
     sim.setObjectAlias(ikDummy,'IK')
     sim.setObjectParent(ikDummy,robotModel,false)
-    sim.setObjectPose(ikDummy,robotModel,{0,0,0,0,0,0,1})
+    sim.setObjectPose(ikDummy,{0,0,0,0,0,0,1},robotModel)
     sim.setObjectInt32Param(ikDummy,sim.objintparam_visibility_layer,0)
     sim.setObjectInt32Param(ikDummy,sim.objintparam_manipulation_permissions,0)
 

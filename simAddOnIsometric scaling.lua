@@ -129,6 +129,6 @@ function scale()
     if (zCoordScale) then
         p[3]=p[3]*scaleFact
     end
-    sim.setObjectPosition(obj,sim.handle_parent,p)
+    sim.setObjectPosition(obj,p,sim.handle_parent)
     sim.announceSceneContentChange()
 end

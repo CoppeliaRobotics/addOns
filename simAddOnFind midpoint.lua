@@ -28,7 +28,7 @@ function sysCall_msg(event)
     local point=nil
     if event.id=='pointSampler.click' or event.id=='pointSampler.hover' then
         if event.data.dummy then
-            point=sim.getObjectPosition(event.data.dummy,sim.handle_world)
+            point=sim.getObjectPosition(event.data.dummy)
         else
             point=event.data.vertexCoords
         end
@@ -43,7 +43,7 @@ function sysCall_msg(event)
             for i,m in ipairs(getMidpoints(firstPoint,secondPoint)) do
                 dummy=sim.createDummy(0.01)
                 sim.setObjectAlias(dummy,'Midpoint')
-                sim.setObjectMatrix(dummy,sim.handle_world,m)
+                sim.setObjectMatrix(dummy,m)
             end
             sim.announceSceneContentChange()
             return {cmd='cleanup'}

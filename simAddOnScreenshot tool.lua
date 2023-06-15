@@ -254,7 +254,7 @@ function povItems_callback(ui,id,v)
 end
 
 function render_callback(ui,id,v)
-    local pose=sim.getObjectPose(cam,-1)
+    local pose=sim.getObjectPose(cam)
     local opt=1
     local a=config.viewSize
     if config.perspective then
@@ -262,7 +262,7 @@ function render_callback(ui,id,v)
         a=config.viewAngle
     end
     local visSens=sim.createVisionSensor(opt,{config.res[1],config.res[2],0,0},{config.nearClipping,config.farClipping,a,0.1,0.1,0.1,0,0,0,0,0})
-    sim.setObjectPose(visSens,-1,pose)
+    sim.setObjectPose(visSens,pose)
 --    sim.setObjectInt32Param(visSens,sim.visionintparam_resolution_x,config.res[1])
 --    sim.setObjectInt32Param(visSens,sim.visionintparam_resolution_y,config.res[2])
 --    sim.setObjectFloatParam(visSens,sim.visionfloatparam_perspective_angle,config.viewAngle)

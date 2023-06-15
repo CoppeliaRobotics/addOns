@@ -18,7 +18,7 @@ function sysCall_nonSimulation()
     if enabled==0 then return end
 
     if sim.getBoolParam(sim.boolparam_rayvalid) then
-        currentCameraPos=sim.getObjectPosition(sim.adjustView(0,-1,512),sim.handle_world)
+        currentCameraPos=sim.getObjectPosition(sim.adjustView(0,-1,512))
 
         local orig=sim.getArrayParam(sim.arrayparam_rayorigin)
         local dir=sim.getArrayParam(sim.arrayparam_raydirection)
@@ -59,7 +59,7 @@ function sysCall_nonSimulation()
 
         if currentFlags().snapToClosest then
             if event.dummy and event.vertexCoords then
-                local dummyPos=sim.getObjectPosition(event.dummy,sim.handle_world)
+                local dummyPos=sim.getObjectPosition(event.dummy)
                 local dd=distanceToRay(dummyPos,orig,dir)
                 local dv=distanceToRay(event.vertexCoords,orig,dir)
                 if dd<dv then
@@ -98,7 +98,7 @@ function sysCall_nonSimulation()
         sim.addDrawingObjectItem(triangles,nil)
         sim.addDrawingObjectItem(trianglesv,nil)
         if event.dummy then
-            local pt=sim.getObjectPosition(event.dummy,sim.handle_world)
+            local pt=sim.getObjectPosition(event.dummy)
             local d=distanceToCamera(pt)
             sim.addDrawingObjectItem(pts,{pt[1],pt[2],pt[3],0.005*d})
         end
@@ -126,7 +126,7 @@ function sysCall_nonSimulation()
             local src=currentFlags().arrowSource or currentFlags().segmentSource
             local tgt=nil
             if event.dummy then
-                tgt=sim.getObjectPosition(event.dummy,sim.handle_world)
+                tgt=sim.getObjectPosition(event.dummy)
             elseif event.vertexCoords then
                 tgt=event.vertexCoords
             elseif event.point then
@@ -259,7 +259,7 @@ end
 function rayCast(orig,dir)
     local sensor=sim.createProximitySensor(sim.proximitysensor_ray_subtype,16,1,{3,3,2,2,1,1,0,0},{0,2000,0.01,0.01,0.01,0.01,0,0,0,0,0,0,0.01,0,0})
     local m=pointNormalToMatrix(orig,dir)
-    sim.setObjectMatrix(sensor,sim.handle_world,m)
+    sim.setObjectMatrix(sensor,m)
     local coll=allVisibleObjectsColl({sim.object_shape_type,sim.object_octree_type})
     local r,d,pt,o,n=sim.checkProximitySensor(sensor,coll)
     sim.destroyCollection(coll)
@@ -274,7 +274,7 @@ function rayCastDummies(orig,dir)
     local a=3*math.pi/180
     local sensor=sim.createProximitySensor(sim.proximitysensor_cone_subtype,16,1,{3,3,2,2,1,1,0,0},{0,2000,0.01,0.01,0.01,0.01,0,0,0,a,0,0,0.01,0,0})
     local m=pointNormalToMatrix(orig,dir)
-    sim.setObjectMatrix(sensor,sim.handle_world,m)
+    sim.setObjectMatrix(sensor,m)
     local coll=allVisibleObjectsColl({sim.object_dummy_type})
     local r,d,pt,o,n=sim.checkProximitySensor(sensor,coll)
     sim.destroyCollection(coll)
@@ -292,7 +292,7 @@ function getTriangleAndVertexInfo(pt,n,o)
     pt=Matrix(1,3,pt)
     if not simIGL then return end
     if not meshInfo then meshInfo={} end
-    local hash=poseHash(sim.getObjectPose(o,sim.handle_world))
+    local hash=poseHash(sim.getObjectPose(o))
     if not meshInfo[o] or meshInfo[o].hash~=hash then
         meshInfo[o]={}
         meshInfo[o].hash=hash

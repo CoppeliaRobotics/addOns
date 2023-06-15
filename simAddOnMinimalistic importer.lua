@@ -53,7 +53,7 @@ function sysCall_init()
                     local objType=value
                     if objType=='object' then
                         objHandle=sim.createDummy(0.01)
-                        sim.setObjectMatrix(objHandle,-1,objMatr)
+                        sim.setObjectMatrix(objHandle,objMatr)
                     end
                     if objType=='shape' then
                         l=l+1
@@ -70,9 +70,9 @@ function sysCall_init()
                         end
                         local color=getNumberTable(getValue(lines[l],colorTag))
                         objHandle=sim.importShape(form,importDir.."/"..filename,0,0,1)
-                        local m=sim.getObjectMatrix(objHandle,-1)
+                        local m=sim.getObjectMatrix(objHandle)
                         objMatr=sim.multiplyMatrices(objMatr,m)
-                        sim.setObjectMatrix(objHandle,-1,objMatr)
+                        sim.setObjectMatrix(objHandle,objMatr)
                         sim.setShapeColor(objHandle,nil,sim.colorcomponent_ambient_diffuse,color)
                         sim.setShapeColor(objHandle,nil,sim.colorcomponent_diffuse,{color[4],color[5],color[6]})
                     end
@@ -104,9 +104,9 @@ function sysCall_init()
                             end
                         end
                         objHandle=sim.groupShapes(subshapes)
-                        local m=sim.getObjectMatrix(objHandle,-1)
+                        local m=sim.getObjectMatrix(objHandle)
                         objMatr=sim.multiplyMatrices(objMatr,m)
-                        sim.setObjectMatrix(objHandle,-1,objMatr)
+                        sim.setObjectMatrix(objHandle,objMatr)
                         l=l-1
                     end
                     if objType=='joint' then
@@ -141,7 +141,7 @@ function sysCall_init()
                             sim.setJointInterval(objHandle,false,{math.pi,2*math.pi})
                             sim.setSphericalJointMatrix(objHandle,getNumberTable(position))
                         end
-                        sim.setObjectMatrix(objHandle,-1,objMatr)
+                        sim.setObjectMatrix(objHandle,objMatr)
                     end
                     if visible==0 then
                         sim.setObjectInt32Param(objHandle,10,256)
