@@ -13,4 +13,5 @@ simAddOnZMQ remote API server.lua
 simAddOnVisualization stream.lua
 simAddOnButton code action.lua
 simAddOnLDraw importer.lua
+simAddOnURL drop service.lua
 
