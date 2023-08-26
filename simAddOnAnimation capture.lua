@@ -192,7 +192,7 @@ function sysCall_afterSimulation()
         modelData=nil
         
         sim.writeCustomDataBlock(dummy,'animationData',sim.packTable(animationData))
-        sim.writeCustomDataBlock(dummy,'__info__',sim.packTable({type='animation'}))
+        sim.writeCustomDataBlock(dummy,'__info__',sim.packTable({type='animation'},1))
         sim.setReferencedHandles(dummy,handles)
         sim.setObjectAlias(dummy,"animatedModel")
         local s=sim.getModelBB(dummy)
