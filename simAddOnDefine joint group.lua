@@ -51,6 +51,8 @@ function sysCall_init()
     local scriptText=''
     local function appendLine(...) scriptText=scriptText..string.format(...)..'\n' end
 
+    appendLine("sim=require'sim'")
+    appendLine("")
     appendLine("function sysCall_init()")
     appendLine("    self=sim.getObject'.'")
     appendLine("end")
