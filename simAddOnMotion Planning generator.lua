@@ -150,6 +150,8 @@ function generate()
     sim.setObjectInt32Param(motionPlanningDummy,sim.objintparam_manipulation_permissions,0)
 
     local jointGroupPath=sim.getObjectAliasRelative(jointGroup,robotModel,1)
+    appendLine("sim=require'sim'")
+    appendLine("simIK=require'simIK'")
     appendLine("robotConfigPath=require'models.robotConfigPath'")
     appendLine("")
     appendLine("function sysCall_init()")
