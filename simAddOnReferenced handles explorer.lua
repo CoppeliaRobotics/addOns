@@ -6,7 +6,7 @@ end
 
 function sysCall_init()
     simUI=require'simUI'
-    sim.addLog(sim.verbosity_scriptinfos,"This tool will display the referenced handles stored in the selected object. Referenced handles can be written and read with simSetReferencedHandles and simGetReferencedHandles.")
+    sim.addLog(sim.verbosity_scriptinfos,"This tool will display the referenced handles stored in the selected object. Referenced handles can be read and written with sim.getReferencedHandles and sim.setReferencedHandles.")
     object=-1
 end
 
@@ -33,6 +33,41 @@ end
 function onSelectionChange(ui,id,index)
 end
 
+function beginEdit()
+    hideDlg()
+
+    local xml='<ui title="Referenced Handles Editor" activate="false" closeable="false" resizable="false">'
+    xml=xml..'<label text="<b>Editing referenced handles of '..sim.getObjectAlias(object,9)..'</b>" />'
+    xml=xml..'<label text="<small>Make changes to selection and then press one of the buttons below:</small>" />'
+    xml=xml..'<button text="Save" on-click="acceptEdit" />'
+    xml=xml..'<button text="Cancel" on-click="abortEdit" />'
+    xml=xml..'</ui>'
+    uiEdit=simUI.create(xml)
+
+    editing=object
+    sim.setObjectSel(content)
+end
+
+function abortEdit()
+    editing=nil
+    sim.setObjectSel{object}
+    simUI.destroy(uiEdit)
+    uiEdit=nil
+end
+
+function acceptEdit()
+    sim.setReferencedHandles(object,sim.getObjectSel())
+    abortEdit()
+end
+
+function setSelection()
+    sim.setObjectSel(content)
+end
+
+function printHandles()
+    print(content)
+end
+
 function showDlg()
     if not ui then
         local pos='position="-30,160" placement="relative"'
@@ -51,6 +86,9 @@ function showDlg()
                 xml=xml..'<row><item>'..handle..'</item><item>'..name..'</item></row>'
             end
             xml=xml..'</table>'
+            xml=xml..'<button text="Edit..." on-click="beginEdit" />'
+            xml=xml..'<button text="Set selection" on-click="setSelection" />'
+            xml=xml..'<button text="Print handles" on-click="printHandles" />'
             xml=xml..'</ui>'
             ui=simUI.create(xml)
         end
@@ -70,6 +108,9 @@ function sysCall_nonSimulation()
     if leaveNow then
         return {cmd='cleanup'}
     end
+
+    if editing then return end
+
     local s=sim.getObjectSelection()
     local previousObject,previousContent=object,content
     content=nil
