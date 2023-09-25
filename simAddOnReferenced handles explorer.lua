@@ -36,14 +36,15 @@ function showDlg()
         if uiPos then
             pos='position="'..uiPos[1]..','..uiPos[2]..'" placement="absolute"'
         end
+        aliasOption=sim.getNamedInt32Param('addons.referencedHandlesExplorer.aliasOption') or 9
         if not ui then
-            xml='<ui title="Referenced Handles Explorer" closeable="true" on-close="onCloseClicked" resizable="false" '..pos..'>'
-            xml=xml..'<group flat="true"><label text="Referenced handles in object &quot;<b>'..sim.getObjectAlias(object,1)..'</b>&quot;:" /></group>'
+            xml='<ui title="Referenced Handles Explorer" activate="false" closeable="true" on-close="onCloseClicked" resizable="true" '..pos..'>'
+            xml=xml..'<group flat="true"><label text="Referenced handles in object &quot;<b>'..sim.getObjectAlias(object,aliasOption)..'</b>&quot;:" /></group>'
             xml=xml..'<table id="600" selection-mode="row" editable="false" on-selection-change="onSelectionChange">'
             xml=xml..'<header><item>Handle</item><item>Name</item></header>'
             for i,handle in ipairs(content) do
                 local name=''
-                if handle~=-1 then name=sim.getObjectAlias(handle,1) end
+                if handle~=-1 then name=sim.getObjectAlias(handle,aliasOption) end
                 xml=xml..'<row><item>'..handle..'</item><item>'..name..'</item></row>'
             end
             xml=xml..'</table>'

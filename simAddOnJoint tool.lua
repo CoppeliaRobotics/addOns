@@ -81,7 +81,7 @@ function onSelectionChanged()
     end
     if nid==1 then return end
 
-    aliasOption=sim.getNamedInt32Param('addons.jointTool.aliasOption') or -1
+    aliasOption=sim.getNamedInt32Param('addons.jointTool.aliasOption') or 9
     local uiPosStr=uiPos and string.format('placement="absolute" position="%d,%d"' ,table.unpack(uiPos)) or 'placement="relative" position="280,500" '
     xml='<ui closeable="true" '..uiPosStr..'resizable="false" on-close="closeUi_user" title="Joint tool" layout="vbox">\n'
     xml=xml..'  <group flat="true" content-margins="0,0,0,0" layout="form">\n'
