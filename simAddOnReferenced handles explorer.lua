@@ -74,7 +74,7 @@ function showDlg()
         if uiPos then
             pos='position="'..uiPos[1]..','..uiPos[2]..'" placement="absolute"'
         end
-        aliasOption=sim.getNamedInt32Param('addons.referencedHandlesExplorer.aliasOption') or 9
+        aliasOption=sim.getNamedInt32Param('referencedHandlesExplorer.aliasOption') or 9
         if not ui then
             xml='<ui title="Referenced Handles Explorer" activate="false" closeable="true" on-close="onCloseClicked" resizable="true" '..pos..'>'
             xml=xml..'<group flat="true"><label text="Referenced handles in object &quot;<b>'..sim.getObjectAlias(object,aliasOption)..'</b>&quot;:" /></group>'
