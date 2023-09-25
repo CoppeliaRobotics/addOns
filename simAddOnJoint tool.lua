@@ -35,6 +35,14 @@ function closeUi_user()
     leaveNow=true
 end
 
+function printConfig()
+    local cfg={}
+    for id,jointHandle in pairs(idToJointMap) do
+        table.insert(cfg,sim.getJointPosition(jointHandle))
+    end
+    print(cfg)
+end
+
 function onSelectionChanged()
     -- get selected joints:
     local jointHandles={}
@@ -75,7 +83,8 @@ function onSelectionChanged()
 
     aliasOption=sim.getNamedInt32Param('addons.jointTool.aliasOption') or -1
     local uiPosStr=uiPos and string.format('placement="absolute" position="%d,%d"' ,table.unpack(uiPos)) or 'placement="relative" position="280,500" '
-    xml='<ui closeable="true" '..uiPosStr..'resizable="false" on-close="closeUi_user" title="Joint tool" layout="form">\n'
+    xml='<ui closeable="true" '..uiPosStr..'resizable="false" on-close="closeUi_user" title="Joint tool" layout="vbox">\n'
+    xml=xml..'  <group flat="true" content-margins="0,0,0,0" layout="form">\n'
     for id,jointHandle in pairs(idToJointMap) do
         local v=sim.getJointPosition(jointHandle)*180/math.pi
         local cyclic,i=sim.getJointInterval(jointHandle)
@@ -83,6 +92,8 @@ function onSelectionChanged()
         xml=xml..string.format('    <label text="%s" />\n',sim.getObjectAlias(jointHandle,aliasOption))
         xml=xml..string.format('    <group flat="true" content-margins="0,0,0,0" layout="hbox"><spinbox id="%s" value="%f" minimum="%f" maximum="%f" step="0.5" on-change="setJointPos" /><label text="%.1f~%.1f [deg]" enabled="false" /></group>\n',id,v,vmin,vmax,vmin,vmax)
     end
+    xml=xml..'  </group>\n'
+    xml=xml..'  <button text="Print current config" on-click="printConfig" />\n'
     xml=xml..'</ui>'
     ui=simUI.create(xml)
 end
