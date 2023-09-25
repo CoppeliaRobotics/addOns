@@ -28,6 +28,10 @@ function closeUi()
     uiPos=table.pack(simUI.getPosition(ui))
     simUI.destroy(ui)
     ui=nil
+end
+
+function closeUi_user()
+    closeUi()
     leaveNow=true
 end
 
@@ -50,7 +54,7 @@ function onSelectionChanged()
     end
     if nid==1 then return end
     local uiPosStr=uiPos and string.format('placement="absolute" position="%d,%d"' ,table.unpack(uiPos)) or 'placement="relative" position="280,500" '
-    xml='<ui closeable="true" '..uiPosStr..'resizable="false" on-close="closeUi" title="Joint tool" layout="form">\n'
+    xml='<ui closeable="true" '..uiPosStr..'resizable="false" on-close="closeUi_user" title="Joint tool" layout="form">\n'
     for id,h in pairs(idToJointMap) do
         local v=sim.getJointPosition(h)*180/math.pi
         local cyclic,i=sim.getJointInterval(h)
