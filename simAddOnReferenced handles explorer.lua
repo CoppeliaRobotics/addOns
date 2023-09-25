@@ -30,6 +30,9 @@ function onCloseClicked()
     leaveNow=true
 end
 
+function onSelectionChange(ui,id,index)
+end
+
 function showDlg()
     if not ui then
         local pos='position="-30,160" placement="relative"'
