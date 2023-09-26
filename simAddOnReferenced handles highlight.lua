@@ -22,7 +22,8 @@ end
 
 function restore()
     for i,t in ipairs(toRestore) do
-        sim.setObjectInt32Param(t.handle,sim.objintparam_hierarchycolor,t.color)
+        -- pcall because during (model) deletion the handle might be already invalid
+        pcall(sim.setObjectInt32Param,t.handle,sim.objintparam_hierarchycolor,t.color)
     end
     toRestore={}
 end
