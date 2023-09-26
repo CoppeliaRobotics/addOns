@@ -1,6 +1,7 @@
 -- this add-on function is a minimalistic scene content exporter, meant as an example.
 
 sim=require'sim'
+lfs=require'lfsx'
 
 function sysCall_info()
     return {autoStart=false,menu='Exporters\nMinimalistic exporter...'}
@@ -25,16 +26,8 @@ function sysCall_init()
         if meshFormat==4 then
             extension="stl"
         end
-        if sim.getInt32Param(sim.intparam_platform)==0 then
-            local expDir=string.gsub(exportDir, "/", "\\")
-            os.execute("rmdir /S /Q "..'"'..expDir..'"')
-            os.execute("mkdir "..'"'..expDir..'"')
-        else
-            local expDir=string.gsub(exportDir, " ", "\\ ")
-            os.execute("rm -rf "..expDir)
-            os.execute("mkdir "..expDir)
-        end
-
+        lfs.rmdir_r(exportDir)
+        lfs.mkdir(exportDir)
         local file=io.open(exportDir.."/"..fileName,"w")
 
         file:write("// Data format:\n")
