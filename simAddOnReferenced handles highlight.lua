@@ -1,0 +1,38 @@
+sim=require'sim'
+
+function sysCall_info()
+    return {autoStart=sim.getNamedBoolParam('referencedHandlesHighlight.autoStart')~=false,menu='Misc\nReferences handles highlight'}
+end
+
+function sysCall_init()
+    toRestore={}
+end
+
+function sysCall_cleanup()
+    restore()
+end
+
+function highlight(handle)
+    table.insert(toRestore,{
+        handle=handle,
+        color=sim.getObjectInt32Param(handle,sim.objintparam_hierarchycolor)
+    })
+    sim.setObjectInt32Param(handle,sim.objintparam_hierarchycolor,0)
+end
+
+function restore()
+    for i,t in ipairs(toRestore) do
+        sim.setObjectInt32Param(t.handle,sim.objintparam_hierarchycolor,t.color)
+    end
+    toRestore={}
+end
+
+function sysCall_selChange(inData)
+    restore()
+    if #inData.sel==1 then
+        local rh=sim.getReferencedHandles(inData.sel[1])
+        for i,h in ipairs(rh) do
+            highlight(h)
+        end
+    end
+end
