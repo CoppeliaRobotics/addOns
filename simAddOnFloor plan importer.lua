@@ -156,7 +156,7 @@ function sysCall_init()
     closeUi=function()
         simUI.destroy(ui)
         ui=nil
-        done=true
+        leaveNow=true
     end
     if imageFile then
         ui=simUI.create([[<ui title="Import floorplan..." closeable="true" on-close="closeUi" resizable="true" modal="true" layout="vbox">
@@ -220,9 +220,7 @@ function sysCall_init()
 end
 
 function sysCall_nonSimulation()
-    if done then
-        return {cmd='cleanup'}
-    end
+    if leaveNow then return {cmd='cleanup'} end
 end
 
 function sysCall_cleanup()

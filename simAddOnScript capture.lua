@@ -42,9 +42,7 @@ function sysCall_addOnScriptSuspend()
 end
 
 function sysCall_nonSimulation()
-    if leaveNow then
-        return {cmd='cleanup'}
-    end
+    if leaveNow then return {cmd='cleanup'} end
 end
 
 function sysCall_cleanup()

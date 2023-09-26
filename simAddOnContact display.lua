@@ -32,11 +32,11 @@ function sysCall_sensing()
         lineContainer=sim.addDrawingObject(sim.drawing_lines,forceVectorWidth,0,-1,1000,black,black,black,purple)
         sphereContainer=sim.addDrawingObject(sim.drawing_spherepoints,contactPointSize,0,-1,1000,black,black,black,lightBlue)
     end
-    
+
     -- empty the containers:
-    sim.addDrawingObjectItem(lineContainer,nil) 
-    sim.addDrawingObjectItem(sphereContainer,nil) 
-    
+    sim.addDrawingObjectItem(lineContainer,nil)
+    sim.addDrawingObjectItem(sphereContainer,nil)
+
     -- Fill the containers with contact information:
     index=0
     while (true) do

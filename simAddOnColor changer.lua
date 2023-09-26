@@ -36,19 +36,16 @@ function getSameColor(allCols,col)
 end
 
 function sysCall_nonSimulation()
-    if leaveNow then
-        return {cmd='cleanup'}
-    end
-    selectedObjects=sim.getObjectSelection()
-    if not selectedObjects then selectedObjects={} end
+    if leaveNow then return {cmd='cleanup'} end
+end
+
+function sysCall_selChange(inData)
+    selectedObjects=inData.sel
     selectedObjects=getAlsoModelObjectsAndOnlyVisibleShapes(selectedObjects)
-    if not areObjectsSame(selectedObjects,previousSelectedObjects) then
+    if not table.eq(selectedObjects,previousSelectedObjects) then
         hideDlg2()
         hideDlg1()
-        previousSelectedObjects={}
-        for i=1,#selectedObjects,1 do
-            previousSelectedObjects[i]=selectedObjects[i]
-        end
+        previousSelectedObjects=table.slice(selectedObjects)
         if #selectedObjects>0 then
             allCols={}
             allShapesAndCols={}
@@ -181,7 +178,7 @@ function showDlg2()
                 <label text="blue"/>
                 <hslider id="3" on-change="sliderMoved" minimum="0" maximum="100"/>
             </group>
-    
+
         <label text="Specular" style="* {font-weight: bold;}"/>
             <group layout="form" flat="true">
                 <label text="red"/>
@@ -305,19 +302,6 @@ function getAlsoModelObjectsAndOnlyVisibleShapes(sel)
         end
     end
     return sel
-end
-
-function areObjectsSame(sel1,sel2)
-    if #sel1~=#sel2 then
-        return false
-    else
-        for i=1,#sel1,1 do
-            if sel1[i]~=sel2[i] then
-                return false
-            end
-        end
-        return true
-    end
 end
 
 function getColorValuesForColorName(colName,selObjects)

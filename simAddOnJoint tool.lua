@@ -43,7 +43,9 @@ function printConfig()
     print(cfg)
 end
 
-function onSelectionChanged()
+function sysCall_selChange(inData)
+    sel=inData.sel
+
     -- get selected joints:
     local jointHandles={}
     for i,objectHandle in ipairs(sel) do
@@ -98,25 +100,8 @@ function onSelectionChanged()
     ui=simUI.create(xml)
 end
 
-function checkSelectionChanged()
-    local newsel=sim.getObjectSelection()
-    table.sort(newsel)
-    if sim.packInt32Table(sel)~=sim.packInt32Table(newsel) then
-        sel=newsel
-        onSelectionChanged()
-        return
-    end
-end
-
 function sysCall_nonSimulation()
-    if leaveNow then
-        return {cmd='cleanup'}
-    end
-    checkSelectionChanged()
-end
-
-function sysCall_sensing()
-    checkSelectionChanged()
+    if leaveNow then return {cmd='cleanup'} end
 end
 
 function sysCall_cleanup()

@@ -22,12 +22,12 @@ function sysCall_init()
 end
 
 function sysCall_nonSimulation()
-    if leaveNow then
-        return {cmd='cleanup'}
-    end
-    local s=sim.getObjectSelection()
-    if s and #s==1 then
-        initDlg(s[1])
+    if leaveNow then return {cmd='cleanup'} end
+end
+
+function sysCall_selChange(inData)
+    if #inData.sel==1 then
+        initDlg(inData.sel[1])
     else
         prevObj=-1
     end
@@ -139,7 +139,7 @@ end
 function update(generateNew)
     local s=sim.getObjectSelection()
     local parentDummy
-    if s and (#s==1) then
+    if #s==1 then
         local data=sim.readCustomTableData(s[1],'__info__')
         if data.type=='3dText' then
             parentDummy=s[1]

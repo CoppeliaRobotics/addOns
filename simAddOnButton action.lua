@@ -54,13 +54,13 @@ function hideDlg()
 end
 
 function sysCall_nonSimulation()
-    if leaveNow then
-        hideDlg()
-        return {cmd='cleanup'}
-    end
-    local s=sim.getObjectSelection()
-    if s and #s>0 then
-        if not haveArraysSameContent(selectedObjects,s) then
+    if leaveNow then return {cmd='cleanup'} end
+end
+
+function sysCall_selChange(inData)
+    local s=inData.sel
+    if #s>0 then
+        if not table.eq(selectedObjects,s) then
             hideDlg()
             selectedObjects=s
         end
@@ -80,18 +80,4 @@ end
 
 function sysCall_beforeSimulation()
     hideDlg()
-end
-
-function haveArraysSameContent(arr1,arr2)
-    local retVal=false
-    if #arr1==#arr2 then
-        retVal=true
-        for i=1,#arr1,1 do
-            if arr1[i]~=arr2[i] then
-                retVal=false
-                break
-            end
-        end
-    end
-    return retVal
 end

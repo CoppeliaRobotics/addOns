@@ -52,12 +52,12 @@ function hideDlg()
 end
 
 function sysCall_nonSimulation()
-    if leaveNow then
-        return {cmd='cleanup'}
-    end
-    local s=sim.getObjectSelection()
-    local show=(s and #s==1)
-    if show then
+    if leaveNow then return {cmd='cleanup'} end
+end
+
+function sysCall_selChange(inData)
+    local s=inData.sel
+    if #s==1 then
         if obj~=s[1] then
             hideDlg()
             obj=s[1]

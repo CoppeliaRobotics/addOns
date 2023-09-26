@@ -40,10 +40,7 @@ function sysCall_msg(event)
 end
 
 function sysCall_nonSimulation()
-    if leaveNow then
-        sim.broadcastMsg{id='pointSampler.disable',data={key='pointSampler.interactive'}}
-        return {cmd='cleanup'}
-    end
+    if leaveNow then return {cmd='cleanup'} end
 end
 
 function sysCall_beforeSimulation()
@@ -55,6 +52,7 @@ function sysCall_afterSimulation()
 end
 
 function sysCall_cleanup()
+    sim.broadcastMsg{id='pointSampler.disable',data={key='pointSampler.interactive'}}
     hideDlg()
 end
 

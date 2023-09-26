@@ -53,9 +53,8 @@ function sysCall_sensing()
 end
 
 function sysCall_nonSimulation()
-    if leaveNow then
-        return {cmd='cleanup'}
-    end
+    if leaveNow then return {cmd='cleanup'} end
+
     if capturing then
         capture()
     end

@@ -17,7 +17,7 @@ function sysCall_init()
     end
 end
 
-importClicked_callback=function()
+function importClicked_callback()
     local files=sim.fileDialog(sim.filedlg_type_load_multiple,'*.xyz point cloud import','','','*.xyz','xyz')
     if files then
         local pc=sim.createPointCloud(0.02,20,0,size)
@@ -69,7 +69,7 @@ function colorChange_callback(ui,id,newVal)
         col[i]=v*255
         i=i+1
     end
-    simUI.setEditValue(ui,3,(col[1]/255)..','..(col[2]/255)..','..(col[3]/255),true)
+    simUI.setEditValue(ui,3,string.format('%f,%f,%f',col[1]/255,col[2]/255,col[3]/255),true)
 end
 
 function onCloseClicked()
@@ -78,22 +78,22 @@ end
 
 function showDlg()
     if not ui then
-        xml = [[
+        xml=[[
         <ui title="Point Cloud Importer" modal="true" closeable="true" on-close="onCloseClicked" resizable="false" placement="center">
-                <group layout="form" flat="true">
+            <group layout="form" flat="true">
                 <label text="Point size"/>
                 <edit on-editing-finished="ptSizeChange_callback" id="2"/>
                 <label text="RGB color"/>
                 <edit on-editing-finished="colorChange_callback" id="3"/>
-                </group>
+            </group>
 
-                <button text="Import *.xyz file" checked="false"  on-click="importClicked_callback" id="1" />
-                <label text="" style="* {margin-left: 380px;}"/>
+            <button text="Import *.xyz file" checked="false"  on-click="importClicked_callback" id="1" />
+            <label text="" style="* {margin-left: 380px;}"/>
         </ui>
         ]]
         ui=simUI.create(xml)
         simUI.setEditValue(ui,2,tostring(size),true)
-        simUI.setEditValue(ui,3,(col[1]/255)..','..(col[2]/255)..','..(col[3]/255),true)
+        simUI.setEditValue(ui,3,string.format('%f,%f,%f',col[1]/255,col[2]/255,col[3]/255),true)
     end
 end
 
@@ -105,9 +105,14 @@ function hideDlg()
 end
 
 function sysCall_nonSimulation()
-    if leaveNow then
-        return {cmd='cleanup'}
-    end
+    if leaveNow then return {cmd='cleanup'} end
+end
+
+function sysCall_beforeSimulation()
+    hideDlg()
+end
+
+function sysCall_afterSimulation()
     showDlg()
 end
 

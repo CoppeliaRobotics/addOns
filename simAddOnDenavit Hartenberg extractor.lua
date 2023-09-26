@@ -6,20 +6,17 @@ end
 
 function sysCall_init()
     simUI=require'simUI'
-    local sel=sim.getObjectSel()
+    local sel=sim.getObjectSelection()
     if #sel~=1 then
         simUI.msgBox(simUI.msgbox_type.critical,simUI.msgbox_buttons.ok,'Denavit-Hartenberg extractor','This tool requires exactly one object, representing a kinematic chain, to be selected.\n\ne.g. select the last joint or the end-effector of a kinematic chain.')
     else
         local joints={}
-        local sel=sim.getObjectSel()
-        if #sel==1 then
-            local obj=sel[1]
-            while obj~=-1 do
-                if sim.getObjectType(obj)==sim.object_joint_type then
-                    table.insert(joints,1,obj)
-                end
-                obj=sim.getObjectParent(obj)
+        local obj=sel[1]
+        while obj~=-1 do
+            if sim.getObjectType(obj)==sim.object_joint_type then
+                table.insert(joints,1,obj)
             end
+            obj=sim.getObjectParent(obj)
         end
         if #joints>1 then
             print('Denavit-Hartenberg parameters:')
@@ -36,7 +33,7 @@ function sysCall_init()
 end
 
 function getDHParams(joint1,joint2)
-    local dhParams={0,0,0,0} 
+    local dhParams={0,0,0,0}
     local m1=sim.getObjectMatrix(joint1)
     m1=sim.multiplyMatrices(m1,sim.poseToMatrix(sim.getObjectChildPose(joint1))) -- don't forget the joint's intrinsic transformation
     local m2=sim.getObjectMatrix(joint2)
@@ -58,14 +55,14 @@ function getDHParams(joint1,joint2)
             n=n*-1.0
         end
         -- n points towards the axis of the second joint
-        
+
         local x0=Vector({1,0,0})
         local angle=math.acos(x0:dot(n))
         if x0:cross(n)[3]<0 then
             angle=-angle
         end
         dhParams[2]=angle
-        
+
         local mt=sim.multiplyMatrices(sim.buildMatrix({0,0,0},{0,0,-angle}),m:data())
         mt=Matrix(3,4,mt)
         local p2=mt:slice(1,4,3,4)

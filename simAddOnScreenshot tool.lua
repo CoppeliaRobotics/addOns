@@ -43,23 +43,16 @@ function sysCall_beforeInstanceSwitch()
 end
 
 function sysCall_nonSimulation()
-    if leaveNow then
-        return {cmd='cleanup'}
-    end
-    showOrHideDlg()
+    if leaveNow then return {cmd='cleanup'} end
 end
 
 function sysCall_sensing()
-    if leaveNow then
-        return {cmd='cleanup'}
-    end
-    showOrHideDlg()
+    if leaveNow then return {cmd='cleanup'} end
 end
 
-function showOrHideDlg()
-    local s=sim.getObjectSelection()
-    local show=false
-    if s and #s==1 and ( (sim.getObjectType(s[1])==sim.object_camera_type) or (sim.getObjectType(s[1])==sim.object_visionsensor_type) ) then
+function sysCall_selChange(inData)
+    local s=inData.sel
+    if #s==1 and (sim.getObjectType(s[1])==sim.object_camera_type or sim.getObjectType(s[1])==sim.object_visionsensor_type) then
         cam=s[1]
         showDlg()
     else

@@ -121,10 +121,11 @@ function sysCall_beforeInstanceSwitch()
 end
 
 function sysCall_nonSimulation()
-    if leaveNow then
-        return {cmd='cleanup'}
-    end
-    if #sim.getObjectSel()==1 then
+    if leaveNow then return {cmd='cleanup'} end
+end
+
+function sysCall_selChange(inData)
+    if #inData.sel==1 then
         showDlg()
     else
         hideDlg()
@@ -132,7 +133,7 @@ function sysCall_nonSimulation()
 end
 
 function buildJoint(revoluteJoint)
-    local sel=sim.getObjectSel()
+    local sel=sim.getObjectSelection()
     local objMatr=sim.getObjectMatrix(sel[1])
     if sim.getObjectType(sel[1])==sim.object_joint_type then
         objMatr=sim.multiplyMatrices(objMatr,sim.poseToMatrix(sim.getObjectChildPose(sel[1]))) -- don't forget the joint's intrinsic transformation

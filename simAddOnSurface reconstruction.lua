@@ -15,12 +15,12 @@ function sysCall_init()
 end
 
 function sysCall_nonSimulation()
-    if leaveNow then
-        return {cmd='cleanup'}
-    end
-    local s=sim.getObjectSelection()
-    local show=false
-    if s and #s==1 and (sim.getObjectType(s[1])==sim.object_pointcloud_type) then
+    if leaveNow then return {cmd='cleanup'} end
+end
+
+function sysCall_selChange(inData)
+    local s=inData.sel
+    if #s==1 and sim.getObjectType(s[1])==sim.object_pointcloud_type then
         showDlg()
     else
         hideDlg()

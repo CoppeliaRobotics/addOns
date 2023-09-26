@@ -139,7 +139,7 @@ function onDecoderChanged()
     end
 end
 
-function onSelectionChange(ui,id,row,column)
+function onSelectedBlockChanged(ui,id,row,column)
     if row==-1 then
         selectedTag=nil
     else
@@ -176,7 +176,7 @@ function showDlg()
         if not ui then
             xml='<ui title="Custom Data Block Explorer" activate="false" closeable="true" on-close="onCloseClicked" resizable="true" '..pos..'>'
             xml=xml..'<group flat="true"><label text="'..title..'" /></group>'
-            xml=xml..'<table id="600" selection-mode="row" editable="false" on-selection-change="onSelectionChange">'
+            xml=xml..'<table id="600" selection-mode="row" editable="false" on-selection-change="onSelectedBlockChanged">'
             xml=xml..'<header><item>Tag name</item><item>Size (bytes)</item><item>Type</item></header>'
             local selectedIndex,i=-1,0
             for tag,data in pairs(content) do
@@ -219,22 +219,19 @@ function hideDlg()
 end
 
 function sysCall_nonSimulation()
-    if leaveNow then
-        return {cmd='cleanup'}
-    end
-    local s=sim.getObjectSelection()
+    if leaveNow then return {cmd='cleanup'} end
+end
+
+function sysCall_selChange(inData)
+    local s=inData.sel
     local previousObject,previousContent=object,content
     content=nil
     object=-1
     info=nil
     local tags=nil
-    if s then
-        if #s>=1 then
-            if s[#s]>=0 then
-                object=s[#s]
-            end
-        end
-    else
+    if #s==1 then
+        object=s[#s]
+    elseif #s==0 then
         object=sim.handle_scene
     end
     if object~=-1 then

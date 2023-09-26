@@ -39,12 +39,13 @@ function hideDlg()
 end
 
 function sysCall_nonSimulation()
-    if leaveNow then
-        return {cmd='cleanup'}
-    end
-    local s=sim.getObjectSelection()
+    if leaveNow then return {cmd='cleanup'} end
+end
+
+function sysCall_selChange(inData)
+    local s=inData.sel
     local show=false
-    if s and #s==1 then
+    if #s==1 then
         local inf=sim.readCustomDataBlock(s[1],'__info__')
         if inf==nil or sim.unpackTable(inf).type~='animation' then
             local tmp=sim.getObjectsInTree(s[1])

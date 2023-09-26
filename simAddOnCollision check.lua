@@ -43,7 +43,7 @@ function adjust(obj)
         local found=false
         for j=1,#toExplore,1 do
             local obj=toExplore[j]
-            
+
             if sim.getModelProperty(obj)&sim.modelproperty_not_model~=0 or (not modelDone) then
                 modelDone=true -- stop exploration at first model
                 local t=sim.getObjectType(obj)
@@ -102,7 +102,7 @@ function coll(ui,id)
     local objectsColl2=sim.getCollectionObjects(entity2)
     sim.destroyCollection(entity1)
     sim.destroyCollection(entity2)
-    
+
     restoreData={dummy=-1,origs={},origLayers={},origsMap={}}
     local allCollisions={}
     local colors={{1,0,0},{0,1,0},{0,0.5,1},{1,1,0},{1,0,1},{0,1,0.5},{0.5,0,0},{0,0.5,0},{0,0.25,0.5},{0.5,0.5,0},{0.5,0,0.5},{0,0.5,0.25}}
@@ -292,18 +292,18 @@ function sysCall_sensing()
 end
 
 function sysCall_nonSimulation()
-    return update()
+    if leaveNow then return {cmd='cleanup'} end
+end
+
+function sysCall_selChange(inData)
+    update()
 end
 
 function update()
-    if leaveNow then
-        hideDlg()
-        return {cmd='cleanup'}
-    end
     local s=sim.getObjectSelection()
     local o1=-1
     local o2=-1
-    if s and #s<3 and #s>0 then
+    if #s>=1 and #s<=2 then
         obj1IsModel=(sim.getModelProperty(s[1])&sim.modelproperty_not_model)==0
         local t=sim.getObjectType(s[1])
         if t==sim.object_shape_type or t==sim.object_dummy_type or t==sim.object_octree_type or t==sim.object_pointcloud_type or obj1IsModel then

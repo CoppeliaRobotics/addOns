@@ -56,7 +56,7 @@ function abortEdit()
 end
 
 function acceptEdit()
-    sim.setReferencedHandles(object,sim.getObjectSel())
+    sim.setReferencedHandles(object,sim.getObjectSelection())
     abortEdit()
 end
 
@@ -105,23 +105,19 @@ function hideDlg()
 end
 
 function sysCall_nonSimulation()
-    if leaveNow then
-        return {cmd='cleanup'}
-    end
+    if leaveNow then return {cmd='cleanup'} end
+end
 
+function sysCall_selChange(inData)
     if editing then return end
 
-    local s=sim.getObjectSelection()
+    local s=inData.sel
     local previousObject,previousContent=object,content
     content=nil
     object=-1
-    if s then
-        if #s>=1 then
-            if s[#s]>=0 then
-                object=s[#s]
-                content=sim.getReferencedHandles(object)
-            end
-        end
+    if #s==1 then
+        object=s[1]
+        content=sim.getReferencedHandles(object)
     end
     if previousObject~=object then
         hideDlg()

@@ -7,7 +7,7 @@ function sysCall_info()
 end
 
 function sysCall_init()
-    if (sim.msgbox_return_yes==sim.msgBox(sim.msgbox_type_info,sim.msgbox_buttons_yesno,"Minimalistic Importer","This add-on is a minimalistic importer, meant as an example. Content in folder 'exportedContent' will be imported. Do you want to proceed?")) then
+    if sim.msgbox_return_yes==sim.msgBox(sim.msgbox_type_info,sim.msgbox_buttons_yesno,"Minimalistic Importer","This add-on is a minimalistic importer, meant as an example. Content in folder 'exportedContent' will be imported. Do you want to proceed?") then
 
         local directoryName="exportedContent"
         local fileName="sceneObjects.txt"
@@ -189,20 +189,20 @@ getValue=function(str,tg)
 	if tg==visibilityTag then s="visibility" end
 	if tg==commentTag then
 		local r=string.match(str,"%/%/.*")
-		return r 
+		return r
 	end
 	if s==nil then return nil end
 	local r=string.match(str,s.."[ ]*{(.-)}")
 	if r==nil then return nil end
 	r=string.reverse(string.match(r," *(.*)"))
-	return(string.reverse(string.match(r," *(.*)")))
+	return string.reverse(string.match(r," *(.*)"))
 end
 
 getNumberTable=function(str)
 	local retTable={}
-	for w in string.gmatch(str,"%S+") do 
-		retTable[#retTable+1]=tonumber(w) 
+	for w in string.gmatch(str,"%S+") do
+		table.insert(retTable,tonumber(w))
 	end
-	return(retTable)
+	return retTable
 end
 

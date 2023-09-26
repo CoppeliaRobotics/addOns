@@ -11,15 +11,14 @@ end
 function sysCall_init()
     simUI=require'simUI'
     sim.addLog(sim.verbosity_scriptinfos,"This tool allows to replace/change aliases of selected objects.")
-    strings={"originalString","replacementString"}
 end
 
 function sysCall_nonSimulation()
-    if leaveNow then
-        return {cmd='cleanup'}
-    end
-    local selectedObjects=sim.getObjectSelection()
-    if selectedObjects and (#selectedObjects>=1) then
+    if leaveNow then return {cmd='cleanup'} end
+end
+
+function sysCall_selChange(inData)
+    if #inData.sel>=1 then
         showDlg()
     else
         hideDlg()
@@ -46,16 +45,14 @@ function showDlg()
         end
         local xml ='<ui title="Alias change tool" activate="false" closeable="true" on-close="close_callback" '..pos..[[>
             <group layout="form" flat="true">
-            <label text="replace occurences of"/>
-            <edit on-editing-finished="editFinished_callback" id="1" />
+            <label text="Replace occurences of"/>
+            <edit value="originalString" id="1" />
             <label text="with string"/>
-            <edit on-editing-finished="editFinished_callback" id="2" />
+            <edit value="replacementString" id="2" />
             </group>
-            <button text="perform operation on selected objects" on-click="replace_callback" id="3"/>
+            <button text="Perform operation on selected objects" on-click="replace_callback" id="3"/>
         </ui>]]
         ui=simUI.create(xml)
-        simUI.setEditValue(ui,1,strings[1])
-        simUI.setEditValue(ui,2,strings[2])
     end
 end
 
@@ -68,18 +65,16 @@ function hideDlg()
     end
 end
 
-function editFinished_callback(ui,id,v)
-    strings[id]=v
-end
-
 function replace_callback(ui,id,v)
     local selectedObjects=sim.getObjectSelection()
-    if #strings[1]>0 then
-        for i=1,#selectedObjects,1 do
-            local name=sim.getObjectAlias(selectedObjects[i])
-            local newName,r=string.gsub(name,strings[1],strings[2])
-            if (r>0) then
-                sim.setObjectAlias(selectedObjects[i],newName)
+    local originalString=simUI.getEditValue(ui,1)
+    local replacementString=simUI.getEditValue(ui,2)
+    if #originalString>0 then
+        for i,handle in ipairs(selectedObjects) do
+            local name=sim.getObjectAlias(handle)
+            local newName,r=string.gsub(name,originalString,replacementString)
+            if r>0 then
+                sim.setObjectAlias(handle,newName)
             end
         end
         sim.announceSceneContentChange()

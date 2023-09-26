@@ -71,7 +71,7 @@ function sysCall_init()
     file:write(finalTxt)
     io.close(file)
     sim.addLog(sim.verbosity_msgs,"Wrote 'lua.xml'")
-    
+
     finalTxt=header2
     for i=1,#lkwds,1 do
         t[#t+1]=lkwds[i]
@@ -83,17 +83,17 @@ function sysCall_init()
         end
         finalTxt=finalTxt..t[i]
     end
-    
+
     finalTxt=finalTxt..footer2
     local file=io.open("langs.xml","w")
     file:write(finalTxt)
     io.close(file)
     sim.addLog(sim.verbosity_msgs,"Wrote 'langs.xml'")
-    
+
     sim.addLog(sim.verbosity_msgs,"1.  Place 'lua.xml' into 'C:/Programs (x86)/Notepad++/plugins/APIs' (or similar)")
     sim.addLog(sim.verbosity_msgs,"2.  Place 'langs.xml' into 'C:/user/<userName>/AppData/Roaming/Notepad++' (or similar).")
     sim.addLog(sim.verbosity_msgs,"Alternatively, you may also only replace the Lua section in the original langs.xml file.")
-    
+
     return {cmd='cleanup'}
 end
 
@@ -106,9 +106,9 @@ header1=[[<?xml version="1.0" encoding="Windows-1252" ?>
         ignore any casing, start and stopFunc specify what chars a function starts and stops with.
         param specifies parameter separator and terminal can be used to specify a character that stops
         any function. Using the same character for different functions results in undefined behaviour.
-        
+
         05/11/2009
-        The basic word character are : A-Z a-z 0-9 and '_' 
+        The basic word character are : A-Z a-z 0-9 and '_'
         If your function name contains other characters,
         add your characters in "additionalWordChar" attribute (without separator)
         in order to make calltip hint work
@@ -526,5 +526,3 @@ lkwds={"table.concat",
 "rrotate",
 "rshift",
 "shift"}
-
-
