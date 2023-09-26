@@ -53,6 +53,7 @@ function sysCall_init()
             </group>
             <label text="Handling:" />
             <group flat="true" content-margins="0,0,0,0" layout="vbox">
+                <checkbox id="${ui_chkEnabled}" text="Enabled" checked="true" on-change="updateUi" />
                 <checkbox id="${ui_chkHandleInSimulation}" text="During simulation" checked="true" on-change="updateUi" />
                 <checkbox id="${ui_chkHandleInNonSimulation}" text="When not simulating" checked="true" on-change="updateUi" />
             </group>
@@ -292,6 +293,7 @@ function generate()
     end
     local dampingFactor=simUI.getSpinboxValue(ui,ui_spinDampingFactor)
     local maxIterations=simUI.getSpinboxValue(ui,ui_spinMaxIterations)
+    local enabled=simUI.getCheckboxValue(ui,ui_chkEnabled)>0
     local handleInSim=simUI.getCheckboxValue(ui,ui_chkHandleInSimulation)>0
     local handleInNonSim=simUI.getCheckboxValue(ui,ui_chkHandleInNonSimulation)>0
     local avoidJointLimits=simUI.getCheckboxValue(ui,ui_chkAvoidJointLimits)>0
@@ -320,8 +322,9 @@ function generate()
         appendLine("    simJoints=sim.getReferencedHandles(jointGroup)")
     end
     appendLine("")
-    appendLine("    enabledWhenSimulationRunning=%s",handleInSim)
-    appendLine("    enabledWhenSimulationStopped=%s",handleInNonSim)
+    appendLine("    enabled=%s",enabled)
+    appendLine("    handleWhenSimulationRunning=%s",handleInSim)
+    appendLine("    handleWhenSimulationStopped=%s",handleInNonSim)
     appendLine("    dampingFactor=%f",dampingFactor)
     appendLine("    maxIterations=%d",maxIterations)
     appendLine("    if dampingFactor>0 then")
@@ -372,12 +375,12 @@ function generate()
 
     appendLine("")
     appendLine("function sysCall_actuation()")
-    appendLine("    if enabledWhenSimulationRunning then handleIk() end")
+    appendLine("    if enabled and handleWhenSimulationRunning then handleIk() end")
     appendLine("end")
 
     appendLine("")
     appendLine("function sysCall_nonSimulation()")
-    appendLine("    if enabledWhenSimulationStopped then handleIk() end")
+    appendLine("    if enabled and handleWhenSimulationStopped then handleIk() end")
     appendLine("end")
 
     appendLine("")
@@ -456,23 +459,33 @@ function generate()
     end
 
     appendLine("")
-    appendLine("function getEnabledWhenSimulationRunning()")
-    appendLine("    return enabledWhenSimulationRunning")
+    appendLine("function getEnabled()")
+    appendLine("    return enabled")
     appendLine("end")
 
     appendLine("")
-    appendLine("function getEnabledWhenSimulationStopped()")
-    appendLine("    return enabledWhenSimulationStopped")
+    appendLine("function setEnabled(b)")
+    appendLine("    enabled=not not b")
     appendLine("end")
 
     appendLine("")
-    appendLine("function setEnabledWhenSimulationRunning(enabled)")
-    appendLine("    enabledWhenSimulationRunning=not not enabled")
+    appendLine("function getHandleWhenSimulationRunning()")
+    appendLine("    return handleWhenSimulationRunning")
     appendLine("end")
 
     appendLine("")
-    appendLine("function setEnabledWhenSimulationStopped(enabled)")
-    appendLine("    enabledWhenSimulationStopped=not not enabled")
+    appendLine("function setHandleWhenSimulationRunning(b)")
+    appendLine("    handleWhenSimulationRunning=not not b")
+    appendLine("end")
+
+    appendLine("")
+    appendLine("function getHandleWhenSimulationStopped()")
+    appendLine("    return handleWhenSimulationStopped")
+    appendLine("end")
+
+    appendLine("")
+    appendLine("function setHandleWhenSimulationStopped(b)")
+    appendLine("    handleWhenSimulationStopped=not not b")
     appendLine("end")
 
     appendLine("")
