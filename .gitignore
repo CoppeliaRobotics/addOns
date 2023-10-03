@@ -1,5 +1,4 @@
-simAdd_OnPythonTest.lua
-simAddOnPythonTest.lua
+simAddOnPythonTest.py
 simAddOnHibot Visualization.lua
 simAddOnWork on models from list.lua
 simAddOnWork on scenes from list.lua
@@ -14,4 +13,5 @@ simAddOnVisualization stream.lua
 simAddOnButton code action.lua
 simAddOnLDraw importer.lua
 simAddOnURL drop service.lua
+simAddOnCommander.lua
 
