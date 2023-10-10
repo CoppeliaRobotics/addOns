@@ -1,11 +1,11 @@
-require'addOns.booleanMesh'
+require 'addOns.booleanMesh'
 
 function sysCall_info()
-    return {autoStart=false,menu='Geometry / Mesh\nMesh union'}
+    return {autoStart = false, menu = 'Geometry / Mesh\nMesh union'}
 end
 
 function op()
-    local simIGL=require'simIGL'
+    local simIGL = require 'simIGL'
     return simIGL.boolean_op.union
 end
 

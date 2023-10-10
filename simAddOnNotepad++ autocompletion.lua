@@ -1,103 +1,105 @@
-sim=require'sim'
+sim = require 'sim'
 
 function sysCall_info()
-    return {autoStart=false,menu='Exporters\nNotepad++ autocompletion'}
+    return {autoStart = false, menu = 'Exporters\nNotepad++ autocompletion'}
 end
 
 function sysCall_init()
-    local f=sim.getApiFunc(-1,'+')
-    local v=sim.getApiFunc(-1,'-')
-    local t={}
-    local b={}
-    for i=1,#f,1 do
-        b[f[i]]=true
-        t[#t+1]=f[i]
+    local f = sim.getApiFunc(-1, '+')
+    local v = sim.getApiFunc(-1, '-')
+    local t = {}
+    local b = {}
+    for i = 1, #f, 1 do
+        b[f[i]] = true
+        t[#t + 1] = f[i]
     end
-    for i=1,#v,1 do
-        b[v[i]]=false
-        t[#t+1]=v[i]
+    for i = 1, #v, 1 do
+        b[v[i]] = false
+        t[#t + 1] = v[i]
     end
     table.sort(t)
-    finalTxt=header1
-    for i=1,#t,1 do
+    finalTxt = header1
+    for i = 1, #t, 1 do
         if b[t[i]] then
             -- function
-            local s=sim.getApiInfo(-1,t[i])
-            if s and not string.find(string.lower(s),"deprecated") then
-                s=string.gsub(s,"\n","")
-                local ep=string.find(s,")")
+            local s = sim.getApiInfo(-1, t[i])
+            if s and not string.find(string.lower(s), "deprecated") then
+                s = string.gsub(s, "\n", "")
+                local ep = string.find(s, ")")
                 if ep then
-                    s=string.sub(s,1,ep-1)
-                    ep=string.find(s,"%(")
+                    s = string.sub(s, 1, ep - 1)
+                    ep = string.find(s, "%(")
                     if ep then
-                        local args=string.sub(s,ep+1)
-                        ep=string.find(s,"=")
-                        local rets=""
-                        if ep then
-                            rets=string.sub(s,0,ep-1)
-                        end
-                        finalTxt=finalTxt..[[        <KeyWord name="]]..t[i]..[[" func="yes">
+                        local args = string.sub(s, ep + 1)
+                        ep = string.find(s, "=")
+                        local rets = ""
+                        if ep then rets = string.sub(s, 0, ep - 1) end
+                        finalTxt = finalTxt .. [[        <KeyWord name="]] .. t[i] ..
+                                       [[" func="yes">
 ]]
-                        if #rets>0 then
-                            rets=rets.." ="
-                        end
-                        finalTxt=finalTxt..[[            <Overload retVal="]]..rets..[[" >
+                        if #rets > 0 then rets = rets .. " =" end
+                        finalTxt = finalTxt .. [[            <Overload retVal="]] .. rets .. [[" >
 ]]
-                        ep=string.find(args,",")
+                        ep = string.find(args, ",")
                         while ep do
-                            s=string.sub(args,0,ep-1)
-                            finalTxt=finalTxt..[[                <Param name="]]..s..[[" />
+                            s = string.sub(args, 0, ep - 1)
+                            finalTxt = finalTxt .. [[                <Param name="]] .. s .. [[" />
 ]]
-                            args=string.sub(args,ep+1)
-                            ep=string.find(args,",")
+                            args = string.sub(args, ep + 1)
+                            ep = string.find(args, ",")
                         end
-                        finalTxt=finalTxt..[[                <Param name="]]..args..[[" />
+                        finalTxt = finalTxt .. [[                <Param name="]] .. args .. [[" />
 ]]
-                        finalTxt=finalTxt..[[            </Overload>
+                        finalTxt = finalTxt .. [[            </Overload>
 ]]
-                        finalTxt=finalTxt..[[        </KeyWord>
+                        finalTxt = finalTxt .. [[        </KeyWord>
 ]]
                     end
                 end
             end
         else
             -- constant
-            finalTxt=finalTxt..[[        <KeyWord name="]]..t[i]..[[" func="no"/>
+            finalTxt = finalTxt .. [[        <KeyWord name="]] .. t[i] .. [[" func="no"/>
 ]]
         end
     end
-    finalTxt=finalTxt..footer1
-    local file=io.open("lua.xml","w")
+    finalTxt = finalTxt .. footer1
+    local file = io.open("lua.xml", "w")
     file:write(finalTxt)
     io.close(file)
-    sim.addLog(sim.verbosity_msgs,"Wrote 'lua.xml'")
+    sim.addLog(sim.verbosity_msgs, "Wrote 'lua.xml'")
 
-    finalTxt=header2
-    for i=1,#lkwds,1 do
-        t[#t+1]=lkwds[i]
-    end
+    finalTxt = header2
+    for i = 1, #lkwds, 1 do t[#t + 1] = lkwds[i] end
     table.sort(t)
-    for i=1,#t,1 do
-        if i>1 then
-            finalTxt=finalTxt.." "
-        end
-        finalTxt=finalTxt..t[i]
+    for i = 1, #t, 1 do
+        if i > 1 then finalTxt = finalTxt .. " " end
+        finalTxt = finalTxt .. t[i]
     end
 
-    finalTxt=finalTxt..footer2
-    local file=io.open("langs.xml","w")
+    finalTxt = finalTxt .. footer2
+    local file = io.open("langs.xml", "w")
     file:write(finalTxt)
     io.close(file)
-    sim.addLog(sim.verbosity_msgs,"Wrote 'langs.xml'")
+    sim.addLog(sim.verbosity_msgs, "Wrote 'langs.xml'")
 
-    sim.addLog(sim.verbosity_msgs,"1.  Place 'lua.xml' into 'C:/Programs (x86)/Notepad++/plugins/APIs' (or similar)")
-    sim.addLog(sim.verbosity_msgs,"2.  Place 'langs.xml' into 'C:/user/<userName>/AppData/Roaming/Notepad++' (or similar).")
-    sim.addLog(sim.verbosity_msgs,"Alternatively, you may also only replace the Lua section in the original langs.xml file.")
+    sim.addLog(
+        sim.verbosity_msgs,
+        "1.  Place 'lua.xml' into 'C:/Programs (x86)/Notepad++/plugins/APIs' (or similar)"
+    )
+    sim.addLog(
+        sim.verbosity_msgs,
+        "2.  Place 'langs.xml' into 'C:/user/<userName>/AppData/Roaming/Notepad++' (or similar)."
+    )
+    sim.addLog(
+        sim.verbosity_msgs,
+        "Alternatively, you may also only replace the Lua section in the original langs.xml file."
+    )
 
-    return {cmd='cleanup'}
+    return {cmd = 'cleanup'}
 end
 
-header1=[[<?xml version="1.0" encoding="Windows-1252" ?>
+header1 = [[<?xml version="1.0" encoding="Windows-1252" ?>
 <NotepadPlus>
     <!-- language doesnt really mean anything, its more of a comment -->
     <AutoComplete language="lua">
@@ -123,10 +125,10 @@ header1=[[<?xml version="1.0" encoding="Windows-1252" ?>
         -->
 ]]
 
-footer1=[[    </AutoComplete>
+footer1 = [[    </AutoComplete>
 </NotepadPlus>]]
 
-header2=[[<?xml version="1.0" encoding="Windows-1252" ?>
+header2 = [[<?xml version="1.0" encoding="Windows-1252" ?>
 <NotepadPlus>
    <!-- The key words of the supported languages, don't touch them! -->
    <Languages>
@@ -278,7 +280,7 @@ header2=[[<?xml version="1.0" encoding="Windows-1252" ?>
             <Keywords name="instre2">_ENV _G _VERSION assert collectgarbage dofile error getfenv getmetatable ipairs load loadfile loadstring module next pairs pcall print rawequal rawget rawlen rawset require select setfenv setmetatable tonumber tostring type unpack xpcall string table math bit32 coroutine io os debug package __index __newindex __call __add __sub __mul __div __mod __pow __unm __concat __len __eq __lt __le __gc __mode</Keywords>
             <Keywords name="type1">]]
 
-footer2=[[</Keywords>
+footer2 = [[</Keywords>
         </Language>
         <Language name="makefile" ext="mak" commentLine="#">
         </Language>
@@ -408,121 +410,20 @@ footer2=[[</Keywords>
     </Languages>
 </NotepadPlus>]]
 
-lkwds={"table.concat",
-"table.insert",
-"table.maxn",
-"table.pack",
-"table.remove",
-"table.sort",
-"table.unpack",
-"tan",
-"tanh",
-"upper",
-"sin",
-"sinh",
-"sqrt",
-"string.byte",
-"string.char",
-"string.dump",
-"string.find",
-"string.format",
-"string.gmatch",
-"string.gsub",
-"string.len",
-"string.lower",
-"string.match",
-"string.rep",
-"string.reverse",
-"string.sub",
-"string.upper",
-"sub",
-"abs",
-"acos",
-"arshift",
-"asin",
-"atan",
-"atan2",
-"band",
-"bit32.arshift",
-"bit32.band",
-"bit32.bnot",
-"bit32.bor",
-"bit32.btest",
-"bit32.bxor",
-"bit32.extract",
-"bit32.lrotate",
-"bit32.lshift",
-"bit32.replace",
-"bit32.rrotate",
-"bit32.rshift",
-"bnot",
-"bor",
-"btest",
-"bxor",
-"byte",
-"ceil",
-"char",
-"cos",
-"cosh",
-"deg",
-"dump",
-"exp",
-"extract",
-"find",
-"floor",
-"fmod",
-"format",
-"frexp",
-"gmatch",
-"gsub",
-"ldexp",
-"len",
-"log",
-"log10",
-"lower",
-"lrotate",
-"lshift",
-"match",
-"math.abs",
-"math.acos",
-"math.asin",
-"math.atan",
-"math.atan2",
-"math.ceil",
-"math.cos",
-"math.cosh",
-"math.deg",
-"math.exp",
-"math.floor",
-"math.fmod",
-"math.frexp",
-"math.huge",
-"math.ldexp",
-"math.log",
-"math.log10",
-"math.max",
-"math.min",
-"math.modf",
-"math.pi",
-"math.pow",
-"math.rad",
-"math.random",
-"math.randomseed",
-"math.sin",
-"math.sinh",
-"math.sqrt",
-"math.tan",
-"math.tanh",
-"max",
-"min",
-"modf",
-"pow",
-"rad",
-"random",
-"randomseed",
-"rep",
-"replace",
-"reverse",
-"rrotate",
-"rshift",
-"shift"}
+lkwds = {
+    "table.concat", "table.insert", "table.maxn", "table.pack", "table.remove", "table.sort",
+    "table.unpack", "tan", "tanh", "upper", "sin", "sinh", "sqrt", "string.byte", "string.char",
+    "string.dump", "string.find", "string.format", "string.gmatch", "string.gsub", "string.len",
+    "string.lower", "string.match", "string.rep", "string.reverse", "string.sub", "string.upper",
+    "sub", "abs", "acos", "arshift", "asin", "atan", "atan2", "band", "bit32.arshift", "bit32.band",
+    "bit32.bnot", "bit32.bor", "bit32.btest", "bit32.bxor", "bit32.extract", "bit32.lrotate",
+    "bit32.lshift", "bit32.replace", "bit32.rrotate", "bit32.rshift", "bnot", "bor", "btest",
+    "bxor", "byte", "ceil", "char", "cos", "cosh", "deg", "dump", "exp", "extract", "find", "floor",
+    "fmod", "format", "frexp", "gmatch", "gsub", "ldexp", "len", "log", "log10", "lower", "lrotate",
+    "lshift", "match", "math.abs", "math.acos", "math.asin", "math.atan", "math.atan2", "math.ceil",
+    "math.cos", "math.cosh", "math.deg", "math.exp", "math.floor", "math.fmod", "math.frexp",
+    "math.huge", "math.ldexp", "math.log", "math.log10", "math.max", "math.min", "math.modf",
+    "math.pi", "math.pow", "math.rad", "math.random", "math.randomseed", "math.sin", "math.sinh",
+    "math.sqrt", "math.tan", "math.tanh", "max", "min", "modf", "pow", "rad", "random",
+    "randomseed", "rep", "replace", "reverse", "rrotate", "rshift", "shift",
+}

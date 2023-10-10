@@ -1,15 +1,15 @@
-sim=require'sim'
+sim = require 'sim'
 
 function sysCall_info()
-    return {autoStart=false,menu='Exporters\nVideo recorder...'}
+    return {autoStart = false, menu = 'Exporters\nVideo recorder...'}
 end
 
 function sysCall_init()
-    simUI=require'simUI'
-    capturing=false
-    numCapturedFrames=0
-    outputDir=sim.getStringParam(sim.stringparam_importexportdir)
-    ui=simUI.create[[<ui title="Video Recorder" closeable="true" on-close="onUiClose">
+    simUI = require 'simUI'
+    capturing = false
+    numCapturedFrames = 0
+    outputDir = sim.getStringParam(sim.stringparam_importexportdir)
+    ui = simUI.create [[<ui title="Video Recorder" closeable="true" on-close="onUiClose">
         <group flat="true" layout="hbox" content-margins="0,0,0,0">
             <label text="Output dir:" />
             <edit id="${editOutputBaseDir}" value="${outputDir}" />
@@ -37,7 +37,7 @@ function sysCall_cleanup()
 end
 
 function sysCall_addOnScriptSuspend()
-    return {cmd='cleanup'}
+    return {cmd = 'cleanup'}
 end
 
 function sysCall_afterSimulation()
@@ -47,55 +47,62 @@ function sysCall_beforeInstanceSwitch()
 end
 
 function sysCall_sensing()
-    if capturing then
-        capture()
-    end
+    if capturing then capture() end
 end
 
 function sysCall_nonSimulation()
-    if leaveNow then return {cmd='cleanup'} end
+    if leaveNow then return {cmd = 'cleanup'} end
 
-    if capturing then
-        capture()
-    end
+    if capturing then capture() end
 end
 
 function onUiClose()
-    leaveNow=true
+    leaveNow = true
 end
 
 function browse()
-    local r=simUI.fileDialog(simUI.filedialog_type.folder,'Select output directory',outputDir,'','','',true)
-    if r[1]=='' then return end
-    outputDir=r[1]
+    local r = simUI.fileDialog(
+                  simUI.filedialog_type.folder, 'Select output directory', outputDir, '', '', '',
+                  true
+              )
+    if r[1] == '' then return end
+    outputDir = r[1]
     updateUi()
 end
 
 function startCapture()
     if capturing then return end
-    capturing=true
-    filePrefix=string.format('%d',os.time())
-    numCapturedFrames=0
+    capturing = true
+    filePrefix = string.format('%d', os.time())
+    numCapturedFrames = 0
     updateUi()
 end
 
 function stopCapture()
     if not capturing then return end
-    capturing=false
-    if numCapturedFrames>0 then
-        if simUI.getCheckboxValue(ui,chkMakeVideo)>0 then
-            local fps=tonumber(simUI.getEditValue(ui,editFPS))
-            local br=tonumber(simUI.getEditValue(ui,editBitrate))
-            local inf=string.format('%s/%s_%s.png',outputDir,filePrefix,'%08d')
-            local outf=string.format('%s/%s.mp4',outputDir,filePrefix)
-            local args={'-r',tostring(fps),'-i',inf,'-c:v','libx264','-b:v',br..'k',outf}
-            sim.addLog(sim.verbosity_scriptinfos,'Running: ffmpeg '..table.join(args,' '))
-            simSubprocess=simSubprocess or require'simSubprocess'
-            local exitCode,output=simSubprocess.exec('ffmpeg',args,'',{useSearchPath=true,openNewConsole=false})
-            if exitCode~=0 then
-                simUI.msgBox(simUI.msgbox_type.critical,simUI.msgbox_buttons.ok,'Error','Failed to execute ffmpeg:\n\n'..output)
+    capturing = false
+    if numCapturedFrames > 0 then
+        if simUI.getCheckboxValue(ui, chkMakeVideo) > 0 then
+            local fps = tonumber(simUI.getEditValue(ui, editFPS))
+            local br = tonumber(simUI.getEditValue(ui, editBitrate))
+            local inf = string.format('%s/%s_%s.png', outputDir, filePrefix, '%08d')
+            local outf = string.format('%s/%s.mp4', outputDir, filePrefix)
+            local args = {
+                '-r', tostring(fps), '-i', inf, '-c:v', 'libx264', '-b:v', br .. 'k', outf,
+            }
+            sim.addLog(sim.verbosity_scriptinfos, 'Running: ffmpeg ' .. table.join(args, ' '))
+            simSubprocess = simSubprocess or require 'simSubprocess'
+            local exitCode, output = simSubprocess.exec(
+                                         'ffmpeg', args, '',
+                                         {useSearchPath = true, openNewConsole = false}
+                                     )
+            if exitCode ~= 0 then
+                simUI.msgBox(
+                    simUI.msgbox_type.critical, simUI.msgbox_buttons.ok, 'Error',
+                    'Failed to execute ffmpeg:\n\n' .. output
+                )
             else
-                sim.addLog(sim.verbosity_scriptinfos,output)
+                sim.addLog(sim.verbosity_scriptinfos, output)
             end
         end
     end
@@ -103,15 +110,15 @@ function stopCapture()
 end
 
 function updateUi()
-    simUI.setEnabled(ui,btnStartCapture,not capturing)
-    simUI.setEnabled(ui,btnStopCapture,capturing)
-    simUI.setEditValue(ui,editOutputBaseDir,outputDir)
-    simUI.setEnabled(ui,grpVideoEncoderOptions,simUI.getCheckboxValue(ui,chkMakeVideo)>0)
+    simUI.setEnabled(ui, btnStartCapture, not capturing)
+    simUI.setEnabled(ui, btnStopCapture, capturing)
+    simUI.setEditValue(ui, editOutputBaseDir, outputDir)
+    simUI.setEnabled(ui, grpVideoEncoderOptions, simUI.getCheckboxValue(ui, chkMakeVideo) > 0)
 end
 
 function capture()
-    local img,res=auxFunc('fetchframe',-1)--sim.getScaledImage('\xff\x00\xff',{1,1},{1024,768},0)
-    local fileName=string.format('%s/%s_%08d.jpg',outputDir,filePrefix,numCapturedFrames)
-    numCapturedFrames=numCapturedFrames+1
-    sim.saveImage(img,res,0,fileName,-1)
+    local img, res = auxFunc('fetchframe', -1) -- sim.getScaledImage('\xff\x00\xff',{1,1},{1024,768},0)
+    local fileName = string.format('%s/%s_%08d.jpg', outputDir, filePrefix, numCapturedFrames)
+    numCapturedFrames = numCapturedFrames + 1
+    sim.saveImage(img, res, 0, fileName, -1)
 end

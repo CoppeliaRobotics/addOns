@@ -1,15 +1,15 @@
-sim=require'sim'
+sim = require 'sim'
 
 function sysCall_info()
-    return {autoStart=false,menu='Developer tools\nMessage viewer'}
+    return {autoStart = false, menu = 'Developer tools\nMessage viewer'}
 end
 
 function sysCall_init()
-    consoleHandle=sim.auxiliaryConsoleOpen('Broadcast message viewer',500,16)
+    consoleHandle = sim.auxiliaryConsoleOpen('Broadcast message viewer', 500, 16)
 end
 
 function sysCall_addOnScriptSuspend()
-    return {cmd='cleanup'}
+    return {cmd = 'cleanup'}
 end
 
 function sysCall_cleanup()
@@ -17,5 +17,5 @@ function sysCall_cleanup()
 end
 
 function sysCall_msg(event)
-    sim.auxiliaryConsolePrint(consoleHandle,_S.tableToString(event,{},99)..'\n')
+    sim.auxiliaryConsolePrint(consoleHandle, _S.tableToString(event, {}, 99) .. '\n')
 end
