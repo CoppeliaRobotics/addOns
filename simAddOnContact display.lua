@@ -53,7 +53,7 @@ function sysCall_sensing()
                                                                       sim.handle_all,
                                                                       sim.handle_all, index
                                                                   )
-        if (objectsInContact) then
+        if #objectsInContact == 2 then
             line = {contactPt[1], contactPt[2], contactPt[3], 0, 0, 0}
             line[4] = contactPt[1] + forceDirectionAndAmplitude[1] * forceVectorScaling
             line[5] = contactPt[2] + forceDirectionAndAmplitude[2] * forceVectorScaling
