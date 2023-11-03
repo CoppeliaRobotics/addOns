@@ -268,9 +268,9 @@ end
 
 function rayCast(orig, dir)
     local sensor = sim.createProximitySensor(
-                       sim.proximitysensor_ray_subtype, 16, 1, {3, 3, 2, 2, 1, 1, 0, 0},
-                       {0, 2000, 0.01, 0.01, 0.01, 0.01, 0, 0, 0, 0, 0, 0, 0.01, 0, 0}
-                   )
+        sim.proximitysensor_ray_subtype, 16, 1, {3, 3, 2, 2, 1, 1, 0, 0},
+        {0, 2000, 0.01, 0.01, 0.01, 0.01, 0, 0, 0, 0, 0, 0, 0.01, 0, 0}
+    )
     local m = pointNormalToMatrix(orig, dir)
     sim.setObjectMatrix(sensor, m)
     local coll = allVisibleObjectsColl({sim.object_shape_type, sim.object_octree_type})
@@ -286,26 +286,24 @@ end
 function rayCastDummies(orig, dir)
     local a = 3 * math.pi / 180
     local sensor = sim.createProximitySensor(
-                       sim.proximitysensor_cone_subtype, 16, 1, {3, 3, 2, 2, 1, 1, 0, 0},
-                       {0, 2000, 0.01, 0.01, 0.01, 0.01, 0, 0, 0, a, 0, 0, 0.01, 0, 0}
-                   )
+        sim.proximitysensor_cone_subtype, 16, 1, {3, 3, 2, 2, 1, 1, 0, 0},
+        {0, 2000, 0.01, 0.01, 0.01, 0.01, 0, 0, 0, a, 0, 0, 0.01, 0, 0}
+    )
     local m = pointNormalToMatrix(orig, dir)
     sim.setObjectMatrix(sensor, m)
     local coll = allVisibleObjectsColl({sim.object_dummy_type})
     local r, d, pt, o, n = sim.checkProximitySensor(sensor, coll)
     sim.destroyCollection(coll)
     sim.removeObjects({sensor})
-    if r > 0 then return o end
+    if r > 0 then
+        return o
+    end
 end
 
 function poseHash(p)
-    return table.join(
-               map(
-                   function(x)
-                return math.floor(x * 1000000)
-            end, p
-               ), '-'
-           )
+    return table.join(map(function(x)
+        return math.floor(x * 1000000)
+    end, p), '-')
 end
 
 function getTriangleAndVertexInfo(pt, n, o)
@@ -320,19 +318,15 @@ function getTriangleAndVertexInfo(pt, n, o)
         meshInfo[o].f = Matrix(-1, 3, meshInfo[o].mesh.indices)
         meshInfo[o].v = Matrix(-1, 3, meshInfo[o].mesh.vertices)
         meshInfo[o].e, meshInfo[o].ue, meshInfo[o].emap, meshInfo[o].uec, meshInfo[o].uee =
-            simIGL.uniqueEdgeMap(
-                meshInfo[o].f:totable{}
-            )
+            simIGL.uniqueEdgeMap(meshInfo[o].f:totable{})
     end
     local r, s = nil, nil
-    local succ, errMsg = pcall(
-                             function()
-            r, s = simIGL.closestFacet(
-                       meshInfo[o].mesh, pt:totable{}, meshInfo[o].emap, meshInfo[o].uec,
-                       meshInfo[o].uee
-                   )
-        end
-                         )
+    local succ, errMsg = pcall(function()
+        r, s = simIGL.closestFacet(
+            meshInfo[o].mesh, pt:totable{}, meshInfo[o].emap,
+            meshInfo[o].uec, meshInfo[o].uee
+        )
+    end)
     if not succ then
         sim.addLog(sim.verbosity_errors, 'IGL: ' .. errMsg)
         return
