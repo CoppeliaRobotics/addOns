@@ -239,7 +239,7 @@ function enable()
     if enabled == 0 then savedNavigationMode = sim.getNavigationMode() end
     enabled = enabled + 1
     if enabled == 1 then
-        sim.setNavigationMode(sim.navigation_camerashift | sim.navigation_camerarotatemiddlebutton)
+        sim.setNavigationMode(sim.navigation_camerashift | sim.navigation_camerarotatemiddlebutton | sim.navigation_camerazoomwheel)
         createDrawingObjects()
         clickCnt = sim.getInt32Param(sim.intparam_mouseclickcounterdown)
         simUI = require 'simUI'
