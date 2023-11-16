@@ -33,6 +33,7 @@ function sysCall_nonSimulation()
         local pt, n, o = rayCast(orig, dir)
         local ti, vi, tc, vc = nil, nil, nil, nil
         local event = {key = flagsStack[1], rayOrigin = orig, rayDirection = dir}
+        local normalOrig = pt
         if pt then
             if currentFlags().handle then event.handle = o end
             if currentFlags().surfacePoint then
@@ -52,6 +53,13 @@ function sysCall_nonSimulation()
                 if currentFlags().vertex and vi then
                     event.vertexIndex = vi
                     event.vertexCoords = vc
+                end
+                if currentFlags().surfaceNormal and not event.normal then
+                    local p1, p2, p3 = Vector(table.slice(tc, 1, 3)), Vector(table.slice(tc, 4, 6)), Vector(table.slice(tc, 7, 9))
+                    local n = (p2 - p1):cross(p3 - p1):normalized():data()
+                    event.normal = n
+                    event.pointNormalMatrix = pointNormalToMatrix(vc, n)
+                    normalOrig = vc
                 end
             end
         end
@@ -104,20 +112,18 @@ function sysCall_nonSimulation()
         end
         if event.point then
             local d = distanceToCamera(event.point)
-            sim.addDrawingObjectItem(
-                pts, {event.point[1], event.point[2], event.point[3], 0.005 * d}
-            )
-            if event.normal then
-                local off = Vector(event.normal) * 0.1 * d
-                sim.addDrawingObjectItem(
-                    lines, {pt[1], pt[2], pt[3], pt[1] + off[1], pt[2] + off[2], pt[3] + off[3]}
-                )
-            end
+            sim.addDrawingObjectItem(pts, {event.point[1], event.point[2], event.point[3], 0.005 * d})
         end
         if event.vertexCoords then
             local vertexPos = table.slice(event.vertexCoords)
             table.insert(vertexPos, 0.005 * distanceToCamera(event.vertexCoords))
             sim.addDrawingObjectItem(trianglesv, vertexPos)
+        end
+        if event.normal and normalOrig then
+            local p = normalOrig
+            local d = distanceToCamera(p)
+            local off = Vector(event.normal) * 0.1 * d
+            sim.addDrawingObjectItem(lines, {p[1], p[2], p[3], p[1] + off[1], p[2] + off[2], p[3] + off[3]})
         end
         if event.triangleCoords then
             local c = Matrix(3, 3, event.triangleCoords)
