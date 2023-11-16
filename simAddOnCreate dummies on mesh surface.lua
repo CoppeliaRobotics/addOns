@@ -80,6 +80,8 @@ function showDlg()
             pos = 'position="' .. uiPos[1] .. ',' .. uiPos[2] .. '" placement="absolute"'
         end
         local xml = [[<ui title="Create dummies on mesh surface" layout="form" activate="false" closeable="true" resizable="true" on-close="close_callback" ]] ..  pos .. [[>
+            <label id="9" text="" />
+            <checkbox id="10" text="Constrain to vertices" on-change="changedConstrain" />
             <label id="11" text="Size:" />
             <spinbox id="12" value="]] .. dummySize .. [[" step="0.001" decimals="3" suffix="m" on-change="changedDummySize" />
             <label id="13" text="Color:" />
@@ -99,6 +101,23 @@ function hideDlg()
         uiPos[1], uiPos[2] = simUI.getPosition(ui)
         simUI.destroy(ui)
         ui = nil
+    end
+end
+
+function changedConstrain(ui, id, val)
+    local constrainToVerticesNew = val > 0
+    if constrainToVertices ~= constrainToVerticesNew then
+        constrainToVertices = constrainToVerticesNew
+        sim.broadcastMsg {id = 'pointSampler.disable', data = {key = 'createDummiesOnMeshSurf'}}
+        sim.broadcastMsg {
+            id = 'pointSampler.enable',
+            data = {
+                key = 'createDummiesOnMeshSurf',
+                surfacePoint = not constrainToVertices,
+                vertex = not not constrainToVertices,
+                surfaceNormal = true
+            },
+        }
     end
 end
 
