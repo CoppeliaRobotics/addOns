@@ -51,7 +51,7 @@ decoders = {
         f = function(tag, data, type)
             local status, data = pcall(function() return sim.unpackTable(data) end)
             if status then
-                return getAsString(data):gsub('[\n ]', {['\n'] = '<br/>', [' '] = '&nbsp;'})
+                return _S.tableToString(data, {indent = true}):gsub('[\n ]', {['\n'] = '<br/>', [' '] = '&nbsp;'})
             end
         end,
     },
@@ -60,7 +60,7 @@ decoders = {
         f = function(tag, data, type)
             local status, data = pcall(function() return cbor.decode(data) end)
             if status then
-                return getAsString(data):gsub('[\n ]', {['\n'] = '<br/>', [' '] = '&nbsp;'})
+                return _S.tableToString(data, {indent = true}):gsub('[\n ]', {['\n'] = '<br/>', [' '] = '&nbsp;'})
             end
         end,
     },
