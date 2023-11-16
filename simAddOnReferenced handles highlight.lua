@@ -40,3 +40,11 @@ function sysCall_selChange(inData)
         end
     end
 end
+
+function sysCall_beforeSave()
+    restore()
+end
+
+function sysCall_afterSave()
+    sysCall_selChange {sel = sim.getObjectSel()}
+end
