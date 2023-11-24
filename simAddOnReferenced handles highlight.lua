@@ -52,3 +52,11 @@ end
 function sysCall_afterSave()
     sysCall_selChange {sel = sim.getObjectSel()}
 end
+
+function sysCall_beforeInstanceSwitch()
+    restore()
+end
+
+function sysCall_afterInstanceSwitch()
+    sysCall_selChange {sel = sim.getObjectSel()}
+end
