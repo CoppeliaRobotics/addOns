@@ -35,7 +35,11 @@ function sysCall_selChange(inData)
     restore()
     if #inData.sel == 1 then
         local rh = sim.getReferencedHandles(inData.sel[1])
+        local handles = {}
         for i, h in ipairs(rh) do
+            handles[h] = true
+        end
+        for h in pairs(handles) do
             pcall(highlight, h) -- referenced handle might be invalid
         end
     end
