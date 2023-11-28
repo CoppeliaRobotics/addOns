@@ -6,15 +6,14 @@ end
 
 function edit()
     index = simUI.getComboboxSelectedIndex(ui, ui_combo)
-    selectedAddonFilename = simUI.getComboboxItemText(ui, ui_combo, index)
-    selectedAddonPath = addonDir .. '/' .. selectedAddonFilename
+    selectedAddon = addons[index + 1]
 
     dummy = sim.createDummy(0.01)
-    sim.setObjectAlias(dummy, selectedAddonFilename:gsub('%.lua$', ''))
+    sim.setObjectAlias(dummy, selectedAddon.name)
     sim.setObjectInt32Param(dummy, sim.objintparam_visibility_layer, 0)
     sim.setObjectInt32Param(dummy, sim.objintparam_manipulation_permissions, 0)
     script = sim.addScript(sim.scripttype_customizationscript)
-    local f = io.open(selectedAddonPath, 'r')
+    local f = io.open(selectedAddon.path, 'r')
     sim.setScriptStringParam(script, sim.scriptstringparam_text, f:read('*a'))
     f:close()
     sim.associateScriptWithObject(script, dummy)
@@ -25,7 +24,7 @@ function edit()
 end
 
 function save()
-    local f = io.open(selectedAddonPath, 'w')
+    local f = io.open(selectedAddon.path, 'w')
     f:write(sim.getScriptStringParam(script, sim.scriptstringparam_text))
     f:close()
     sim.removeObjects {dummy}
@@ -42,12 +41,23 @@ function sysCall_init()
 
     addonDir = sim.getStringParam(sim.stringparam_addondir)
 
-    addonsCbItems = ''
+    addons = {}
     for f in lfs.dir(addonDir) do
         local mode = lfs.attributes(addonDir .. '/' .. f, 'mode')
         if mode == 'file' and string.startswith(f, 'simAddOn') and string.endswith(f, '.lua') then
-            addonsCbItems = addonsCbItems .. '<item>' .. f .. '</item>'
+            local addon = {
+                basename = f,
+                path = addonDir .. '/' .. f,
+                name = string.gsub(f, '^simAddOn(.*)%.lua$', '%1'),
+            }
+            table.insert(addons, addon)
         end
+    end
+    table.sort(addons, function(a, b) return a.name < b.name end)
+
+    local addonsCbItems = ''
+    for _, x in ipairs(addons) do
+        addonsCbItems = addonsCbItems .. '<item>' .. x.basename .. '</item>\n'
     end
 
     ui = simUI.create(
