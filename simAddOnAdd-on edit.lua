@@ -13,9 +13,7 @@ function edit()
     sim.setObjectInt32Param(dummy, sim.objintparam_visibility_layer, 0)
     sim.setObjectInt32Param(dummy, sim.objintparam_manipulation_permissions, 0)
     script = sim.addScript(sim.scripttype_customizationscript)
-    local f = io.open(selectedAddon.path, 'r')
-    sim.setScriptStringParam(script, sim.scriptstringparam_text, f:read('*a'))
-    f:close()
+    sim.setScriptStringParam(script, sim.scriptstringparam_text, selectedAddon.code)
     sim.associateScriptWithObject(script, dummy)
 
     simUI.setEnabled(ui, ui_combo, false)
@@ -50,6 +48,21 @@ function sysCall_init()
                 path = addonDir .. '/' .. f,
                 name = string.gsub(f, '^simAddOn(.*)%.lua$', '%1'),
             }
+
+            local file = assert(io.open(addon.path, 'r'))
+            addon.code = file:read('*a')
+            file:close()
+
+            local env = {}
+            setmetatable(env, {__index = _G})
+            assert(load(addon.code, addon.basename, "t", env))()
+            if type(env.sysCall_info) == 'function' then
+                addon.info = env.sysCall_info()
+                if addon.info.menu then
+                    addon.name = addon.info.menu:gsub('\n',' > ')
+                end
+            end
+
             table.insert(addons, addon)
         end
     end
@@ -57,17 +70,15 @@ function sysCall_init()
 
     local addonsCbItems = ''
     for _, x in ipairs(addons) do
-        addonsCbItems = addonsCbItems .. '<item>' .. x.basename .. '</item>\n'
+        addonsCbItems = addonsCbItems .. '<item>' .. x.name .. '</item>\n'
     end
 
-    ui = simUI.create(
-             [[<ui title="Add-on editor" closeable="true" on-close="closeUi" resizable="false">
+    ui = simUI.create([[<ui title="Add-on editor" closeable="true" on-close="closeUi" resizable="false">
         <label text="Select an add-on to edit and click Edit; it will be loaded into a customization script. When finished, click Save to save it back to the original add-on script file." wordwrap="true" />
         <combobox id="${ui_combo}">]] .. addonsCbItems .. [[</combobox>
         <button id="${ui_btnEdit}" text="Edit" on-click="edit" />
         <button id="${ui_btnSave}" text="Save" on-click="save" enabled="false" />
-    </ui>]]
-         )
+    </ui>]])
 end
 
 function sysCall_nonSimulation()
