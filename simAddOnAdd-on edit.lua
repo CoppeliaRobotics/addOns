@@ -45,9 +45,7 @@ function sysCall_init()
     addonsCbItems = ''
     for f in lfs.dir(addonDir) do
         local mode = lfs.attributes(addonDir .. '/' .. f, 'mode')
-        print('scanning', f, mode)
         if mode == 'file' and string.startswith(f, 'simAddOn') and string.endswith(f, '.lua') then
-            print('yep')
             addonsCbItems = addonsCbItems .. '<item>' .. f .. '</item>'
         end
     end
