@@ -11,6 +11,10 @@ function sysCall_init()
     toRestore = {}
 end
 
+function sysCall_addOnScriptSuspend()
+    return {cmd = 'cleanup'}
+end
+
 function sysCall_cleanup()
     restore()
 end
