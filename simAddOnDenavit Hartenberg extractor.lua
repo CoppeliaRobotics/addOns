@@ -13,22 +13,26 @@ function sysCall_init()
             'This tool requires exactly one object, representing a kinematic chain, to be selected.\n\ne.g. select the last joint or the end-effector of a kinematic chain.'
         )
     else
-        local joints = {}
+        local jointsAndEndEffector = {}
         local obj = sel[1]
         while obj ~= -1 do
-            if sim.getObjectType(obj) == sim.object_joint_type then
-                table.insert(joints, 1, obj)
+            if sim.getObjectType(obj) == sim.object_joint_type or #jointsAndEndEffector == 0 then
+                table.insert(jointsAndEndEffector, 1, obj)
             end
             obj = sim.getObjectParent(obj)
         end
-        if #joints > 1 then
-            print('Denavit-Hartenberg parameters:')
-            for i = 1, #joints - 1 do
-                local dhParams = getDHParams(joints[i], joints[i + 1])
+        if #jointsAndEndEffector > 1 then
+            print('Denavit-Hartenberg parameters (classic DH convention):')
+            for i = 1, #jointsAndEndEffector - 1 do
+                local dhParams = getDHParams(jointsAndEndEffector[i], jointsAndEndEffector[i + 1])
+                local onn = 'joint'
+                if i == #jointsAndEndEffector - 1 and sim.getObjectType(sel[1]) ~= sim.object_joint_type then
+                    onn = 'object'
+                end
                 print(
                     string.format(
-                        "    - between joint '%s' and joint '%s': d=%.4f [m], theta=%.1f [deg], r=%.4f [m], alpha=%.1f [deg]",
-                        sim.getObjectAlias(joints[i], 6), sim.getObjectAlias(joints[i + 1], 6),
+                        "    - between joint '%s' and " .. onn .. " '%s': d=%.4f [m], theta=%.1f [deg], r=%.4f [m], alpha=%.1f [deg]",
+                        sim.getObjectAlias(jointsAndEndEffector[i], 6), sim.getObjectAlias(jointsAndEndEffector[i + 1], 6),
                         dhParams[1], dhParams[2] * 180 / math.pi, dhParams[3],
                         dhParams[4] * 180 / math.pi
                     )
@@ -44,14 +48,14 @@ function sysCall_init()
     return {cmd = 'cleanup'}
 end
 
-function getDHParams(joint1, joint2)
+function getDHParams(obj1, obj2)
     local dhParams = {0, 0, 0, 0}
-    local m1 = sim.getObjectMatrix(joint1)
-    m1 = sim.multiplyMatrices(m1, sim.poseToMatrix(sim.getObjectChildPose(joint1))) -- don't forget the joint's intrinsic transformation
-    local m2 = sim.getObjectMatrix(joint2)
+    local m1 = sim.getObjectMatrix(obj1)
+    m1 = sim.multiplyMatrices(m1, sim.poseToMatrix(sim.getObjectChildPose(obj1))) -- don't forget the joint's intrinsic transformation (if joint)
+    local m2 = sim.getObjectMatrix(obj2)
     sim.invertMatrix(m1)
     local m = sim.multiplyMatrices(m1, m2)
-    -- m is joint2 relative to joint1 frame
+    -- m is obj2 relative to obj1 frame
     m = Matrix(3, 4, m)
     local p = m:slice(1, 4, 3, 4)
     local z = m:slice(1, 3, 3, 3)
