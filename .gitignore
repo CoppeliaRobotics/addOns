@@ -1,18 +1,25 @@
-simAddOnPythonTest.ppy
-simAddOnPythonTest.py
-simAddOnHibot Visualization.lua
-simAddOnWork on models from list.lua
-simAddOnWork on scenes from list.lua
-simAddOnGLTF animation exporter.lua
-simAddOnGLTF exporter.lua
-simAddOnSDF importer.lua
-simAddOnURDF exporter.lua
-simAddOnURDF importer.lua
-simAddOnWS remote API server.lua
-simAddOnZMQ remote API server.lua
-simAddOnVisualization stream.lua
-simAddOnButton code action.lua
-simAddOnLDraw importer.lua
-simAddOnURL drop service.lua
-simAddOnCommander.lua
-
+PythonTest.ppy
+PythonTest.py
+Hibot Visualization.lua
+Work on models from list.lua
+Work on scenes from list.lua
+GLTF animation exporter.lua
+GLTF exporter.lua
+SDF importer.lua
+URDF exporter.lua
+URDF importer.lua
+WS remote API server.lua
+ZMQ remote API server.lua
+Visualization stream.lua
+Button code action.lua
+LDraw importer.lua
+URL drop service.lua
+Commander.lua
+Mesh difference.lua
+Mesh intersection.lua
+Mesh subdivision.lua
+Mesh symmetric difference.lua
+Mesh union.lua
+Point sampler interactive.lua
+Point sampler service.lua
+Surface reconstruction.lua
