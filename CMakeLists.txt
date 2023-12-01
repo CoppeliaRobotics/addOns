@@ -11,7 +11,7 @@ endif()
 list(APPEND CMAKE_MODULE_PATH ${COPPELIASIM_INCLUDE_DIR}/cmake)
 find_package(CoppeliaSim 4.5.0.7 REQUIRED)
 
-file(GLOB ADDON_FILES CONFIGURE_DEPENDS simAddOn*.lua)
+file(GLOB ADDON_FILES CONFIGURE_DEPENDS *.lua)
 foreach(ADDON_FILE IN LISTS ADDON_FILES)
     coppeliasim_add_addon(${ADDON_FILE})
 endforeach()
