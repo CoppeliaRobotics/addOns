@@ -42,17 +42,11 @@ function sysCall_init()
     local name = ''
     while name == '' do
         name = simUI.inputDialog(
-                   'JointGroup',
-                   'Enter a name for the joint group which will contain the following joints:\n\n' ..
-                       table.join(
-                           map(
-                               function(h)
-                            return ' - ' .. sim.getObjectAlias(h, 7)
-                        end, table.slice(joints, 1, 10)
-                           ), '\n'
-                       ) .. (#joints > 10 and string.format('\n (and %d more)', #joints - 10) or '') ..
-                       '\n'
-               )
+            'JointGroup',
+            'Enter a name for the joint group which will contain the following joints:\n\n' ..
+            table.join(map(function(h) return ' - ' .. sim.getObjectAlias(h, 7) end, table.slice(joints, 1, 10)), '\n') ..
+            (#joints > 10 and string.format('\n (and %d more)', #joints - 10) or '') .. '\n'
+        )
     end
     if name == nil then return {cmd = 'cleanup'} end
 
@@ -63,10 +57,10 @@ function sysCall_init()
         scriptText = scriptText .. string.format(...) .. '\n'
     end
 
-    appendLine("sim=require'sim'")
+    appendLine("sim = require 'sim'")
     appendLine("")
     appendLine("function sysCall_init()")
-    appendLine("    self=sim.getObject'.'")
+    appendLine("    self = sim.getObject '.'")
     appendLine("end")
     appendLine("")
     appendLine("function getJoints()")
@@ -74,11 +68,11 @@ function sysCall_init()
     appendLine("end")
     appendLine("")
     appendLine("function getConfig()")
-    appendLine("    return map(sim.getJointPosition,getJoints())")
+    appendLine("    return map(sim.getJointPosition, getJoints())")
     appendLine("end")
     appendLine("")
     appendLine("function setConfig(cfg)")
-    appendLine("    foreach(sim.setJointPosition,getJoints(),cfg)")
+    appendLine("    foreach(sim.setJointPosition, getJoints(), cfg)")
     appendLine("end")
 
     local jointGroupDummy = sim.createDummy(0.01)

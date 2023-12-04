@@ -162,32 +162,32 @@ function generate()
     sim.setObjectInt32Param(motionPlanningDummy, sim.objintparam_manipulation_permissions, 0)
 
     local jointGroupPath = sim.getObjectAliasRelative(jointGroup, robotModel, 1)
-    appendLine("sim=require'sim'")
-    appendLine("simOMPL=require'simOMPL'")
-    appendLine("robotConfigPath=require'models.robotConfigPath'")
+    appendLine("sim = require 'sim'")
+    appendLine("simOMPL = require 'simOMPL'")
+    appendLine("robotConfigPath = require 'models.robotConfigPath'")
     appendLine("")
     appendLine("function sysCall_init()")
-    appendLine("    model=sim.getObject'::'")
-    appendLine("    jointGroup=sim.getObject('%s',{proxy=model})", jointGroupPath)
-    appendLine("    joints=sim.getReferencedHandles(jointGroup)")
+    appendLine("    model = sim.getObject '::'")
+    appendLine("    jointGroup = sim.getObject('%s', {proxy = model})", jointGroupPath)
+    appendLine("    joints = sim.getReferencedHandles(jointGroup)")
     appendLine("")
-    appendLine("    robotCollection=sim.createCollection()")
-    appendLine("    sim.addItemToCollection(robotCollection,sim.handle_tree,model,0)")
+    appendLine("    robotCollection = sim.createCollection()")
+    appendLine("    sim.addItemToCollection(robotCollection, sim.handle_tree, model, 0)")
     appendLine("")
-    appendLine("    startState=ObjectProxy'./StartState'")
-    appendLine("    goalState=ObjectProxy'./GoalState'")
+    appendLine("    startState = ObjectProxy './StartState'")
+    appendLine("    goalState = ObjectProxy './GoalState'")
     appendLine("")
-    appendLine("    task=simOMPL.createTask'main'")
+    appendLine("    task = simOMPL.createTask 'main'")
     appendLine("")
     appendLine("    -- wrap simOMPL.* functions with task argument:")
-    appendLine("    for k,v in pairs(simOMPL) do")
-    appendLine("        if type(v)=='function' and not _G[k] then")
-    appendLine("            _G[k]=function(...) return simOMPL[k](task,...) end")
+    appendLine("    for k, v in pairs(simOMPL) do")
+    appendLine("        if type(v) == 'function' and not _G[k] then")
+    appendLine("            _G[k] = function(...) return simOMPL[k](task, ...) end")
     appendLine("        end")
     appendLine("    end")
     appendLine("")
-    appendLine("    setStateSpaceForJoints(joints,{1,1,1})")
-    appendLine("    setCollisionPairs({robotCollection,sim.handle_all})")
+    appendLine("    setStateSpaceForJoints(joints, {1, 1, 1})")
+    appendLine("    setCollisionPairs({robotCollection, sim.handle_all})")
     appendLine("    setAlgorithm(simOMPL.Algorithm.%s)", algorithmName)
     appendLine("end")
     appendLine("")
@@ -199,21 +199,18 @@ function generate()
     appendLine("    setStartState(startState:getConfig())")
     appendLine("    setGoalState(goalState:getConfig())")
     appendLine("    setup()")
-    appendLine("    solved,path=simOMPL.compute(task,10)")
-    appendLine("    path=Matrix(-1,getStateSpaceDimension(),path)")
-    appendLine(
-        '%s',
-        "    printf('solved: %s (%s)',solved,hasApproximateSolution() and 'approximate' or 'exact')"
-    )
-    appendLine('%s', "    printf('path: %d states',#path)")
+    appendLine("    solved, path = simOMPL.compute(task, 10)")
+    appendLine("    path = Matrix(-1, getStateSpaceDimension(), path)")
+    appendLine('%s', "    printf('solved: %s (%s)', solved, hasApproximateSolution() and 'approximate' or 'exact')")
+    appendLine('%s', "    printf('path: %d states', #path)")
     appendLine("    if solved then")
-    appendLine("        robotConfigPath.create(path,model,'%s')", jointGroupPath)
+    appendLine("        robotConfigPath.create(path, model, '%s')", jointGroupPath)
     appendLine("    end")
     appendLine("end")
     appendLine("")
-    appendLine("function ObjectProxy(p,t)")
-    appendLine("    t=t or sim.scripttype_customizationscript")
-    appendLine("    return sim.getScriptFunctions(sim.getScript(t,sim.getObject(p)))")
+    appendLine("function ObjectProxy(p, t)")
+    appendLine("    t = t or sim.scripttype_customizationscript")
+    appendLine("    return sim.getScriptFunctions(sim.getScript(t, sim.getObject(p)))")
     appendLine("end")
 
     local startStateDummy = sim.createDummy(0.01)
@@ -234,17 +231,17 @@ function generate()
     sim.associateScriptWithObject(script, motionPlanningDummy)
     local startStateScript = sim.addScript(sim.scripttype_customizationscript)
     sim.setScriptStringParam(
-        startStateScript, sim.scriptstringparam_text, [[require'models.robotConfig_customization'
-model=sim.getObject'::'
-jointGroupPath=']] .. jointGroupPath .. "'"
+        startStateScript, sim.scriptstringparam_text, [[require 'models.robotConfig_customization'
+model = sim.getObject '::'
+jointGroupPath = ']] .. jointGroupPath .. "'"
     )
     sim.associateScriptWithObject(startStateScript, startStateDummy)
     local goalStateScript = sim.addScript(sim.scripttype_customizationscript)
     sim.setScriptStringParam(
-        goalStateScript, sim.scriptstringparam_text, [[require'models.robotConfig_customization'
-model=sim.getObject'::'
-jointGroupPath=']] .. jointGroupPath .. [['
-color={0,1,0}]]
+        goalStateScript, sim.scriptstringparam_text, [[require 'models.robotConfig_customization'
+model = sim.getObject'::'
+jointGroupPath = ']] .. jointGroupPath .. [['
+color = {0, 1, 0}]]
     )
     sim.associateScriptWithObject(goalStateScript, goalStateDummy)
     sim.announceSceneContentChange()
