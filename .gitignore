@@ -23,3 +23,7 @@ Mesh union.lua
 Point sampler interactive.lua
 Point sampler service.lua
 Surface reconstruction.lua
+Create dummies on mesh surface.lua
+Find midpoint.lua
+Measure distance and direction.lua
+Translate to align vertex.lua
