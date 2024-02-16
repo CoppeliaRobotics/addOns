@@ -1,5 +1,7 @@
 sim = require 'sim'
 
+require 'functional'
+
 require 'addOns.jointGroup'
 
 function sysCall_info()
@@ -100,23 +102,23 @@ function onModelChanged()
             needsUpdateUi = true
         end
 
-        -- find 'tip' within model:
-        local tip = sim.getObject('./tip', {proxy = robotModel, noError = true})
-        if tip ~= -1 then
-            local idx = table.find(comboRobotTipHandle, tip)
-            if idx then
-                simUI.setComboboxSelectedIndex(ui, ui_comboRobotTip, idx - 1)
-                needsUpdateUi = true
-            end
-        end
-
-        -- find 'target' within model:
-        local target = sim.getObject('./target', {proxy = robotModel, noError = true})
-        if target ~= -1 then
-            local idx = table.find(comboRobotTargetHandle, target)
-            if idx then
-                simUI.setComboboxSelectedIndex(ui, ui_comboRobotTarget, idx - 1)
-                needsUpdateUi = true
+        -- find 'tip'/'target' within model:
+        for _, prefix in ipairs{'', 'ik', 'arm'} do
+            local cap = prefix == '' and identity or string.capitalize
+            local tip = sim.getObject('./' .. prefix .. cap 'tip', {proxy = robotModel, noError = true})
+            local target = sim.getObject('./' .. prefix .. cap 'target', {proxy = robotModel, noError = true})
+            if tip ~= -1 and target ~= -1 then
+                local tip_idx = table.find(comboRobotTipHandle, tip)
+                if tip_idx then
+                    simUI.setComboboxSelectedIndex(ui, ui_comboRobotTip, tip_idx - 1)
+                    needsUpdateUi = true
+                end
+                local target_idx = table.find(comboRobotTargetHandle, target)
+                if target_idx then
+                    simUI.setComboboxSelectedIndex(ui, ui_comboRobotTarget, target_idx - 1)
+                    needsUpdateUi = true
+                end
+                break
             end
         end
 
