@@ -21,6 +21,6 @@ function sysCall_cleanup()
 end
 
 function sysCall_event(event)
-    event = cbor.decode(event)
+    event = cbor.decode(tostring(event))
     sim.auxiliaryConsolePrint(consoleHandle, _S.tableToString(event, {}, 99) .. '\n')
 end

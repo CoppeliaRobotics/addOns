@@ -58,7 +58,7 @@ decoders = {
     {
         name = 'cbor',
         f = function(tag, data, type)
-            local status, data = pcall(function() return cbor.decode(data) end)
+            local status, data = pcall(function() return cbor.decode(tostring(data)) end)
             if status then
                 return _S.tableToString(data, {indent = true}):gsub('[\n ]', {['\n'] = '<br/>', [' '] = '&nbsp;'})
             end
@@ -245,7 +245,7 @@ function sysCall_selChange(inData)
         info = sim.readCustomTableData(object, '__info__')
     end
     if previousObject ~= object then hideDlg() end
-    if tags then
+    if tags and #tags > 0 then
         content = {}
         for i, tag in ipairs(tags) do content[tag] = {sim.readCustomDataBlockEx(object, tag)} end
         local _ = function(x)

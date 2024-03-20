@@ -53,7 +53,7 @@ function sysCall_selChange(inData)
     local show = false
     if #s == 1 then
         local inf = sim.readCustomDataBlock(s[1], '__info__')
-        if inf == nil or sim.unpackTable(inf).type ~= 'animation' then
+        if inf == nil or #inf == 0 or sim.unpackTable(inf).type ~= 'animation' then
             local tmp = sim.getObjectsInTree(s[1])
             local cnt = 0
             for i = 1, #tmp, 1 do

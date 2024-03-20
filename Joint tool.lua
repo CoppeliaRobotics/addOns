@@ -52,7 +52,8 @@ function sysCall_selChange(inData)
     -- get selected joints:
     local jointHandles = {}
     for i, objectHandle in ipairs(sel) do
-        if sim.readCustomDataBlock(objectHandle, '__jointGroup__') then
+        local dat = sim.readCustomDataBlock(objectHandle, '__jointGroup__')
+        if dat and #dat > 0 then
             for j, jointHandle in ipairs(sim.getReferencedHandles(objectHandle)) do
                 if sim.getObjectType(jointHandle) == sim.object_joint_type then
                     table.insert(jointHandles, jointHandle)

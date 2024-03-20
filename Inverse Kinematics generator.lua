@@ -511,10 +511,12 @@ function generate()
     sim.setScriptStringParam(script, sim.scriptstringparam_text, scriptText)
     sim.associateScriptWithObject(script, ikDummy)
 
-    if not sim.readCustomDataBlock(simTip, 'ikTip') then
+    local dat = sim.readCustomDataBlock(simTip, 'ikTip')
+    if not dat or #dat == 0 then
         sim.writeCustomDataBlock(simTip, 'ikTip', sim.packInt32Table {1})
     end
-    if not sim.readCustomDataBlock(simTarget, 'ikTarget') then
+    local dat = sim.readCustomDataBlock(simTarget, 'ikTarget')
+    if not dat or #dat == 0 then
         sim.writeCustomDataBlock(simTarget, 'ikTarget', sim.packInt32Table {1})
     end
 

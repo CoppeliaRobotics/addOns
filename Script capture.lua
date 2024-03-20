@@ -49,7 +49,7 @@ function sysCall_cleanup()
 end
 
 function sysCall_event(es)
-    es = cbor.decode(es)
+    es = cbor.decode(tostring(es))
     for _, e in ipairs(es) do
         if e.event == 'objectAdded' then
             onObjectAdded(e.handle)
