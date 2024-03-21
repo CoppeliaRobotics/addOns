@@ -22,13 +22,13 @@ end
 decoders = {
     {
         name = 'auto',
-        f = function(tag, data, type)
-            if type then
-                local d = getDecoderForType(type)
+        f = function(tag, data, _type)
+            if _type then
+                local d = getDecoderForType(_type)
                 if d then
-                    return d.f(tag, data, type)
+                    return d.f(tag, data, _type)
                 else
-                    error('unknown type: ' .. type)
+                    error('unknown type: ' .. _type)
                 end
             end
             return '<font color=#b75501>For automatic selection of decoder, there must be an \'__info__\' block with type information, e.g.: {blocks={myTagName={type=\'table\'}}}, which is normally written by sim.writeCustomTableData or sim.writeCustomDataBlockEx.</font>'
@@ -36,19 +36,19 @@ decoders = {
     },
     {
         name = 'binary',
-        f = function(tag, data, type)
+        f = function(tag, data, _type)
             return '<tt>' .. data:gsub('(.)', function(y) return string.format('%02X ', string.byte(y)) end) .. '</tt>'
         end,
     },
     {
         name = 'string',
-        f = function(tag, data, type)
+        f = function(tag, data, _type)
             return data
         end,
     },
     {
         name = 'table',
-        f = function(tag, data, type)
+        f = function(tag, data, _type)
             local status, data = pcall(function() return sim.unpackTable(data) end)
             if status then
                 return _S.tableToString(data, {indent = true}):gsub('[\n ]', {['\n'] = '<br/>', [' '] = '&nbsp;'})
@@ -57,46 +57,50 @@ decoders = {
     },
     {
         name = 'cbor',
-        f = function(tag, data, type)
+        f = function(tag, data, _type)
             local status, data = pcall(function() return cbor.decode(tostring(data)) end)
             if status then
-                return _S.tableToString(data, {indent = true}):gsub('[\n ]', {['\n'] = '<br/>', [' '] = '&nbsp;'})
+                if type(data) == 'table' then
+                    return _S.tableToString(data, {indent = true}):gsub('[\n ]', {['\n'] = '<br/>', [' '] = '&nbsp;'})
+                else
+                    return getAsString(data)
+                end
             end
         end,
     },
     {
         name = 'float[]',
-        f = function(tag, data, type)
+        f = function(tag, data, _type)
             return getAsString(sim.unpackFloatTable(data))
         end,
     },
     {
         name = 'double[]',
-        f = function(tag, data, type)
+        f = function(tag, data, _type)
             return getAsString(sim.unpackDoubleTable(data))
         end,
     },
     {
         name = 'int32[]',
-        f = function(tag, data, type)
+        f = function(tag, data, _type)
             return getAsString(sim.unpackInt32Table(data))
         end,
     },
     {
         name = 'uint8[]',
-        f = function(tag, data, type)
+        f = function(tag, data, _type)
             return getAsString(sim.unpackUInt8Table(data))
         end,
     },
     {
         name = 'uint16[]',
-        f = function(tag, data, type)
+        f = function(tag, data, _type)
             return getAsString(sim.unpackUInt16Table(data))
         end,
     },
     {
         name = 'uint32[]',
-        f = function(tag, data, type)
+        f = function(tag, data, _type)
             return getAsString(sim.unpackUInt32Table(data))
         end,
     },
