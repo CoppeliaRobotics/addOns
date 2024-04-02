@@ -53,6 +53,7 @@ function sysCall_init()
                 <checkbox id="${ui_chkAvoidJointLimits}" text="Actively avoid joint limits" on-change="updateUi" />
                 <checkbox id="${ui_chkAbortOnJointLimitsHit}" text="Abort on joint limits hit" on-change="updateUi" />
                 <checkbox id="${ui_chkAllowError}" text="Allow error" checked="true" on-change="updateUi" />
+                <checkbox id="${ui_chkOutputErrors}" text="Output errors" checked="false" on-change="updateUi" />
             </group>
             <label text="Handling:" />
             <group flat="true" content-margins="0,0,0,0" layout="vbox">
@@ -308,6 +309,7 @@ function generate()
     local avoidJointLimits = simUI.getCheckboxValue(ui, ui_chkAvoidJointLimits) > 0
     local abortOnJointLimitsHit = simUI.getCheckboxValue(ui, ui_chkAbortOnJointLimitsHit) > 0
     local allowError = simUI.getCheckboxValue(ui, ui_chkAllowError) > 0
+    local outputErrors = simUI.getCheckboxValue(ui, ui_chkOutputErrors) > 0
     local genIKVars = simUI.getCheckboxValue(ui, ui_chkGenIKVars) > 0
 
     local ikDummy = sim.createDummy(0.01)
@@ -400,9 +402,11 @@ function generate()
     appendLine("")
     appendLine("function handleIk()")
     appendLine("    local result, failureReason = simIK.handleGroup(ikEnv, ikGroup, ikOptions)")
-    appendLine("    if result ~= simIK.result_success then")
-    appendLine("        sim.addLog(sim.verbosity_errors, 'IK failed: ' .. simIK.getFailureDescription(failureReason))")
-    appendLine("    end")
+    if outputErrors then
+        appendLine("    if result ~= simIK.result_success then")
+        appendLine("        sim.addLog(sim.verbosity_errors, 'IK failed: ' .. simIK.getFailureDescription(failureReason))")
+        appendLine("    end")
+    end
     appendLine("end")
 
     appendLine("")
