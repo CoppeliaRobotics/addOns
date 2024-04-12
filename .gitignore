@@ -27,7 +27,8 @@ Create dummies on mesh surface.lua
 Find midpoint.lua
 Measure distance and direction.lua
 Translate to align vertex.lua
-Convex decomposer hacd.lua
-Convex decomposer vhacd.lua
-Convex decomposer coacd.lua
+Convex decomposition hacd.lua
+Convex decomposition vhacd.lua
+Convex decomposition coacd.lua
 Convex hull.lua
+Mesh decimation.lua
