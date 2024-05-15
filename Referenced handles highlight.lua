@@ -24,7 +24,7 @@ function highlight(handle)
         toRestore,
         {handle = handle, color = sim.getObjectInt32Param(handle, sim.objintparam_hierarchycolor)}
     )
-    sim.setObjectInt32Param(handle, sim.objintparam_hierarchycolor, 0)
+    sim.setObjectInt32Param(handle, sim.objintparam_hierarchycolor, 1)
 end
 
 function restore()
