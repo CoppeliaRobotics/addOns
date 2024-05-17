@@ -45,11 +45,11 @@ function sysCall_init()
     addons = {}
     for f in lfs.dir(addonDir) do
         local mode = lfs.attributes(addonDir .. '/' .. f, 'mode')
-        if mode == 'file' and string.startswith(f, 'simAddOn') and string.endswith(f, '.lua') then
+        if mode == 'file' and string.endswith(f, '.lua') then
             local addon = {
                 basename = f,
                 path = addonDir .. '/' .. f,
-                name = string.gsub(f, '^simAddOn(.*)%.lua$', '%1'),
+                name = string.gsub(f, '^(.*)%.lua$', '%1'),
             }
             table.insert(addons, addon)
         end
