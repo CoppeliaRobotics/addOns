@@ -69,7 +69,7 @@ function sysCall_init()
     sim.setObjectPose(jointGroupDummy, {0, 0, 0, 0, 0, 0, 1}, modelHandle)
     sim.setObjectInt32Param(jointGroupDummy, sim.objintparam_visibility_layer, 0)
     sim.setObjectInt32Param(jointGroupDummy, sim.objintparam_manipulation_permissions, 0)
-    sim.writeCustomDataBlock(jointGroupDummy, '__jointGroup__', sim.packInt32Table {1})
+    sim.writeCustomBufferData(jointGroupDummy, '__jointGroup__', sim.packInt32Table {1})
 
     sim.announceSceneContentChange()
 

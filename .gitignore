@@ -20,6 +20,7 @@ Mesh intersection.lua
 Mesh subdivision.lua
 Mesh symmetric difference.lua
 Mesh union.lua
+Subdivide large triangles.lua
 Point sampler interactive.lua
 Point sampler service.lua
 Surface reconstruction.lua
@@ -30,5 +31,6 @@ Translate to align vertex.lua
 Convex decomposition hacd.lua
 Convex decomposition vhacd.lua
 Convex decomposition coacd.lua
+Convex decomposition coacd.py
 Convex hull.lua
 Mesh decimation.lua

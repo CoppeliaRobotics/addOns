@@ -158,7 +158,7 @@ end
 
 function onClearClicked(ui, id)
     if selectedTag then
-        sim.writeCustomDataBlock(object, selectedTag, '')
+        sim.writeCustomBufferData(object, selectedTag, '')
         sim.announceSceneContentChange()
         hideDlg()
     end
@@ -245,7 +245,7 @@ function sysCall_selChange(inData)
         object = sim.handle_scene
     end
     if object ~= -1 then
-        tags = sim.readCustomDataBlockTags(object)
+        tags = sim.readCustomDataTags(object)
         info = sim.readCustomTableData(object, '__info__')
     end
     if previousObject ~= object then hideDlg() end

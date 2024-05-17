@@ -515,13 +515,13 @@ function generate()
     sim.setScriptStringParam(script, sim.scriptstringparam_text, scriptText)
     sim.associateScriptWithObject(script, ikDummy)
 
-    local dat = sim.readCustomDataBlock(simTip, 'ikTip')
+    local dat = sim.readCustomBufferData(simTip, 'ikTip')
     if not dat or #dat == 0 then
-        sim.writeCustomDataBlock(simTip, 'ikTip', sim.packInt32Table {1})
+        sim.writeCustomBufferData(simTip, 'ikTip', sim.packInt32Table {1})
     end
-    local dat = sim.readCustomDataBlock(simTarget, 'ikTarget')
+    local dat = sim.readCustomBufferData(simTarget, 'ikTarget')
     if not dat or #dat == 0 then
-        sim.writeCustomDataBlock(simTarget, 'ikTarget', sim.packInt32Table {1})
+        sim.writeCustomBufferData(simTarget, 'ikTarget', sim.packInt32Table {1})
     end
 
     sim.announceSceneContentChange()

@@ -52,7 +52,7 @@ function sysCall_selChange(inData)
     local s = inData.sel
     local show = false
     if #s == 1 then
-        local inf = sim.readCustomDataBlock(s[1], '__info__')
+        local inf = sim.readCustomBufferData(s[1], '__info__')
         if inf == nil or #inf == 0 or sim.unpackTable(inf).type ~= 'animation' then
             local tmp = sim.getObjectsInTree(s[1])
             local cnt = 0
@@ -214,8 +214,8 @@ function sysCall_afterSimulation()
         end
         modelData = nil
 
-        sim.writeCustomDataBlock(dummy, 'animationData', sim.packTable(animationData))
-        sim.writeCustomDataBlock(dummy, '__info__', sim.packTable({type = 'animation'}, 1))
+        sim.writeCustomBufferData(dummy, 'animationData', sim.packTable(animationData))
+        sim.writeCustomBufferData(dummy, '__info__', sim.packTable({type = 'animation'}, 1))
         sim.setReferencedHandles(dummy, handles)
         sim.setObjectAlias(dummy, "animatedModel")
         local s = sim.getModelBB(dummy)
