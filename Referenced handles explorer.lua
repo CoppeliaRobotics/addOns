@@ -40,7 +40,7 @@ function beginEdit()
     hideDlg()
 
     local xml =
-        '<ui title="Referenced Handles Editor" activate="false" closeable="false" resizable="false">'
+        '<ui title="Referenced Handles Explorer" activate="false" closeable="false" resizable="false">'
     xml =
         xml .. '<label text="<b>Editing referenced handles of ' .. sim.getObjectAlias(object, 9) ..
             '</b>" />'
@@ -91,15 +91,21 @@ function showDlg()
             xml = xml ..
                       '<table id="600" selection-mode="row" editable="false" on-selection-change="onSelectionChange">'
             xml = xml .. '<header><item>Handle</item><item>Name</item></header>'
-            for i, handle in ipairs(content) do
-                local name = ''
-                if handle ~= -1 then name = sim.getObjectAlias(handle, aliasOption) end
-                xml = xml .. '<row><item>' .. handle .. '</item><item>' .. name .. '</item></row>'
+            for ch, content1 in pairs(content) do
+                local flagDisplay = ch == 'normal' and '' or string.format(' [%s]', ch)
+                for tag, content2 in pairs(content1) do
+                    xml = xml .. '<row><item></item><item>tag = \'' .. string.gsub(tag, '\'', '\\\'') .. '\'' .. flagDisplay .. '</item></row>'
+                    for i, handle in ipairs(content2) do
+                        local name = ''
+                        if handle ~= -1 then name = sim.getObjectAlias(handle, aliasOption) end
+                        xml = xml .. '<row><item>' .. handle .. '</item><item>    ' .. name .. '</item></row>'
+                    end
+                end
             end
             xml = xml .. '</table>'
-            xml = xml .. '<button text="Edit..." on-click="beginEdit" />'
-            xml = xml .. '<button text="Set selection" on-click="setSelection" />'
-            xml = xml .. '<button text="Print handles" on-click="printHandles" />'
+            --xml = xml .. '<button text="Edit..." on-click="beginEdit" />'
+            --xml = xml .. '<button text="Set selection" on-click="setSelection" />'
+            --xml = xml .. '<button text="Print handles" on-click="printHandles" />'
             xml = xml .. '</ui>'
             ui = simUI.create(xml)
         end
@@ -128,10 +134,22 @@ function sysCall_selChange(inData)
     object = -1
     if #s == 1 then
         object = s[1]
-        content = sim.getReferencedHandles(object)
+        content = {}
+        for k, handle in pairs{
+            normal = object,
+            ['sim.handleflag_keeporiginal'] = object | sim.handleflag_keeporiginal,
+        } do
+            local content1 = {}
+            for _, tag in ipairs(sim.getReferencedHandlesTags(handle)) do
+                content1[tag] = sim.getReferencedHandles(handle, tag)
+            end
+            if next(content1) then
+                content[k] = content1
+            end
+        end
     end
     if previousObject ~= object then hideDlg() end
-    if content and #content > 0 then
+    if content and next(content) then
         local _ = function(x)
             return x ~= nil and sim.packTable(x) or nil
         end
