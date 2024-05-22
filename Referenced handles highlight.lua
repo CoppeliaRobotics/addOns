@@ -35,6 +35,10 @@ function restore()
     toRestore = {}
 end
 
+function update()
+    sysCall_selChange {sel = sim.getObjectSel()}
+end
+
 function sysCall_selChange(inData)
     restore()
     if #inData.sel == 1 then
@@ -49,12 +53,20 @@ function sysCall_selChange(inData)
     end
 end
 
+function sysCall_beforeCopy(inData)
+    restore()
+end
+
+function sysCall_afterCopy(inData)
+    update()
+end
+
 function sysCall_beforeSave()
     restore()
 end
 
 function sysCall_afterSave()
-    sysCall_selChange {sel = sim.getObjectSel()}
+    update()
 end
 
 function sysCall_beforeInstanceSwitch()
@@ -62,5 +74,5 @@ function sysCall_beforeInstanceSwitch()
 end
 
 function sysCall_afterInstanceSwitch()
-    sysCall_selChange {sel = sim.getObjectSel()}
+    update()
 end
