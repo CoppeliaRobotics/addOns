@@ -136,7 +136,7 @@ function sysCall_selChange(inData)
 end
 
 function buildJoint(revoluteJoint)
-    local sel = sim.getObjectSelection()
+    local sel = sim.getObjectSel()
     local objMatr = sim.getObjectMatrix(sel[1])
     if sim.getObjectType(sel[1]) == sim.object_joint_type then
         objMatr = sim.multiplyMatrices(objMatr, sim.poseToMatrix(sim.getObjectChildPose(sel[1]))) -- don't forget the joint's intrinsic transformation

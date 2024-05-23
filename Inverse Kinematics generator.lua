@@ -71,7 +71,7 @@ function sysCall_init()
     </ui>]]
          )
     updateUi()
-    local sel = sim.getObjectSelection()
+    local sel = sim.getObjectSel()
     if #sel == 1 then
         local idx = table.find(comboRobotModelHandle, sel[1])
         if idx then simUI.setComboboxSelectedIndex(ui, ui_comboRobotModel, idx - 1, false) end

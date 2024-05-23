@@ -63,7 +63,7 @@ function abortEdit()
 end
 
 function acceptEdit()
-    sim.setReferencedHandles(object, sim.getObjectSelection())
+    sim.setReferencedHandles(object, sim.getObjectSel())
     abortEdit()
 end
 

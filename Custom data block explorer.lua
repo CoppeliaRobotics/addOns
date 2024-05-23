@@ -9,7 +9,7 @@ function sysCall_init()
     cbor = require 'org.conman.cbor'
     sim.addLog(
         sim.verbosity_scriptinfos,
-        "This tool will display the custom data blocks attached to the selected object, or the custom data blocks attached to the scene, if no object is selected. Custom data blocks can be written and read with simWriteCustomDataBlock and simReadCustomDataBlock."
+        "This tool will display the custom data blocks attached to the selected object, or the custom data blocks attached to the scene, if no object is selected. Custom data blocks can be written and read with sim.writeCustomString/Buffer/TableData and sim.readCustomString/Buffer/TableData."
     )
     object = -1
     selectedDecoder = 1

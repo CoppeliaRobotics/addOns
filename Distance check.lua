@@ -136,7 +136,7 @@ function sysCall_selChange(inData)
 end
 
 function update()
-    local s = sim.getObjectSelection()
+    local s = sim.getObjectSel()
     local o1 = -1
     local o2 = -1
     if #s >= 1 and #s <= 2 then

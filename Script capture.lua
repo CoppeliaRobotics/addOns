@@ -103,7 +103,7 @@ function onObjectAdded(handle)
                            sim.getObjectInt32Param(handle, sim.shapeintparam_edge_visibility)
                    )
         else
-            code = string.format('%s=sim.createMeshShape(...)', id)
+            code = string.format('%s=sim.createShape(...)', id)
         end
     elseif objType == sim.object_joint_type then
         local jointType = sim.getJointType(handle)

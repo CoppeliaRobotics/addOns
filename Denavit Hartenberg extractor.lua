@@ -6,7 +6,7 @@ end
 
 function sysCall_init()
     simUI = require 'simUI'
-    local sel = sim.getObjectSelection()
+    local sel = sim.getObjectSel()
     if #sel ~= 1 then
         simUI.msgBox(
             simUI.msgbox_type.critical, simUI.msgbox_buttons.ok, 'Denavit-Hartenberg extractor',

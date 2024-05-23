@@ -11,7 +11,7 @@ function sysCall_init()
 
     -- get selection, expand selected models:
     local sel = {}
-    for _, handle in ipairs(sim.getObjectSelection()) do
+    for _, handle in ipairs(sim.getObjectSel()) do
         table.insert(sel, handle)
         if sim.getModelProperty(handle) & sim.modelproperty_not_model == 0 then
             for _, handle1 in ipairs(sim.getObjectsInTree(handle, sim.handle_all, 1)) do

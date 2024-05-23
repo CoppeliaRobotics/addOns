@@ -311,7 +311,7 @@ function render_callback(ui, id, v)
     local cutOff = 0
     if config.transparent then cutOff = 0.99 end
     image, resX, resY = sim.getVisionSensorCharImage(visSens, 0, 0, 0, 0, cutOff)
-    sim.removeObject(visSens)
+    sim.removeObjects({visSens})
 end
 
 function save_callback(ui, id, v)

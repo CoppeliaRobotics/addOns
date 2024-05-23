@@ -70,7 +70,7 @@ function hideDlg()
 end
 
 function replace_callback(ui, id, v)
-    local selectedObjects = sim.getObjectSelection()
+    local selectedObjects = sim.getObjectSel()
     local originalString = simUI.getEditValue(ui, 1)
     local replacementString = simUI.getEditValue(ui, 2)
     if #originalString > 0 then

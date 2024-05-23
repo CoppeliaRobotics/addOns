@@ -74,9 +74,9 @@ function sysCall_init()
         file:write("//\n")
         file:write("//\n")
 
-        local selectedObjects = sim.getObjectSelection()
+        local selectedObjects = sim.getObjectSel()
         local allObjects = sim.getObjectsInTree(sim.handle_scene)
-        if selectedObjects and #selectedObjects == 1 then
+        if #selectedObjects == 1 then
             allObjects = sim.getObjectsInTree(selectedObjects[1])
         end
         local allIndividualShapesToRemove = {}
@@ -215,9 +215,7 @@ function sysCall_init()
             file:write("\n")
         end
         file:close()
-        for i = 1, #allIndividualShapesToRemove, 1 do
-            sim.removeObject(allIndividualShapesToRemove[i])
-        end
+        sim.removeObjects(allIndividualShapesToRemove)
     end
     return {cmd = 'cleanup'}
 end

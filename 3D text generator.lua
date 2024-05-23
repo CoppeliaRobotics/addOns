@@ -138,7 +138,7 @@ function close_callback()
 end
 
 function update(generateNew)
-    local s = sim.getObjectSelection()
+    local s = sim.getObjectSel()
     local parentDummy
     if #s == 1 then
         local data = sim.readCustomTableData(s[1], '__info__')
