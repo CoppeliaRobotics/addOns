@@ -8,16 +8,13 @@ function edit()
     index = simUI.getComboboxSelectedIndex(ui, ui_combo)
     selectedAddon = addons[index + 1]
 
-    dummy = sim.createDummy(0.01)
-    sim.setObjectAlias(dummy, selectedAddon.name)
-    sim.setObjectInt32Param(dummy, sim.objintparam_visibility_layer, 0)
-    sim.setObjectInt32Param(dummy, sim.objintparam_manipulation_permissions, 0)
-    script = sim.addScript(sim.scripttype_customizationscript)
     local file = assert(io.open(selectedAddon.path, 'r'))
     local code = file:read('*a')
     file:close()
-    sim.setScriptStringParam(script, sim.scriptstringparam_text, code)
-    sim.associateScriptWithObject(script, dummy)
+    script = sim.createScript(sim.scripttype_customizationscript, code)
+    sim.setObjectAlias(script, selectedAddon.name)
+    sim.setObjectInt32Param(script, sim.objintparam_visibility_layer, 0)
+    sim.setObjectInt32Param(script, sim.objintparam_manipulation_permissions, 0)
 
     simUI.setEnabled(ui, ui_combo, false)
     simUI.setEnabled(ui, ui_btnEdit, false)
@@ -28,7 +25,7 @@ function save()
     local f = io.open(selectedAddon.path, 'w')
     f:write(sim.getScriptStringParam(script, sim.scriptstringparam_text))
     f:close()
-    sim.removeObjects {dummy}
+    sim.removeObjects {script}
     leaveNow = true
 end
 

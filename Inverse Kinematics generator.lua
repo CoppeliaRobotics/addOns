@@ -280,10 +280,6 @@ function onClose()
 end
 
 function generate()
-    local scriptText = ''
-    local function appendLine(...)
-        scriptText = scriptText .. string.format(...) .. '\n'
-    end
     local robotModel = getRobotModelHandle()
     local simBase = getRobotBaseHandle()
     local simTip = getRobotTipHandle()
@@ -312,12 +308,17 @@ function generate()
     local outputErrors = simUI.getCheckboxValue(ui, ui_chkOutputErrors) > 0
     local genIKVars = simUI.getCheckboxValue(ui, ui_chkGenIKVars) > 0
 
-    local ikDummy = sim.createDummy(0.01)
-    sim.setObjectAlias(ikDummy, 'IK')
-    sim.setObjectParent(ikDummy, robotModel, false)
-    sim.setObjectPose(ikDummy, {0, 0, 0, 0, 0, 0, 1}, robotModel)
-    sim.setObjectInt32Param(ikDummy, sim.objintparam_visibility_layer, 0)
-    sim.setObjectInt32Param(ikDummy, sim.objintparam_manipulation_permissions, 0)
+    local ikScript = sim.createScript(sim.scripttype_customizationscript, '')
+    sim.setObjectAlias(ikScript, 'IK')
+    sim.setObjectParent(ikScript, robotModel, false)
+    sim.setObjectPose(ikScript, {0, 0, 0, 0, 0, 0, 1}, robotModel)
+    sim.setObjectInt32Param(ikScript, sim.objintparam_visibility_layer, 0)
+    sim.setObjectInt32Param(ikScript, sim.objintparam_manipulation_permissions, 0)
+
+    local scriptText = ''
+    local function appendLine(...)
+        scriptText = scriptText .. string.format(...) .. '\n'
+    end
 
     appendLine("sim = require 'sim'")
     appendLine("simIK = require 'simIK'")
@@ -325,12 +326,12 @@ function generate()
     appendLine("function sysCall_init()")
     appendLine("    self = sim.getObject '.'")
     appendLine("")
-    appendLine("    simBase = sim.getObject '%s'", sim.getObjectAliasRelative(simBase, ikDummy, 1))
-    appendLine("    simTip = sim.getObject '%s'", sim.getObjectAliasRelative(simTip, ikDummy, 1))
-    appendLine("    simTarget = sim.getObject '%s'", sim.getObjectAliasRelative(simTarget, ikDummy, 1))
+    appendLine("    simBase = sim.getObject '%s'", sim.getObjectAliasRelative(simBase, ikScript, 1))
+    appendLine("    simTip = sim.getObject '%s'", sim.getObjectAliasRelative(simTip, ikScript, 1))
+    appendLine("    simTarget = sim.getObject '%s'", sim.getObjectAliasRelative(simTarget, ikScript, 1))
     if jointGroup then
         appendLine(
-            "    jointGroup = sim.getObject '%s'", sim.getObjectAliasRelative(jointGroup, ikDummy, 1)
+            "    jointGroup = sim.getObject '%s'", sim.getObjectAliasRelative(jointGroup, ikScript, 1)
         )
         appendLine("    simJoints = sim.getReferencedHandles(jointGroup)")
     end
@@ -511,9 +512,7 @@ function generate()
     appendLine("    return simHandleMap[ikHandle]")
     appendLine("end")
 
-    local script = sim.addScript(sim.scripttype_customizationscript)
-    sim.setScriptStringParam(script, sim.scriptstringparam_text, scriptText)
-    sim.associateScriptWithObject(script, ikDummy)
+    sim.setScriptStringParam(ikScript, sim.scriptstringparam_text, scriptText)
 
     local dat = sim.readCustomBufferData(simTip, 'ikTip')
     if not dat or #dat == 0 then
