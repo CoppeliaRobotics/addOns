@@ -134,9 +134,7 @@ function onDecoderChanged()
             if html then
                 simUI.setText(ui, 800, html)
             else
-                simUI.setText(
-                    ui, 800, string.format('<font color=red>Not %s data</font>', decoder.name)
-                )
+                simUI.setText(ui, 800, string.format('<font color=red>Not %s data</font>', decoder.name))
             end
         end
     else
@@ -179,14 +177,10 @@ function showDlg()
             title = "Custom data blocks in object '<b>" .. sim.getObjectAlias(object, 0) .. "</b>':"
         end
         if not ui then
-            xml =
-                '<ui title="Custom Data Block Explorer" activate="false" closeable="true" on-close="onCloseClicked" resizable="true" ' ..
-                    pos .. '>'
+            xml = '<ui title="Custom Data Block Explorer" activate="false" closeable="true" on-close="onCloseClicked" resizable="true" ' .. pos .. '>'
             xml = xml .. '<group flat="true"><label text="' .. title .. '" /></group>'
-            xml = xml ..
-                      '<table id="600" selection-mode="row" editable="false" on-selection-change="onSelectedBlockChanged">'
-            xml = xml ..
-                      '<header><item>Tag name</item><item>Size (bytes)</item><item>Type</item></header>'
+            xml = xml .. '<table id="600" selection-mode="row" editable="false" on-selection-change="onSelectedBlockChanged">'
+            xml = xml .. '<header><item>Tag name</item><item>Size (bytes)</item><item>Type</item></header>'
             local selectedIndex, i = -1, 0
             for tag, data in pairs(content) do
                 if tag == selectedTag then selectedIndex = i end
@@ -207,8 +201,7 @@ function showDlg()
             xml = xml .. '</combobox>'
             xml = xml .. '</group>'
             xml = xml .. '<text-browser id="800" read-only="true" />'
-            xml = xml ..
-                      '<button id="20" enabled="false" text="Clear selected tag" on-click="onClearClicked" />'
+            xml = xml .. '<button id="20" enabled="false" text="Clear selected tag" on-click="onClearClicked" />'
             xml = xml .. '</ui>'
             ui = simUI.create(xml)
             if selectedIndex ~= -1 then
