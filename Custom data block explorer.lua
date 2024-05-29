@@ -124,6 +124,35 @@ function sysCall_beforeInstanceSwitch()
     hideDlg()
 end
 
+function sysCall_event(events)
+    for _, e in ipairs(cbor.decode(tostring(events))) do
+        if e.handle == object and e.event == 'objectChanged' and e.data.customData then
+            local refreshSelectedTag = false
+            local oldKeys = table.keys(content)
+            table.sort(oldKeys)
+            for k, v in pairs(e.data.customData) do
+                content[k] = content[k] or {}
+                content[k][1] = v
+                if k == selectedTag then
+                    refreshSelectedTag = true
+                end
+            end
+            for k, v in pairs(content) do
+                if not e.data.customData[k] then
+                    content[k] = nil
+                end
+            end
+            local newKeys = table.keys(content)
+            table.sort(newKeys)
+            if not table.eq(oldKeys, newKeys) then
+                sysCall_selChange {sel = sim.getObjectSel()}
+            elseif refreshSelectedTag and ui then
+                onDecoderChanged()
+            end
+        end
+    end
+end
+
 function onDecoderChanged()
     local index = simUI.getComboboxSelectedIndex(ui, 700)
     selectedDecoder = index + 1
