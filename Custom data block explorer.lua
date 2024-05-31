@@ -51,7 +51,11 @@ decoders = {
         f = function(tag, data, _type)
             local status, data = pcall(function() return sim.unpackTable(data) end)
             if status then
-                return _S.tableToString(data, {indent = true}):gsub('[\n ]', {['\n'] = '<br/>', [' '] = '&nbsp;'})
+                local s = nil
+                pcall(function()
+                    s = _S.tableToString(data, {indent = true}):gsub('[\n ]', {['\n'] = '<br/>', [' '] = '&nbsp;'})
+                end)
+                return s
             end
         end,
     },
