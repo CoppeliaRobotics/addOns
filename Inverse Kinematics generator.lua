@@ -308,7 +308,7 @@ function generate()
     local outputErrors = simUI.getCheckboxValue(ui, ui_chkOutputErrors) > 0
     local genIKVars = simUI.getCheckboxValue(ui, ui_chkGenIKVars) > 0
 
-    local ikScript = sim.createScript(sim.scripttype_customizationscript, '')
+    local ikScript = sim.createScript(sim.scripttype_customization, '')
     sim.setObjectAlias(ikScript, 'IK')
     sim.setObjectParent(ikScript, robotModel, false)
     sim.setObjectPose(ikScript, {0, 0, 0, 0, 0, 0, 1}, robotModel)

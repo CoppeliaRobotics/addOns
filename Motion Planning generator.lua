@@ -200,11 +200,11 @@ function generate()
     appendLine("end")
     appendLine("")
     appendLine("function ObjectProxy(p, t)")
-    appendLine("    t = t or sim.scripttype_customizationscript")
+    appendLine("    t = t or sim.scripttype_customization")
     appendLine("    return sim.getScriptFunctions(sim.getScript(t, sim.getObject(p)))")
     appendLine("end")
 
-    local motionPlanningScript = sim.createScript(sim.scripttype_customizationscript, scriptText)
+    local motionPlanningScript = sim.createScript(sim.scripttype_customization, scriptText)
     sim.setModelProperty(motionPlanningScript, 0)
     sim.setObjectAlias(motionPlanningScript, 'MotionPlanning')
     sim.setObjectParent(motionPlanningScript, robotModel, false)
@@ -212,7 +212,7 @@ function generate()
     sim.setObjectInt32Param(motionPlanningScript, sim.objintparam_visibility_layer, 0)
     sim.setObjectInt32Param(motionPlanningScript, sim.objintparam_manipulation_permissions, 0)
 
-    local startStateScript = sim.createScript(sim.scripttype_customizationscript, [[require 'models.robotConfig_customization-2'
+    local startStateScript = sim.createScript(sim.scripttype_customization, [[require 'models.robotConfig_customization-2'
 model = sim.getObject '::'
 jointGroupPath = ']] .. jointGroupPath .. "'")
     sim.setObjectAlias(startStateScript, 'StartState')
@@ -220,7 +220,7 @@ jointGroupPath = ']] .. jointGroupPath .. "'")
     sim.setObjectPose(startStateScript, {0, 0, 0, 0, 0, 0, 1}, motionPlanningScript)
     sim.setObjectInt32Param(startStateScript, sim.objintparam_visibility_layer, 0)
     sim.setObjectInt32Param(startStateScript, sim.objintparam_manipulation_permissions, 0)
-    local goalStateScript = sim.createScript(sim.scripttype_customizationscript, [[require 'models.robotConfig_customization-2'
+    local goalStateScript = sim.createScript(sim.scripttype_customization, [[require 'models.robotConfig_customization-2'
 model = sim.getObject'::'
 jointGroupPath = ']] .. jointGroupPath .. [['
 color = {0, 1, 0}]])

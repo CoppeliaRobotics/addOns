@@ -195,7 +195,7 @@ function sysCall_afterSimulation()
             dummy, sim.objectproperty_collapsed | sim.objectproperty_selectable |
                 sim.objectproperty_canupdatedna
         )
-        local s = sim.createScript(sim.scripttype_customizationscript, "require('models.animator_customization-2')")
+        local s = sim.createScript(sim.scripttype_customization, "require('models.animator_customization-2')")
         sim.setObjectParent(s, dummy, false)
         local animationData = {
             times = modelData.times,
