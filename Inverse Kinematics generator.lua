@@ -13,7 +13,7 @@ function sysCall_init()
     simIK = require 'simIK'
     ui = simUI.create(
              [[<ui title="Inverse Kinematics generator" closeable="true" on-close="onClose" layout="vbox" modal="true">
-        <label wordwrap="true" text="This addon generates a script for solving inverse kinematics for the given tip/target/params. The script will be placed in an 'IK' object under the robot model. Choose the params below and click 'Generate'." />
+        <label wordwrap="true" text="This addon generates a script for solving inverse kinematics for the given tip/target/params. The script will be placed in an 'IK' script object child of the robot model. Choose the params below and click 'Generate'." />
         <group flat="true" content-margins="0,0,0,0" layout="form">
             <label text="Robot model:" />
             <combobox id="${ui_comboRobotModel}" on-change="onModelChanged" />
@@ -26,7 +26,7 @@ function sysCall_init()
             <label text="Joint group:" />
             <group flat="true" content-margins="0,0,0,0" layout="vbox">
                 <combobox id="${ui_comboJointGroup}" on-change="updateUi" />
-                <label text="(leave empty to use all joints)" />
+                <label text="(leave empty to use all joints in the tip-target chain)" />
             </group>
             <label text="Constraint:" />
             <group flat="true" content-margins="0,0,0,0" layout="form">
