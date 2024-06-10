@@ -23,7 +23,7 @@ end
 
 function save()
     local f = io.open(selectedAddon.path, 'w')
-    f:write(sim.getScriptStringParam(script, sim.scriptstringparam_text))
+    f:write(sim.getObjectStringParam(script, sim.scriptstringparam_text))
     f:close()
     sim.removeObjects {script}
     leaveNow = true

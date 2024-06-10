@@ -63,7 +63,7 @@ end
 
 function sysCall_msg(e)
     if e.id == 'systemCall' then
-        local descr = sim.getScriptStringParam(e.data.script, sim.scriptstringparam_description)
+        local descr = sim.getObjectStringParam(e.data.script, sim.scriptstringparam_description)
         if captureAddonStart and e.data.callType == sim.syscb_init then
             insertComment('Started ' .. descr)
             updateCode()
