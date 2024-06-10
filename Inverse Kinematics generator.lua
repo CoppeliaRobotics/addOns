@@ -512,7 +512,7 @@ function generate()
     appendLine("    return simHandleMap[ikHandle]")
     appendLine("end")
 
-    sim.setScriptStringParam(ikScript, sim.scriptstringparam_text, scriptText)
+    sim.setObjectStringParam(ikScript, sim.scriptstringparam_text, scriptText)
 
     local dat = sim.readCustomBufferData(simTip, 'ikTip')
     if not dat or #dat == 0 then
