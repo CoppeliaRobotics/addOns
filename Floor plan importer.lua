@@ -161,7 +161,7 @@ function sysCall_init()
             handle, sim.objectspecialproperty_collidable | sim.objectspecialproperty_measurable |
                 sim.objectspecialproperty_detectable_all | sim.objectspecialproperty_renderable
         )
-        sim.setObjectSelection({handle})
+        sim.setObjectSel({handle})
         sim.announceSceneContentChange()
         closeUi()
     end
