@@ -7,10 +7,11 @@ function sysCall_info()
 end
 
 function sysCall_init()
-    if (sim.msgbox_return_yes == sim.msgBox(
-        sim.msgbox_type_info, sim.msgbox_buttons_yesno, "Minimalistic Exporter",
+    simUI = require 'simUI'
+    if simUI.msgbox_result.yes == simUI.msgBox(
+        simUI.msgbox_type.info, simUI.msgbox_buttons.yesno, "Minimalistic Exporter",
         "This add-on is a minimalistic exporter, meant as an example. The scene content will be exported to the 'exportedContent' folder, erasing its previous content. If a single object or model is selected, then only the selection will be exported. Do you want to proceed?"
-    )) then
+    ) then
         local directoryName = "exportedContent"
         local fileName = "sceneObjects.txt"
         local meshFormat = 4 -- 0=OBJ, 1=DXF, 4=binary STL

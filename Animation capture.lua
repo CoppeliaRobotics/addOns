@@ -228,7 +228,7 @@ function sysCall_afterSimulation()
         sim.addObjectToSelection(sim.handle_single, dummy)
         local txt = "Animation model '" .. sim.getObjectAlias(dummy, 1) .. "' was created!"
         sim.addLog(sim.verbosity_scriptinfos, txt)
-        sim.msgBox(sim.dlgstyle_message, sim.msgbox_buttons_ok, 'Animation model', txt)
+        simUI.msgBox(simUI.msgbox_type.info, sim.msgbox_buttons.ok, 'Animation model', txt)
     end
 end
 

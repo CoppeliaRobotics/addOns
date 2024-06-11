@@ -6,8 +6,9 @@ function sysCall_info()
 end
 
 function sysCall_init()
-    if sim.msgbox_return_yes == sim.msgBox(
-        sim.msgbox_type_info, sim.msgbox_buttons_yesno, "Minimalistic Importer",
+    simUI = require 'simUI'
+    if simUI.msgbox_result.yes == sim.msgBox(
+        simUI.msgbox_type.info, simUI.msgbox_buttons.yesno, "Minimalistic Importer",
         "This add-on is a minimalistic importer, meant as an example. Content in folder 'exportedContent' will be imported. Do you want to proceed?"
     ) then
 
