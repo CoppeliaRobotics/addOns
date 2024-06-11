@@ -16,8 +16,8 @@ function sysCall_init()
 end
 
 function importClicked_callback()
-    local files = sim.fileDialog(
-                      sim.filedlg_type_load_multiple, '*.xyz point cloud import', '', '', '*.xyz',
+    local files = simUI.fileDialog(
+                      simUI.filedialog_type.load_multiple, '*.xyz point cloud import', '', '', '*.xyz',
                       'xyz'
                   )
     if files then

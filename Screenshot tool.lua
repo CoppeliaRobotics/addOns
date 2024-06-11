@@ -319,8 +319,8 @@ function save_callback(ui, id, v)
     if config.transparent then options = 1 end
     local filenameAndPath
     if config.fileDlg then
-        filenameAndPath = sim.fileDialog(
-                              sim.filedlg_type_save, 'title', '', 'screenshot.png', 'image file',
+        filenameAndPath = simUI.fileDialog(
+                              simUI.filedialog_type.save, 'title', '', 'screenshot.png', 'image file',
                               '*'
                           )
     else

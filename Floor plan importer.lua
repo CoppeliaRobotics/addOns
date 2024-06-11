@@ -61,8 +61,8 @@ function sysCall_init()
     end
     path = sim.getStringParam(sim.stringparam_scene_path)
     fmts, fmtss = simUI.supportedImageFormats(';')
-    imageFile = sim.fileDialog(
-                    sim.filedlg_type_load, 'Open image...', path, '', 'Image files', fmtss
+    imageFile = simUI.fileDialog(
+                    simUI.filedialog_type.load, 'Open image...', path, '', 'Image files', fmtss
                 )
     addCuboid = function(classTbl, x1, y1, x2, y2)
         local handles = {}
