@@ -317,29 +317,27 @@ end
 function save_callback(ui, id, v)
     local options = 0
     if config.transparent then options = 1 end
-    local filenameAndPath
+    local fileNames
     if config.fileDlg then
-        filenameAndPath = simUI.fileDialog(
+        fileNames = simUI.fileDialog(
                               simUI.filedialog_type.save, 'title', '', 'screenshot.png', 'image file',
                               '*'
                           )
     else
-        local theOs = sim.getInt32Param(sim.intparam_platform)
-        if theOs == 1 then
+        local fileName = 'coppeliaSim_screenshot_' .. os.date("%Y_%m_%d-%H_%M_%S", os.time()) .. '.png'
+        if sim.getInt32Param(sim.intparam_platform) == 1 then
             -- MacOS, special: executable is inside of a bundle:
-            filenameAndPath = '../../../coppeliaSim_screenshot_' ..
-                                  os.date("%Y_%m_%d-%H_%M_%S", os.time()) .. '.png'
-        else
-            filenameAndPath =
-                'coppeliaSim_screenshot_' .. os.date("%Y_%m_%d-%H_%M_%S", os.time()) .. '.png'
+            fileName = '../../../' .. fileName
         end
+        fileNames = {fileName}
     end
-    if filenameAndPath then
-        if sim.saveImage(image, {resX, resY}, options, filenameAndPath, -1) ~= -1 then
-            sim.addLog(sim.verbosity_msgs, "Screenshot was saved to " .. filenameAndPath)
+    if #fileNames > 0 then
+        local fileName = fileNames[1]
+        if sim.saveImage(image, {resX, resY}, options, fileName, -1) ~= -1 then
+            sim.addLog(sim.verbosity_msgs, "Screenshot was saved to " .. fileName)
             simUI.msgBox(
                 simUI.msgbox_type.info, simUI.msgbox_buttons.ok, 'Screenshot',
-                "Screenshot was saved to " .. filenameAndPath
+                "Screenshot was saved to " .. fileName
             )
         else
             sim.addLog(

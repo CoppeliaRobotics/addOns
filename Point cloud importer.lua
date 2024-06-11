@@ -16,16 +16,16 @@ function sysCall_init()
 end
 
 function importClicked_callback()
-    local files = simUI.fileDialog(
+    local fileNames = simUI.fileDialog(
                       simUI.filedialog_type.load_multiple, '*.xyz point cloud import', '', '', '*.xyz',
                       'xyz'
                   )
-    if files then
+    if #fileNames > 0 then
         local pc = sim.createPointCloud(0.02, 20, 0, size)
-        for token in (files .. ";"):gmatch("([^;]*);") do
+        for _, fileName in ipairs(fileNames) do
             local pts = {}
             local cols = {}
-            for line in io.lines(token) do
+            for line in io.lines(fileName) do
                 local c = 0
                 for coord in line:gmatch("([^\9 ]+)") do
                     if c >= 3 then

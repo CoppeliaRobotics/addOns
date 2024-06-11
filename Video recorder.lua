@@ -61,12 +61,12 @@ function onUiClose()
 end
 
 function browse()
-    local r = simUI.fileDialog(
+    local fileNames = simUI.fileDialog(
                   simUI.filedialog_type.folder, 'Select output directory', outputDir, '', '', '',
                   true
               )
-    if r[1] == '' then return end
-    outputDir = r[1]
+    if #fileNames == 0 then return end
+    outputDir = fileNames[1]
     updateUi()
 end
 
