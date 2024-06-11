@@ -37,8 +37,8 @@ function sysCall_event(eventData)
 end
 
 function export()
-    local scenePath = sim.getStringParameter(sim.stringparam_scene_path)
-    local sceneName = sim.getStringParameter(sim.stringparam_scene_name):match("(.+)%..+")
+    local scenePath = sim.getStringParam(sim.stringparam_scene_path)
+    local sceneName = sim.getStringParam(sim.stringparam_scene_name):match("(.+)%..+")
     if sceneName == nil then sceneName = 'untitled' end
     local fileNames = simUI.fileDialog(
                          simUI.filedialog_type.save, 'Export events dump...', scenePath,
