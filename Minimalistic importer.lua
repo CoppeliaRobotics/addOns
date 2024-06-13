@@ -183,10 +183,11 @@ function sysCall_init()
                 end
             end
         end
-        sim.removeObjectFromSelection(sim.handle_all, -1)
+        local nsel = {}
         for i = 1, #newHandlesAndIds / 3, 1 do
-            sim.addObjectToSelection(sim.handle_single, newHandlesAndIds[3 * (i - 1) + 1])
+            nsel[i] = newHandlesAndIds[3 * (i - 1) + 1]
         end
+        sim.setObjectSel(nsel)
         sim.announceSceneContentChange()
     end
     return {cmd = 'cleanup'}
