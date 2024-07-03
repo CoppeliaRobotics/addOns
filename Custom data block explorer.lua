@@ -261,7 +261,7 @@ end
 function sysCall_selChange(inData)
     local s = inData.sel
     local previousObject, previousContent = object, content
-    content = nil
+    content = {}
     object = -1
     info = nil
     local tags = nil
@@ -276,7 +276,6 @@ function sysCall_selChange(inData)
     end
     if previousObject ~= object then hideDlg() end
     if tags and #tags > 0 then
-        content = {}
         for i, tag in ipairs(tags) do content[tag] = {sim.readCustomDataBlockEx(object, tag)} end
         local _ = function(x)
             return x ~= nil and sim.packTable(x) or nil
