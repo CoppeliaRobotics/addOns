@@ -8,7 +8,7 @@ function sysCall_init()
     cbor = require 'org.conman.cbor'
     simUI = require 'simUI'
 
-    target = sim.handle_app
+    target = sim.handle_scene
     selectedProperty = ''
 end
 
@@ -55,10 +55,6 @@ function sysCall_event(events)
     end
 end
 
-function getProperty(h, n, ts)
-    return 
-end
-
 function setTargetApp()
     target = sim.handle_app
 end
@@ -73,28 +69,10 @@ function setTargetSel()
 end
 
 function onTargetChanged()
-    properties = {}
-    propertiesNames = {}
-    if not typeStr then
-        typeStr = {}
-        for k, v in pairs(sim) do
-            local m = string.match(k, 'propertytype_(.*)')
-            if m then typeStr[v] = m end
-        end
-    end
-    local i = -1
-    while true do
-        i = i + 1
-        local pname = sim.getPropertyName(target, i)
-        if not pname then break end
-        table.insert(propertiesNames, pname)
-        local ptype, pflags, psize = sim.getPropertyInfo(target, pname)
-        local ts = typeStr[ptype]
-        local pvalue = sim['get' .. string.capitalize(ts) .. 'Property'](target, pname)
-        local vs = _S.anyToString(pvalue)
-        properties[pname] = {type = ts, value = vs}
-    end
-    table.sort(propertiesNames)
+    properties = sim.getProperties(target)
+    propertiesNames = sim.getPropertiesNames(target)
+        --local ts = typeStr[ptype]
+        --local vs = _S.anyToString(pvalue)
 
     if not ui then showDlg() end
     if target == sim.handle_app then
@@ -116,10 +94,11 @@ function onTargetChanged()
     selectedRow = -1
     for i, pname in ipairs(propertiesNames) do
         if selectedProperty == pname then selectedRow = i end
-        local pinfo = properties[pname]
+        local ptype = sim.getPropertyInfo(target, pname)
+        local pvalue = sim.getProperty(target, pname)
         simUI.setItem(ui, ui_table, i - 1, 0, pname)
-        simUI.setItem(ui, ui_table, i - 1, 1, pinfo.type)
-        simUI.setItem(ui, ui_table, i - 1, 2, pinfo.value)
+        simUI.setItem(ui, ui_table, i - 1, 1, sim.getPropertyTypeString(ptype))
+        simUI.setItem(ui, ui_table, i - 1, 2, _S.anyToString(pvalue))
     end
     if selectedRow ~= -1 then
         simUI.setTableSelection(ui, ui_table, selectedRow - 1, 0, false)
