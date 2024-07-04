@@ -95,6 +95,7 @@ function onTargetChanged()
         simUI.setLabelText(ui, ui_label_selection, sim.getObjectAlias(target, 1))
     end
 
+    simUI.setEnabled(ui, ui_print, false)
     simUI.clearTable(ui, ui_table)
     simUI.setColumnCount(ui, ui_table, 3)
     simUI.setColumnHeaderText(ui, ui_table, 0, 'Name')
@@ -105,18 +106,23 @@ function onTargetChanged()
     for i, pname in ipairs(propertiesNames) do
         if selectedProperty == pname then selectedRow = i end
         local ptype = sim.getPropertyInfo(target, pname)
-        local pvalue = sim.getProperty(target, pname)
+        local pvalue = _S.anyToString(sim.getProperty(target, pname))
         simUI.setItem(ui, ui_table, i - 1, 0, pname)
         simUI.setItem(ui, ui_table, i - 1, 1, sim.getPropertyTypeString(ptype))
-        simUI.setItem(ui, ui_table, i - 1, 2, _S.anyToString(pvalue))
+        if #pvalue > 20 then
+            pvalue = pvalue:sub(1, 20) .. '...'
+        end
+        simUI.setItem(ui, ui_table, i - 1, 2, pvalue)
     end
     if selectedRow ~= -1 then
         simUI.setTableSelection(ui, ui_table, selectedRow - 1, 0, false)
+        simUI.setEnabled(ui, ui_print, true)
     end
 end
 
 function onRowSelected(ui, id, row, col)
     selectedProperty = propertiesNames[row + 1]
+    simUI.setEnabled(ui, ui_print, true)
 end
 
 function onCloseClicked()
@@ -127,6 +133,12 @@ function updateFilter()
     filterMatching = simUI.getEditValue(ui, ui_filter)
     filterInvert = simUI.getCheckboxValue(ui, ui_filter_invert) > 0
     onTargetChanged()
+end
+
+function printValue()
+    local pvalue = sim.getProperty(target, selectedProperty)
+    pvalue = _S.anyToString(pvalue)
+    print(pvalue)
 end
 
 function showDlg()
@@ -157,6 +169,7 @@ function showDlg()
             xml = xml .. '<table id="${ui_table}" selection-mode="row" editable="false" on-selection-change="onRowSelected">'
             xml = xml .. '<header><item>Name</item><item>Type</item><item>Value</item></header>'
             xml = xml .. '</table>'
+            xml = xml .. '<button id="${ui_print}" enabled="false" text="Print value" on-click="printValue" />'
             xml = xml .. '</ui>'
             ui = simUI.create(xml)
         end
