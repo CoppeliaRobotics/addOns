@@ -10,6 +10,8 @@ function sysCall_init()
 
     target = sim.handle_scene
     selectedProperty = ''
+    filterMatching = '*'
+    filterInvert = false
 end
 
 function sysCall_addOnScriptSuspend()
@@ -70,9 +72,17 @@ end
 
 function onTargetChanged()
     properties = sim.getProperties(target)
-    propertiesNames = sim.getPropertiesNames(target)
-        --local ts = typeStr[ptype]
-        --local vs = _S.anyToString(pvalue)
+    propertiesNames = {}
+    local pat = filterMatching
+    pat = string.gsub(pat, '%.', '%%.')
+    pat = string.gsub(pat, '%*', '.*')
+    pat = '^' .. pat .. '$'
+    for i, pname in ipairs(sim.getPropertiesNames(target)) do
+        local m = string.find(pname, pat)
+        if (m and not filterInvert) or (not m and filterInvert) then
+            table.insert(propertiesNames, pname)
+        end
+    end
 
     if not ui then showDlg() end
     if target == sim.handle_app then
@@ -113,6 +123,12 @@ function onCloseClicked()
     leaveNow = true
 end
 
+function updateFilter()
+    filterMatching = simUI.getEditValue(ui, ui_filter)
+    filterInvert = simUI.getCheckboxValue(ui, ui_filter_invert) > 0
+    onTargetChanged()
+end
+
 function showDlg()
     if not ui then
         local pos = 'position="-30,160" placement="relative"'
@@ -132,6 +148,11 @@ function showDlg()
             xml = xml .. '<group flat="true" layout="hbox">'
             xml = xml .. '<label text="Selected target:" />'
             xml = xml .. '<label id="${ui_label_selection}" />'
+            xml = xml .. '</group>'
+            xml = xml .. '<group flat="true" layout="hbox">'
+            xml = xml .. '<label text="Filter:" />'
+            xml = xml .. '<edit id="${ui_filter}" value="' .. filterMatching .. '" on-change="updateFilter" />'
+            xml = xml .. '<checkbox id="${ui_filter_invert}" text="Invert" checked="' .. tostring(filterInvert) .. '" on-change="updateFilter" />'
             xml = xml .. '</group>'
             xml = xml .. '<table id="${ui_table}" selection-mode="row" editable="false" on-selection-change="onRowSelected">'
             xml = xml .. '<header><item>Name</item><item>Type</item><item>Value</item></header>'
