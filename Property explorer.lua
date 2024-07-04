@@ -50,7 +50,7 @@ end
 function sysCall_event(events)
     for _, e in ipairs(cbor.decode(tostring(events))) do
         if e.handle == target and e.event == 'objectChanged' then
-            onTargetChanged()
+            if ui then onTargetChanged() end
         end
     end
 end
@@ -94,9 +94,9 @@ function onTargetChanged()
         local vs = _S.anyToString(pvalue)
         properties[pname] = {type = ts, value = vs}
     end
+    table.sort(propertiesNames)
 
-    hideDlg()
-    showDlg()
+    if not ui then showDlg() end
     if target == sim.handle_app then
         simUI.setLabelText(ui, ui_label_selection, 'sim.handle_app')
     elseif target == sim.handle_appstorage then
@@ -105,6 +105,24 @@ function onTargetChanged()
         simUI.setLabelText(ui, ui_label_selection, 'sim.handle_scene')
     else
         simUI.setLabelText(ui, ui_label_selection, sim.getObjectAlias(target, 1))
+    end
+
+    simUI.clearTable(ui, ui_table)
+    simUI.setColumnCount(ui, ui_table, 3)
+    simUI.setColumnHeaderText(ui, ui_table, 0, 'Name')
+    simUI.setColumnHeaderText(ui, ui_table, 1, 'Type')
+    simUI.setColumnHeaderText(ui, ui_table, 2, 'Value')
+    simUI.setRowCount(ui, ui_table, #propertiesNames)
+    selectedRow = -1
+    for i, pname in ipairs(propertiesNames) do
+        if selectedProperty == pname then selectedRow = i end
+        local pinfo = properties[pname]
+        simUI.setItem(ui, ui_table, i - 1, 0, pname)
+        simUI.setItem(ui, ui_table, i - 1, 1, pinfo.type)
+        simUI.setItem(ui, ui_table, i - 1, 2, pinfo.value)
+    end
+    if selectedRow ~= -1 then
+        simUI.setTableSelection(ui, ui_table, selectedRow - 1, 0, false)
     end
 end
 
@@ -138,24 +156,9 @@ function showDlg()
             xml = xml .. '</group>'
             xml = xml .. '<table id="${ui_table}" selection-mode="row" editable="false" on-selection-change="onRowSelected">'
             xml = xml .. '<header><item>Name</item><item>Type</item><item>Value</item></header>'
-            local selectedRow = -1
-            local i = -1
-            for _, pname in ipairs(propertiesNames) do
-                i = i + 1
-                if selectedProperty == pname then selectedRow = i end
-                local pinfo = properties[pname]
-                xml = xml .. '<row>'
-                xml = xml .. '<item>' .. pname .. '</item>'
-                xml = xml .. '<item>' .. pinfo.type .. '</item>'
-                xml = xml .. '<item>' .. pinfo.value .. '</item>'
-                xml = xml .. '</row>'
-            end
             xml = xml .. '</table>'
             xml = xml .. '</ui>'
             ui = simUI.create(xml)
-            if selectedRow ~= -1 then
-                simUI.setTableSelection(ui, ui_table, selectedRow, 0, false)
-            end
         end
     end
 end
