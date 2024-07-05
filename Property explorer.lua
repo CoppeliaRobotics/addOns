@@ -129,11 +129,21 @@ function onKeyPress(ui, id, key, text)
     key = key & 0x00FFFFFF
     if key == 3 or key == 7 then
         removeSelected()
+    elseif text == '*' then
+        setFilter('*', false)
+    elseif text == 'c' or text == 'C' then
+        setFilter('customData.*', text == 'C')
     end
 end
 
 function onCloseClicked()
     leaveNow = true
+end
+
+function setFilter(flt, inv)
+    simUI.setEditValue(ui, ui_filter, flt)
+    simUI.setCheckboxValue(ui, ui_filter_invert, inv and 2 or 0)
+    updateFilter()
 end
 
 function updateFilter()
