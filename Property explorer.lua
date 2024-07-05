@@ -135,9 +135,19 @@ function updateFilter()
     onTargetChanged()
 end
 
-function printValue()
+function assignValue()
     local pvalue = sim.getProperty(target, selectedProperty)
     pvalue = _S.anyToString(pvalue)
+    local targetStr = 'SEL1'
+    if target == sim.handle_app then
+        targetStr = 'sim.handle_app'
+    elseif target == sim.handle_appstorage then
+        targetStr = 'sim.handle_appstorage'
+    elseif target == sim.handle_scene then
+        targetStr = 'sim.handle_scene'
+    end
+    sim.executeScriptString(string.format('value = sim.getProperty(%d, \'%s\')@lua', target, selectedProperty), sim.getScript(sim.scripttype_sandbox))
+    print(string.format('> value = sim.getProperty(%s, \'%s\')', targetStr, selectedProperty))
     print(pvalue)
 end
 
@@ -169,7 +179,7 @@ function showDlg()
             xml = xml .. '<table id="${ui_table}" selection-mode="row" editable="false" on-selection-change="onRowSelected">'
             xml = xml .. '<header><item>Name</item><item>Type</item><item>Value</item></header>'
             xml = xml .. '</table>'
-            xml = xml .. '<button id="${ui_print}" enabled="false" text="Print value" on-click="printValue" />'
+            xml = xml .. '<button id="${ui_print}" enabled="false" text="Assign value" on-click="assignValue" />'
             xml = xml .. '</ui>'
             ui = simUI.create(xml)
         end
