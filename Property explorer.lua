@@ -107,8 +107,10 @@ function onTargetChanged()
         if selectedProperty == pname then selectedRow = i end
         local ptype = sim.getPropertyInfo(target, pname)
         local pvalue = _S.anyToString(sim.getProperty(target, pname))
+        ptype = sim.getPropertyTypeString(ptype)
+        ptype = string.gsub(ptype, 'array$', '[]')
         simUI.setItem(ui, ui_table, i - 1, 0, pname)
-        simUI.setItem(ui, ui_table, i - 1, 1, sim.getPropertyTypeString(ptype))
+        simUI.setItem(ui, ui_table, i - 1, 1, ptype)
         if #pvalue > 20 then
             pvalue = pvalue:sub(1, 20) .. '...'
         end
