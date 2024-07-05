@@ -22,8 +22,9 @@ function edit()
 end
 
 function save()
+    local scriptText = tostring(sim.getObjectStringParam(script, sim.scriptstringparam_text))
     local f = io.open(selectedAddon.path, 'w')
-    f:write(sim.getObjectStringParam(script, sim.scriptstringparam_text))
+    f:write(scriptText)
     f:close()
     sim.removeObjects {script}
     leaveNow = true
