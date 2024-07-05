@@ -125,6 +125,13 @@ function onRowSelected(ui, id, row, col)
     simUI.setEnabled(ui, ui_print, true)
 end
 
+function onKeyPress(ui, id, key, text)
+    key = key & 0x00FFFFFF
+    if key == 3 or key == 7 then
+        removeSelected()
+    end
+end
+
 function onCloseClicked()
     leaveNow = true
 end
@@ -149,6 +156,14 @@ function assignValue()
     sim.executeScriptString(string.format('value = sim.getProperty(%d, \'%s\')@lua', target, selectedProperty), sim.getScript(sim.scripttype_sandbox))
     print(string.format('> value = sim.getProperty(%s, \'%s\')', targetStr, selectedProperty))
     print(pvalue)
+end
+
+function removeSelected()
+    if not selectedProperty then return end
+    local ptype, pflags, psize = sim.getPropertyInfo(target, selectedProperty)
+    if pflags & 0x04 > 0 then
+        sim.removeProperty(target, selectedProperty)
+    end
 end
 
 function showDlg()
@@ -176,7 +191,7 @@ function showDlg()
             xml = xml .. '<edit id="${ui_filter}" value="' .. filterMatching .. '" on-change="updateFilter" />'
             xml = xml .. '<checkbox id="${ui_filter_invert}" text="Invert" checked="' .. tostring(filterInvert) .. '" on-change="updateFilter" />'
             xml = xml .. '</group>'
-            xml = xml .. '<table id="${ui_table}" selection-mode="row" editable="false" on-selection-change="onRowSelected">'
+            xml = xml .. '<table id="${ui_table}" selection-mode="row" editable="false" on-selection-change="onRowSelected" on-key-press="onKeyPress">'
             xml = xml .. '<header><item>Name</item><item>Type</item><item>Value</item></header>'
             xml = xml .. '</table>'
             xml = xml .. '<button id="${ui_print}" enabled="false" text="Assign value" on-click="assignValue" />'
