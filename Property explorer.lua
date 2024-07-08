@@ -30,11 +30,11 @@ end
 
 function sysCall_nonSimulation()
     if leaveNow then return {cmd = 'cleanup'} end
+    checkTargetChanged()
+end
 
-    if target ~= oldTarget then
-        onTargetChanged()
-        oldTarget = target
-    end
+function sysCall_sensing()
+    checkTargetChanged()
 end
 
 function sysCall_selChange(inData)
@@ -73,6 +73,13 @@ function sysCall_event(events)
                 end
             end
         end
+    end
+end
+
+function checkTargetChanged()
+    if target ~= oldTarget then
+        onTargetChanged()
+        oldTarget = target
     end
 end
 
