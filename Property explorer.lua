@@ -60,7 +60,6 @@ function sysCall_event(events)
                 onTargetChanged()
             else
                 local d = table.flatten(e.data)
-                print(d)
                 for pname, pvalue in pairs(d) do
                     local i = propertyNameToIndex[pname]
                     if i then
