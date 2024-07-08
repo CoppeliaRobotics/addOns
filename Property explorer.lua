@@ -12,6 +12,8 @@ function sysCall_init()
     selectedProperty = ''
     filterMatching = '*'
     filterInvert = false
+
+    createUi()
 end
 
 function sysCall_addOnScriptSuspend()
@@ -19,15 +21,11 @@ function sysCall_addOnScriptSuspend()
 end
 
 function sysCall_cleanup()
-    hideDlg()
+    destroyUi()
 end
 
-function sysCall_beforeSimulation()
-    hideDlg()
-end
-
-function sysCall_beforeInstanceSwitch()
-    hideDlg()
+function sysCall_afterInstanceSwitch()
+    sysCall_selChange {sel = sim.getObjectSel()}
 end
 
 function sysCall_nonSimulation()
@@ -85,7 +83,6 @@ function onTargetChanged()
     end
     table.sort(propertiesNames)
 
-    if not ui then showDlg() end
     if target == sim.handle_app then
         simUI.setLabelText(ui, ui_label_selection, 'sim.handle_app')
     elseif target == sim.handle_appstorage then
@@ -179,7 +176,7 @@ function removeSelected()
     end
 end
 
-function showDlg()
+function createUi()
     if not ui then
         local pos = 'position="-30,160" placement="relative"'
         if uiPos then
@@ -214,7 +211,7 @@ function showDlg()
     end
 end
 
-function hideDlg()
+function destroyUi()
     if ui then
         uiPos = {}
         uiPos[1], uiPos[2] = simUI.getPosition(ui)
