@@ -50,7 +50,29 @@ end
 function sysCall_event(events)
     for _, e in ipairs(cbor.decode(tostring(events))) do
         if e.handle == target and e.event == 'objectChanged' then
-            if ui then onTargetChanged() end
+            local pnames = {}
+            local pvalues, pinfos = sim.getProperties(target)
+            for pname, _ in pairs(pinfos) do table.insert(pnames, pname) end
+            table.sort(pnames)
+
+            if not table.eq(pnames, propertiesNames) then
+                -- some property was added or removed
+                onTargetChanged()
+            else
+                local d = table.flatten(e.data)
+                print(d)
+                for pname, pvalue in pairs(d) do
+                    local i = propertyNameToIndex[pname]
+                    if i then
+                        local pvalue = _S.anyToString(pvalue)
+                        simUI.setItem(ui, ui_table, i - 1, 0, pname)
+                        if #pvalue > 20 then
+                            pvalue = pvalue:sub(1, 20) .. '...'
+                        end
+                        simUI.setItem(ui, ui_table, i - 1, 2, pvalue)
+                    end
+                end
+            end
         end
     end
 end
@@ -71,17 +93,24 @@ end
 function onTargetChanged()
     local pvalues, pinfos = sim.getProperties(target)
     propertiesNames = {}
+    filteredPropertiesNames = {}
     local pat = filterMatching
     pat = string.gsub(pat, '%.', '%%.')
     pat = string.gsub(pat, '%*', '.*')
     pat = '^' .. pat .. '$'
     for pname, _ in pairs(pinfos) do
+        table.insert(propertiesNames, pname)
         local m = string.find(pname, pat)
         if (m and not filterInvert) or (not m and filterInvert) then
-            table.insert(propertiesNames, pname)
+            table.insert(filteredPropertiesNames, pname)
         end
     end
     table.sort(propertiesNames)
+    table.sort(filteredPropertiesNames)
+
+    -- optimization to avoid repopulation of whole table:
+    propertyNameToIndex = {}
+    for i, pname in ipairs(filteredPropertiesNames) do propertyNameToIndex[pname] = i end
 
     if target == sim.handle_app then
         simUI.setLabelText(ui, ui_label_selection, 'sim.handle_app')
@@ -99,9 +128,9 @@ function onTargetChanged()
     simUI.setColumnHeaderText(ui, ui_table, 0, 'Name')
     simUI.setColumnHeaderText(ui, ui_table, 1, 'Type')
     simUI.setColumnHeaderText(ui, ui_table, 2, 'Value')
-    simUI.setRowCount(ui, ui_table, #propertiesNames)
+    simUI.setRowCount(ui, ui_table, #filteredPropertiesNames)
     selectedRow = -1
-    for i, pname in ipairs(propertiesNames) do
+    for i, pname in ipairs(filteredPropertiesNames) do
         if selectedProperty == pname then selectedRow = i end
         local ptype = pinfos[pname].type
         local pvalue = _S.anyToString(pvalues[pname])
@@ -121,7 +150,7 @@ function onTargetChanged()
 end
 
 function onRowSelected(ui, id, row, col)
-    selectedProperty = propertiesNames[row + 1]
+    selectedProperty = filteredPropertiesNames[row + 1]
     simUI.setEnabled(ui, ui_print, true)
 end
 
