@@ -71,18 +71,19 @@ function setTargetSel()
 end
 
 function onTargetChanged()
-    properties = sim.getProperties(target)
+    local pvalues, pinfos = sim.getProperties(target)
     propertiesNames = {}
     local pat = filterMatching
     pat = string.gsub(pat, '%.', '%%.')
     pat = string.gsub(pat, '%*', '.*')
     pat = '^' .. pat .. '$'
-    for i, pname in ipairs(sim.getPropertiesNames(target)) do
+    for pname, _ in pairs(pinfos) do
         local m = string.find(pname, pat)
         if (m and not filterInvert) or (not m and filterInvert) then
             table.insert(propertiesNames, pname)
         end
     end
+    table.sort(propertiesNames)
 
     if not ui then showDlg() end
     if target == sim.handle_app then
@@ -105,8 +106,8 @@ function onTargetChanged()
     selectedRow = -1
     for i, pname in ipairs(propertiesNames) do
         if selectedProperty == pname then selectedRow = i end
-        local ptype = sim.getPropertyInfo(target, pname)
-        local pvalue = _S.anyToString(sim.getProperty(target, pname))
+        local ptype = pinfos[pname].type
+        local pvalue = _S.anyToString(pvalues[pname])
         ptype = sim.getPropertyTypeString(ptype)
         ptype = string.gsub(ptype, 'array$', '[]')
         simUI.setItem(ui, ui_table, i - 1, 0, pname)
