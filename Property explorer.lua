@@ -50,26 +50,16 @@ end
 function sysCall_event(events)
     for _, e in ipairs(cbor.decode(tostring(events))) do
         if e.handle == target and e.event == 'objectChanged' then
-            local pnames = {}
-            local pvalues, pinfos = sim.getProperties(target)
-            for pname, _ in pairs(pinfos) do table.insert(pnames, pname) end
-            table.sort(pnames)
+            local oldPropertiesNames = propertiesNames
+            readTargetProperties()
 
-            if not table.eq(pnames, propertiesNames) then
+            if not table.eq(oldPropertiesNames, propertiesNames) then
                 -- some property was added or removed
                 onTargetChanged()
             else
-                local d = table.flatten(e.data)
-                for pname, pvalue in pairs(d) do
+                for pname, pvalue in pairs(table.flatten(e.data)) do
                     local i = propertyNameToIndex[pname]
-                    if i then
-                        local pvalue = _S.anyToString(pvalue)
-                        simUI.setItem(ui, ui_table, i - 1, 0, pname)
-                        if #pvalue > 20 then
-                            pvalue = pvalue:sub(1, 20) .. '...'
-                        end
-                        simUI.setItem(ui, ui_table, i - 1, 2, pvalue)
-                    end
+                    if i then updateTableRow(i) end
                 end
             end
         end
@@ -96,15 +86,20 @@ function setTargetSel()
     target = sel[#sel] or sim.handle_scene
 end
 
-function onTargetChanged()
-    local pvalues, pinfos = sim.getProperties(target)
-    propertiesNames = {}
-    filteredPropertiesNames = {}
+function getFilteringPattern()
     local pat = filterMatching
     pat = string.gsub(pat, '%.', '%%.')
     pat = string.gsub(pat, '%*', '.*')
     pat = '^' .. pat .. '$'
-    for pname, _ in pairs(pinfos) do
+    return pat
+end
+
+function readTargetProperties()
+    propertiesValues, propertiesInfos = sim.getProperties(target)
+    propertiesNames = {}
+    filteredPropertiesNames = {}
+    local pat = getFilteringPattern()
+    for pname, _ in pairs(propertiesInfos) do
         table.insert(propertiesNames, pname)
         local m = string.find(pname, pat)
         if (m and not filterInvert) or (not m and filterInvert) then
@@ -117,7 +112,25 @@ function onTargetChanged()
     -- optimization to avoid repopulation of whole table:
     propertyNameToIndex = {}
     for i, pname in ipairs(filteredPropertiesNames) do propertyNameToIndex[pname] = i end
+end
 
+function updateTableRow(i)
+    local pname = filteredPropertiesNames[i]
+    assert(pname)
+    local ptype = propertiesInfos[pname].type
+    local pvalue = _S.anyToString(propertiesValues[pname])
+    ptype = sim.getPropertyTypeString(ptype)
+    ptype = string.gsub(ptype, 'array$', '[]')
+    simUI.setItem(ui, ui_table, i - 1, 0, pname)
+    simUI.setItem(ui, ui_table, i - 1, 1, ptype)
+    if #pvalue > 20 then
+        pvalue = pvalue:sub(1, 20) .. '...'
+    end
+    simUI.setItem(ui, ui_table, i - 1, 2, pvalue)
+end
+
+function onTargetChanged()
+    readTargetProperties()
     if target == sim.handle_app then
         simUI.setLabelText(ui, ui_label_selection, 'sim.handle_app')
     elseif target == sim.handle_appstorage then
@@ -127,7 +140,6 @@ function onTargetChanged()
     else
         simUI.setLabelText(ui, ui_label_selection, sim.getObjectAlias(target, 1))
     end
-
     simUI.setEnabled(ui, ui_print, false)
     simUI.clearTable(ui, ui_table)
     simUI.setColumnCount(ui, ui_table, 3)
@@ -138,16 +150,7 @@ function onTargetChanged()
     selectedRow = -1
     for i, pname in ipairs(filteredPropertiesNames) do
         if selectedProperty == pname then selectedRow = i end
-        local ptype = pinfos[pname].type
-        local pvalue = _S.anyToString(pvalues[pname])
-        ptype = sim.getPropertyTypeString(ptype)
-        ptype = string.gsub(ptype, 'array$', '[]')
-        simUI.setItem(ui, ui_table, i - 1, 0, pname)
-        simUI.setItem(ui, ui_table, i - 1, 1, ptype)
-        if #pvalue > 20 then
-            pvalue = pvalue:sub(1, 20) .. '...'
-        end
-        simUI.setItem(ui, ui_table, i - 1, 2, pvalue)
+        updateTableRow(i)
     end
     if selectedRow ~= -1 then
         simUI.setTableSelection(ui, ui_table, selectedRow - 1, 0, false)
