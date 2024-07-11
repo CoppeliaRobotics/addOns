@@ -94,6 +94,12 @@ function getFilteringPattern()
     return pat
 end
 
+function propertyOrder(a, b)
+    local ca = propertiesInfos[a].class
+    local cb = propertiesInfos[b].class
+    return ca < cb or (ca == cb and a < b)
+end
+
 function readTargetProperties()
     propertiesValues, propertiesInfos = sim.getProperties(target)
     propertiesNames = {}
@@ -106,8 +112,21 @@ function readTargetProperties()
             table.insert(filteredPropertiesNames, pname)
         end
     end
-    table.sort(propertiesNames)
-    table.sort(filteredPropertiesNames)
+    table.sort(propertiesNames, propertyOrder)
+    table.sort(filteredPropertiesNames, propertyOrder)
+
+    -- insert header at class break:
+    local fpn = filteredPropertiesNames
+    filteredPropertiesNames = {}
+    local lastPClass = nil
+    for _, pname in ipairs(fpn) do
+        local pclass = propertiesInfos[pname].class
+        if pclass ~= lastPClass then
+            table.insert(filteredPropertiesNames, '#' .. pclass)
+            lastPClass = pclass
+        end
+        table.insert(filteredPropertiesNames, pname)
+    end
 
     -- optimization to avoid repopulation of whole table:
     propertyNameToIndex = {}
@@ -117,16 +136,25 @@ end
 function updateTableRow(i)
     local pname = filteredPropertiesNames[i]
     assert(pname)
-    local ptype = propertiesInfos[pname].type
-    local pvalue = _S.anyToString(propertiesValues[pname])
-    ptype = sim.getPropertyTypeString(ptype)
-    ptype = string.gsub(ptype, 'array$', '[]')
-    simUI.setItem(ui, ui_table, i - 1, 0, pname)
-    simUI.setItem(ui, ui_table, i - 1, 1, ptype)
-    if #pvalue > 20 then
-        pvalue = pvalue:sub(1, 20) .. '...'
+
+    if pname:sub(1, 1) == '#' then
+        -- class group header
+        simUI.setItem(ui, ui_table, i - 1, 0, '[' .. pname:sub(2) .. ']')
+        simUI.setItem(ui, ui_table, i - 1, 1, '')
+        simUI.setItem(ui, ui_table, i - 1, 2, '')
+    else
+        -- normal row
+        local ptype = propertiesInfos[pname].type
+        local pvalue = _S.anyToString(propertiesValues[pname])
+        ptype = sim.getPropertyTypeString(ptype)
+        ptype = string.gsub(ptype, 'array$', '[]')
+        simUI.setItem(ui, ui_table, i - 1, 0, '    ' .. pname)
+        simUI.setItem(ui, ui_table, i - 1, 1, ptype)
+        if #pvalue > 20 then
+            pvalue = pvalue:sub(1, 20) .. '...'
+        end
+        simUI.setItem(ui, ui_table, i - 1, 2, pvalue)
     end
-    simUI.setItem(ui, ui_table, i - 1, 2, pvalue)
 end
 
 function onTargetChanged()
