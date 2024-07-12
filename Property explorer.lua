@@ -86,6 +86,10 @@ function setTargetSel()
     target = sel[#sel] or sim.handle_scene
 end
 
+function onSubTargetChanged(ui, id, i)
+    target = comboHandles[i + 1]
+end
+
 function getFilteringPattern()
     local pat = filterMatching
     pat = string.gsub(pat, '%.', '%%.')
@@ -159,17 +163,36 @@ end
 
 function onTargetChanged()
     readTargetProperties()
-    local combo = {}
+    comboLabels, comboHandles = {}, {}
+    local comboIdx = 0
     if target == sim.handle_app then
-        table.insert(combo, 'sim.handle_app')
+        table.insert(comboLabels, 'sim.handle_app')
+        table.insert(comboHandles, sim.handle_app)
     elseif target == sim.handle_appstorage then
-        table.insert(combo, 'sim.handle_appstorage')
+        table.insert(comboLabels, 'sim.handle_appstorage')
+        table.insert(comboHandles, sim.handle_appstorage)
     elseif target == sim.handle_scene then
-        table.insert(combo, 'sim.handle_scene')
+        table.insert(comboLabels, 'sim.handle_scene')
+        table.insert(comboHandles, sim.handle_scene)
     else
-        table.insert(combo, sim.getObjectAlias(target, 1))
+        local superTarget = target
+        local objectType = sim.getStringProperty(target, 'objectType')
+        if objectType == 'mesh' then
+            superTarget = sim.getIntProperty(target, 'shapeUid')
+            superTarget = sim.getObjectFromUid(superTarget)
+        end
+        table.insert(comboLabels, sim.getObjectAlias(superTarget, 1))
+        table.insert(comboHandles, superTarget)
+        if objectType == 'shape' or objectType == 'mesh' then
+            local meshes = sim.getIntVectorProperty(superTarget, 'meshes')
+            for i, mesh in ipairs(meshes) do
+                table.insert(comboLabels, '    Mesh ' .. i)
+                table.insert(comboHandles, mesh)
+                if mesh == target then comboIndex = i - 1 end
+            end
+        end
     end
-    simUI.setComboboxItems(ui, ui_combo_selection, combo, 0)
+    simUI.setComboboxItems(ui, ui_combo_selection, comboLabels, comboIdx)
     simUI.setEnabled(ui, ui_print, false)
     simUI.clearTable(ui, ui_table)
     simUI.setColumnCount(ui, ui_table, 3)
@@ -262,7 +285,7 @@ function createUi()
             xml = xml .. '</group>'
             xml = xml .. '<group flat="true" layout="hbox">'
             xml = xml .. '<label text="Selected target:" />'
-            xml = xml .. '<combobox id="${ui_combo_selection}">'
+            xml = xml .. '<combobox id="${ui_combo_selection}" on-change="onSubTargetChanged">'
             xml = xml .. '</combobox>'
             xml = xml .. '</group>'
             xml = xml .. '<group flat="true" layout="hbox">'
