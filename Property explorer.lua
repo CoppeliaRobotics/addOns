@@ -159,15 +159,17 @@ end
 
 function onTargetChanged()
     readTargetProperties()
+    local combo = {}
     if target == sim.handle_app then
-        simUI.setLabelText(ui, ui_label_selection, 'sim.handle_app')
+        table.insert(combo, 'sim.handle_app')
     elseif target == sim.handle_appstorage then
-        simUI.setLabelText(ui, ui_label_selection, 'sim.handle_appstorage')
+        table.insert(combo, 'sim.handle_appstorage')
     elseif target == sim.handle_scene then
-        simUI.setLabelText(ui, ui_label_selection, 'sim.handle_scene')
+        table.insert(combo, 'sim.handle_scene')
     else
-        simUI.setLabelText(ui, ui_label_selection, sim.getObjectAlias(target, 1))
+        table.insert(combo, sim.getObjectAlias(target, 1))
     end
+    simUI.setComboboxItems(ui, ui_combo_selection, combo, 0)
     simUI.setEnabled(ui, ui_print, false)
     simUI.clearTable(ui, ui_table)
     simUI.setColumnCount(ui, ui_table, 3)
@@ -260,7 +262,8 @@ function createUi()
             xml = xml .. '</group>'
             xml = xml .. '<group flat="true" layout="hbox">'
             xml = xml .. '<label text="Selected target:" />'
-            xml = xml .. '<label id="${ui_label_selection}" />'
+            xml = xml .. '<combobox id="${ui_combo_selection}">'
+            xml = xml .. '</combobox>'
             xml = xml .. '</group>'
             xml = xml .. '<group flat="true" layout="hbox">'
             xml = xml .. '<label text="Filter:" />'
