@@ -188,7 +188,7 @@ function onTargetChanged()
             for i, mesh in ipairs(meshes) do
                 table.insert(comboLabels, '    Mesh ' .. i)
                 table.insert(comboHandles, mesh)
-                if mesh == target then comboIndex = i - 1 end
+                if mesh == target then comboIdx = i end
             end
         end
     end
