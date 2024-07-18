@@ -288,7 +288,7 @@ function getAlsoModelObjectsAndOnlyVisibleShapes(sel)
         local p = sim.getModelProperty(sel[i])
         if (p & sim.modelproperty_not_model) == 0 then
             -- We have a model
-            local modObjs = sim.getObjectsInTree(sel[i], sim.object_shape_type)
+            local modObjs = sim.getObjectsInTree(sel[i], sim.sceneobject_shape)
             for k = 1, #modObjs, 1 do
                 local addIt = true
                 for j = 1, #tsel, 1 do
@@ -301,7 +301,7 @@ function getAlsoModelObjectsAndOnlyVisibleShapes(sel)
             end
         else
             -- We do not have a model
-            if sim.getObjectType(sel[i]) == sim.object_shape_type then
+            if sim.getObjectType(sel[i]) == sim.sceneobject_shape then
                 -- We have a shape
                 local addIt = true
                 for j = 1, #tsel, 1 do

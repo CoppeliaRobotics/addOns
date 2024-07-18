@@ -6,7 +6,7 @@ end
 
 function sysCall_init()
     local sel = sim.getObjectSel()
-    local shapes = filter(function(h) return sim.getObjectType(h) == sim.object_shape_type end, sel)
+    local shapes = filter(function(h) return sim.getObjectType(h) == sim.sceneobject_shape end, sel)
     if #shapes < 2 then
         simUI = require 'simUI'
         simUI.msgBox(

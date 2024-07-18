@@ -23,8 +23,8 @@ function sysCall_init()
     -- filter by joints:
     local joints = {}
     for _, handle in ipairs(sel) do
-        if sim.getObjectType(handle) == sim.object_joint_type then
-            if sim.getJointType(handle) ~= sim.joint_spherical_subtype then
+        if sim.getObjectType(handle) == sim.sceneobject_joint then
+            if sim.getJointType(handle) ~= sim.joint_spherical then
                 table.insert(joints, handle)
             end
         end

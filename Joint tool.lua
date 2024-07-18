@@ -55,7 +55,7 @@ function sysCall_selChange(inData)
         local dat = sim.readCustomBufferData(objectHandle, '__jointGroup__')
         if dat and #dat > 0 then
             for j, jointHandle in ipairs(sim.getReferencedHandles(objectHandle)) do
-                if sim.getObjectType(jointHandle) == sim.object_joint_type then
+                if sim.getObjectType(jointHandle) == sim.sceneobject_joint then
                     table.insert(jointHandles, jointHandle)
                 else
                     sim.addLog(
@@ -67,10 +67,10 @@ function sysCall_selChange(inData)
                 end
             end
         elseif sim.getModelProperty(objectHandle) & sim.modelproperty_not_model == 0 then
-            for j, jointHandle in ipairs(sim.getObjectsInTree(objectHandle, sim.object_joint_type)) do
+            for j, jointHandle in ipairs(sim.getObjectsInTree(objectHandle, sim.sceneobject_joint)) do
                 table.insert(jointHandles, jointHandle)
             end
-        elseif sim.getObjectType(objectHandle) == sim.object_joint_type then
+        elseif sim.getObjectType(objectHandle) == sim.sceneobject_joint then
             table.insert(jointHandles, objectHandle)
         else
             sim.addLog(
@@ -85,7 +85,7 @@ function sysCall_selChange(inData)
     local nid = 1
     closeUi()
     for i, jointHandle in ipairs(jointHandles) do
-        local isSpherical = sim.getJointType(jointHandle) == sim.joint_spherical_subtype
+        local isSpherical = sim.getJointType(jointHandle) == sim.joint_spherical
         local mh, a, b = sim.getJointDependency(jointHandle)
         if not isSpherical and mh == -1 and not jointToIdMap[jointHandle] then
             jointToIdMap[jointHandle] = nid

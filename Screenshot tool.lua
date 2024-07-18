@@ -57,8 +57,8 @@ end
 
 function sysCall_selChange(inData)
     local s = inData.sel
-    if #s == 1 and (sim.getObjectType(s[1]) == sim.object_camera_type or sim.getObjectType(s[1]) ==
-        sim.object_visionsensor_type) then
+    if #s == 1 and (sim.getObjectType(s[1]) == sim.sceneobject_camera or sim.getObjectType(s[1]) ==
+        sim.sceneobject_visionsensor) then
         cam = s[1]
         showDlg()
     else

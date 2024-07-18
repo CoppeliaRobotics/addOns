@@ -99,7 +99,7 @@ function sysCall_init()
             file:write(" parent{" .. parentId .. "}")
             file:write(" visibility{" .. sim.boolAnd32(visibleLayers, layers) .. "}")
             file:write(" type{")
-            if objType == sim.object_shape_type then
+            if objType == sim.sceneobject_shape then
                 local param = sim.getObjectInt32Param(allObjects[obji], 3016)
                 if exportIndividualShapeComponents and (param ~= 0) then
                     file:write("multishape}")
@@ -171,11 +171,11 @@ function sysCall_init()
                     end
                 end
             else
-                if objType == sim.object_joint_type then
+                if objType == sim.sceneobject_joint then
                     file:write("joint}")
                     local t = sim.getJointType(allObjects[obji])
                     local cyclic, interval = sim.getJointInterval(allObjects[obji])
-                    if t == sim.joint_prismatic_subtype then
+                    if t == sim.joint_prismatic then
                         local pos = sim.getJointPosition(allObjects[obji])
                         file:write(
                             string.format(
@@ -184,7 +184,7 @@ function sysCall_init()
                             )
                         )
                     end
-                    if t == sim.joint_revolute_subtype then
+                    if t == sim.joint_revolute then
                         local pos = sim.getJointPosition(allObjects[obji])
                         if cyclic then
                             file:write(
@@ -201,7 +201,7 @@ function sysCall_init()
                             )
                         end
                     end
-                    if t == sim.joint_spherical_subtype then
+                    if t == sim.joint_spherical then
                         local jmatr = sim.getJointMatrix(allObjects[obji])
                         file:write("\n    type{spherical} position{")
                         for i = 1, 12, 1 do

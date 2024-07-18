@@ -142,13 +142,13 @@ function update()
     if #s >= 1 and #s <= 2 then
         obj1IsModel = (sim.getModelProperty(s[1]) & sim.modelproperty_not_model) == 0
         local t = sim.getObjectType(s[1])
-        if t == sim.object_shape_type or t == sim.object_dummy_type or t == sim.object_octree_type or
-            t == sim.object_pointcloud_type or obj1IsModel then o1 = s[1] end
+        if t == sim.sceneobject_shape or t == sim.sceneobject_dummy or t == sim.sceneobject_octree or
+            t == sim.sceneobject_pointcloud or obj1IsModel then o1 = s[1] end
         if #s == 2 then
             obj2IsModel = (sim.getModelProperty(s[2]) & sim.modelproperty_not_model) == 0
             local t = sim.getObjectType(s[2])
-            if t == sim.object_shape_type or t == sim.object_dummy_type or t ==
-                sim.object_octree_type or t == sim.object_pointcloud_type or obj2IsModel then
+            if t == sim.sceneobject_shape or t == sim.sceneobject_dummy or t ==
+                sim.sceneobject_octree or t == sim.sceneobject_pointcloud or obj2IsModel then
                 o2 = s[2]
             else
                 o1 = -1

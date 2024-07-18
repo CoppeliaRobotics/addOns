@@ -14,8 +14,8 @@ end
 
 function couldCollide(obj, typ, ignoreModelOverride)
     local retVal = false
-    if typ == sim.object_shape_type or typ == sim.object_octree_type or typ ==
-        sim.object_pointcloud_type or typ == sim.object_dummy_type then
+    if typ == sim.sceneobject_shape or typ == sim.sceneobject_octree or typ ==
+        sim.sceneobject_pointcloud or typ == sim.sceneobject_dummy then
         if sim.getObjectSpecialProperty(obj) & sim.objectspecialproperty_collidable > 0 then
             -- Check if the object is possibly part of a model that has a collidable flag override:
             retVal = true
@@ -185,13 +185,13 @@ function coll(ui, id)
                                                 objPair[i], sim.objintparam_visibility_layer, 0
                                             )
                                             local copy
-                                            if t[i] == sim.object_dummy_type then
+                                            if t[i] == sim.sceneobject_dummy then
                                                 copy = sim.createDummy(0.01, getCol(i))
                                                 sim.setObjectPose(
                                                     copy, sim.getObjectPose(objPair[i])
                                                 )
                                             end
-                                            if t[i] == sim.object_shape_type then
+                                            if t[i] == sim.sceneobject_shape then
                                                 copy = sim.copyPasteObjects(
                                                            {objPair[i]}, 2 + 4 + 8 + 16 + 32
                                                        )[1]
@@ -208,7 +208,7 @@ function coll(ui, id)
                                                     {0, 0, 0}
                                                 )
                                             end
-                                            if t[i] == sim.object_octree_type then
+                                            if t[i] == sim.sceneobject_octree then
                                                 copy = sim.copyPasteObjects(
                                                            {objPair[i]}, 2 + 4 + 8 + 16 + 32
                                                        )[1]
@@ -218,7 +218,7 @@ function coll(ui, id)
                                                     getCol(i, true)
                                                 )
                                             end
-                                            if t[i] == sim.object_pointcloud_type then
+                                            if t[i] == sim.sceneobject_pointcloud then
                                                 copy = sim.createPointCloud(0.1, 50, 8, 4)
                                                 sim.setObjectPose(
                                                     copy, sim.getObjectPose(objPair[i])
@@ -365,13 +365,13 @@ function update()
     if #s >= 1 and #s <= 2 then
         obj1IsModel = (sim.getModelProperty(s[1]) & sim.modelproperty_not_model) == 0
         local t = sim.getObjectType(s[1])
-        if t == sim.object_shape_type or t == sim.object_dummy_type or t == sim.object_octree_type or
-            t == sim.object_pointcloud_type or obj1IsModel then o1 = s[1] end
+        if t == sim.sceneobject_shape or t == sim.sceneobject_dummy or t == sim.sceneobject_octree or
+            t == sim.sceneobject_pointcloud or obj1IsModel then o1 = s[1] end
         if #s == 2 then
             obj2IsModel = (sim.getModelProperty(s[2]) & sim.modelproperty_not_model) == 0
             local t = sim.getObjectType(s[2])
-            if t == sim.object_shape_type or t == sim.object_dummy_type or t ==
-                sim.object_octree_type or t == sim.object_pointcloud_type or obj2IsModel then
+            if t == sim.sceneobject_shape or t == sim.sceneobject_dummy or t ==
+                sim.sceneobject_octree or t == sim.sceneobject_pointcloud or obj2IsModel then
                 o2 = s[2]
             else
                 o1 = -1

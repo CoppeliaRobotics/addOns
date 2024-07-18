@@ -59,7 +59,7 @@ function sysCall_selChange(inData)
             for i = 1, #tmp, 1 do
                 local obj = tmp[i]
                 if sim.getObjectInt32Param(obj, sim.objintparam_visible) ~= 0 and
-                    sim.getObjectType(obj) == sim.object_shape_type then
+                    sim.getObjectType(obj) == sim.sceneobject_shape then
                     cnt = cnt + 1
                 end
             end
@@ -100,7 +100,7 @@ function sysCall_beforeSimulation()
         for i = 1, #tmp, 1 do
             local obj = tmp[i]
             if sim.getObjectInt32Param(obj, sim.objintparam_visible) ~= 0 and sim.getObjectType(obj) ==
-                sim.object_shape_type then
+                sim.sceneobject_shape then
                 map[obj] = true
                 cnt = cnt + 1
             end
@@ -227,7 +227,7 @@ function sysCall_afterSimulation()
         sim.setObjectSel({dummy})
         local txt = "Animation model '" .. sim.getObjectAlias(dummy, 1) .. "' was created!"
         sim.addLog(sim.verbosity_scriptinfos, txt)
-        simUI.msgBox(simUI.msgbox_type.info, sim.msgbox_buttons.ok, 'Animation model', txt)
+        simUI.msgBox(simUI.msgbox_type.info, simUI.msgbox_buttons.ok, 'Animation model', txt)
     end
 end
 

@@ -93,7 +93,7 @@ function onObjectAdded(handle)
     local code = ''
     local objType = sim.getObjectType(handle)
     local id = objectId(handle)
-    if objType == sim.object_shape_type then
+    if objType == sim.sceneobject_shape then
         result, pureType, dims = sim.getShapeGeomInfo(handle)
         if result & 2 > 0 then
             code = string.format(
@@ -105,7 +105,7 @@ function onObjectAdded(handle)
         else
             code = string.format('%s=sim.createShape(...)', id)
         end
-    elseif objType == sim.object_joint_type then
+    elseif objType == sim.sceneobject_joint then
         local jointType = sim.getJointType(handle)
         local jointMode = sim.getJointMode(handle)
         code = string.format(
@@ -113,7 +113,7 @@ function onObjectAdded(handle)
                    getConstantName(jointType, 'joint_', '_subtype'),
                    getConstantName(jointMode, 'jointmode_')
                )
-    elseif objType == sim.object_dummy_type then
+    elseif objType == sim.sceneobject_dummy then
         code = string.format('%s=sim.createDummy(0.01)', id)
     else
         code = id .. '=nil -- not implemented type (type=' ..

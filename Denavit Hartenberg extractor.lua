@@ -16,7 +16,7 @@ function sysCall_init()
         local jointsAndEndEffector = {}
         local obj = sel[1]
         while obj ~= -1 do
-            if sim.getObjectType(obj) == sim.object_joint_type or #jointsAndEndEffector == 0 then
+            if sim.getObjectType(obj) == sim.sceneobject_joint or #jointsAndEndEffector == 0 then
                 table.insert(jointsAndEndEffector, 1, obj)
             end
             obj = sim.getObjectParent(obj)
@@ -26,7 +26,7 @@ function sysCall_init()
             for i = 1, #jointsAndEndEffector - 1 do
                 local dhParams = getDHParams(jointsAndEndEffector[i], jointsAndEndEffector[i + 1])
                 local onn = 'joint'
-                if i == #jointsAndEndEffector - 1 and sim.getObjectType(sel[1]) ~= sim.object_joint_type then
+                if i == #jointsAndEndEffector - 1 and sim.getObjectType(sel[1]) ~= sim.sceneobject_joint then
                     onn = 'object'
                 end
                 print(
