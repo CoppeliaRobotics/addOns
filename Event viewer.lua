@@ -9,7 +9,20 @@ function sysCall_init()
     sim.test('sim.enableEvents', true)
     sim.test('sim.mergeEvents', true)
     sim.test('sim.cborEvents', true)
-    consoleHandle = sim.auxiliaryConsoleOpen('Event viewer', 500, 16)
+    consoleHandle = sim.auxiliaryConsoleOpen('Event viewer', 500, 20)
+    checkClosed = function()
+        if sim.auxiliaryConsolePrint(consoleHandle, '') == 0 then
+            return {cmd = 'cleanup'}
+        end
+    end
+end
+
+function sysCall_nonSimulation()
+    return checkClosed()
+end
+
+function sysCall_sensing()
+    return checkClosed()
 end
 
 function sysCall_addOnScriptSuspend()
