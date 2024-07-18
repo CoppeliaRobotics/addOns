@@ -9,31 +9,35 @@ function sysCall_init()
     sim.test('sim.enableEvents', true)
     sim.test('sim.mergeEvents', true)
     sim.test('sim.cborEvents', true)
-    consoleHandle = sim.auxiliaryConsoleOpen('Event viewer', 500, 20)
-    checkClosed = function()
-        if sim.auxiliaryConsolePrint(consoleHandle, '') == 0 then
-            return {cmd = 'cleanup'}
-        end
-    end
-end
-
-function sysCall_nonSimulation()
-    return checkClosed()
-end
-
-function sysCall_sensing()
-    return checkClosed()
+    simUI = require 'simUI'
+    ui = simUI.create [[<ui title="Event viewer" position="-400,100" size="640,220" placement="relative" closeable="true" resizable="true" on-close="onClose" content-margins="0,0,0,0">
+        <text-browser id="1" type="plain" read-only="false" style="QTextBrowser { font-family: Courier New; }" />
+    </ui>]]
+    sep = ''
 end
 
 function sysCall_addOnScriptSuspend()
     return {cmd = 'cleanup'}
 end
 
-function sysCall_cleanup()
-    sim.auxiliaryConsoleClose(consoleHandle)
+function sysCall_event(event)
+    local txt = ''
+    for _, event in ipairs(cbor.decode(tostring(event))) do
+        local s = _S.tableToString(event, {indent = true}, 99)
+        txt = txt .. sep .. s
+        sep = '\n\n'
+    end
+    simUI.appendText(ui, 1, txt)
 end
 
-function sysCall_event(event)
-    event = cbor.decode(tostring(event))
-    sim.auxiliaryConsolePrint(consoleHandle, _S.tableToString(event, {}, 99) .. '\n')
+function sysCall_nonSimulation()
+    if leaveNow then return {cmd = 'cleanup'} end
+end
+
+function sysCall_sensing()
+    if leaveNow then return {cmd = 'cleanup'} end
+end
+
+function onClose()
+    leaveNow = true
 end
