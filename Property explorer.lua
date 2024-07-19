@@ -154,8 +154,8 @@ function updateTableRow(i)
         ptype = string.gsub(ptype, 'array$', '[]')
         simUI.setItem(ui, ui_table, i - 1, 0, '    ' .. pname)
         simUI.setItem(ui, ui_table, i - 1, 1, ptype)
-        if #pvalue > 20 then
-            pvalue = pvalue:sub(1, 20) .. '...'
+        if #pvalue > 30 then
+            pvalue = pvalue:sub(1, 30) .. '...'
         end
         simUI.setItem(ui, ui_table, i - 1, 2, pvalue)
     end
