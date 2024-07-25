@@ -10,7 +10,7 @@ function sysCall_init()
     simOMPL = require 'simOMPL'
     ui = simUI.create(
              [[<ui title="Motion Planning generator" closeable="true" on-close="onClose" layout="vbox" modal="true">
-        <label wordwrap="true" text="This addon generates a script for solving motion planning tasks for the given robot. The script will be placed in a 'Motion Planning' object under the robot model. Choose the params below and click 'Generate'." />
+        <label word-wrap="true" text="This addon generates a script for solving motion planning tasks for the given robot. The script will be placed in a 'Motion Planning' object under the robot model. Choose the params below and click 'Generate'." />
         <group flat="true" content-margins="0,0,0,0" layout="form">
             <label text="Robot model:" />
             <combobox id="${ui_comboRobotModel}" on-change="onModelChanged" />

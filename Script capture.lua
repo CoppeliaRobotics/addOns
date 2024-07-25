@@ -30,7 +30,7 @@ function sysCall_init()
             <button id="${btnInsertComment}" text="Insert comment" on-click="insertComment" />
         </group>
         <text-browser id="${txtCode}" text="" html="false" />
-        <label id="${lblCapturing}" text="Capturing: N/A" wordwrap="true" on-link-activated="editSettings" />
+        <label id="${lblCapturing}" text="Capturing: N/A" word-wrap="true" on-link-activated="editSettings" />
     </ui>]]
     trackedHandles = {}
     log = {}
