@@ -59,7 +59,7 @@ function sysCall_event(events)
             else
                 for pname, pvalue in pairs(table.flatten(e.data)) do
                     local i = propertyNameToIndex[pname]
-                    if i then updateTableRow(i) end
+                    if i then updateTableRow(i, true) end
                 end
             end
         end
@@ -137,27 +137,29 @@ function readTargetProperties()
     for i, pname in ipairs(filteredPropertiesNames) do propertyNameToIndex[pname] = i end
 end
 
-function updateTableRow(i)
+function updateTableRow(i, updateSingle)
     local pname = filteredPropertiesNames[i]
     assert(pname)
 
     if pname:sub(1, 1) == '#' then
         -- class group header
-        simUI.setItem(ui, ui_table, i - 1, 0, '[' .. pname:sub(2) .. ']')
-        simUI.setItem(ui, ui_table, i - 1, 1, '')
-        simUI.setItem(ui, ui_table, i - 1, 2, '')
+        tableRows[i] = {'[' .. pname:sub(2) .. ']', '', ''}
     else
         -- normal row
         local ptype = propertiesInfos[pname].type
         local pvalue = _S.anyToString(propertiesValues[pname])
         ptype = sim.getPropertyTypeString(ptype)
         ptype = string.gsub(ptype, 'array$', '[]')
-        simUI.setItem(ui, ui_table, i - 1, 0, '    ' .. pname)
-        simUI.setItem(ui, ui_table, i - 1, 1, ptype)
         if #pvalue > 30 then
             pvalue = pvalue:sub(1, 30) .. '...'
         end
-        simUI.setItem(ui, ui_table, i - 1, 2, pvalue)
+        tableRows[i] = {'    ' .. pname, ptype, pvalue}
+    end
+
+    if updateSingle then
+        for j = 1, 3 do
+            simUI.setItem(ui, ui_table, i - 1, j - 1, tableRows[i][j])
+        end
     end
 end
 
@@ -205,6 +207,7 @@ function onTargetChanged()
         if selectedProperty == pname then selectedRow = i end
         updateTableRow(i)
     end
+    simUI.setItems(ui, ui_table, cbor.encode(tableRows))
     if selectedRow ~= -1 then
         simUI.setTableSelection(ui, ui_table, selectedRow - 1, 0, false)
         simUI.setEnabled(ui, ui_print, true)
@@ -273,33 +276,32 @@ function createUi()
         if uiPos then
             pos = 'position="' .. uiPos[1] .. ',' .. uiPos[2] .. '" placement="absolute"'
         end
-        if not ui then
-            xml = '<ui title="Property Explorer" activate="false" closeable="true" on-close="onCloseClicked" resizable="true" ' .. pos .. '>'
-            xml = xml .. '<group flat="true" layout="hbox">'
-            xml = xml .. '<label text="Target:" />'
-            xml = xml .. '<group flat="true">'
-            xml = xml .. '<radiobutton text="App (session)" checked="' .. tostring(target == sim.handle_app) .. '" on-click="setTargetApp" />'
-            xml = xml .. '<radiobutton text="App (storage)" checked="' .. tostring(target == sim.handle_appstorage) .. '" on-click="setTargetAppStorage" />'
-            xml = xml .. '<radiobutton text="Selection (obj/scene)" checked="' .. tostring(target ~= sim.handle_app and target ~= sim.handle_appstorage) .. '" on-click="setTargetSel" />'
-            xml = xml .. '</group>'
-            xml = xml .. '</group>'
-            xml = xml .. '<group flat="true" layout="hbox">'
-            xml = xml .. '<label text="Selected target:" />'
-            xml = xml .. '<combobox id="${ui_combo_selection}" on-change="onSubTargetChanged">'
-            xml = xml .. '</combobox>'
-            xml = xml .. '</group>'
-            xml = xml .. '<group flat="true" layout="hbox">'
-            xml = xml .. '<label text="Filter:" />'
-            xml = xml .. '<edit id="${ui_filter}" value="' .. filterMatching .. '" on-change="updateFilter" />'
-            xml = xml .. '<checkbox id="${ui_filter_invert}" text="Invert" checked="' .. tostring(filterInvert) .. '" on-change="updateFilter" />'
-            xml = xml .. '</group>'
-            xml = xml .. '<table id="${ui_table}" selection-mode="row" editable="false" on-selection-change="onRowSelected" on-key-press="onKeyPress">'
-            xml = xml .. '<header><item>Name</item><item>Type</item><item>Value</item></header>'
-            xml = xml .. '</table>'
-            xml = xml .. '<button id="${ui_print}" enabled="false" text="Assign value" on-click="assignValue" />'
-            xml = xml .. '</ui>'
-            ui = simUI.create(xml)
-        end
+        xml = '<ui title="Property Explorer" activate="false" closeable="true" on-close="onCloseClicked" resizable="true" ' .. pos .. '>'
+        xml = xml .. '<group flat="true" layout="hbox">'
+        xml = xml .. '<label text="Target:" />'
+        xml = xml .. '<group flat="true">'
+        xml = xml .. '<radiobutton text="App (session)" checked="' .. tostring(target == sim.handle_app) .. '" on-click="setTargetApp" />'
+        xml = xml .. '<radiobutton text="App (storage)" checked="' .. tostring(target == sim.handle_appstorage) .. '" on-click="setTargetAppStorage" />'
+        xml = xml .. '<radiobutton text="Selection (obj/scene)" checked="' .. tostring(target ~= sim.handle_app and target ~= sim.handle_appstorage) .. '" on-click="setTargetSel" />'
+        xml = xml .. '</group>'
+        xml = xml .. '</group>'
+        xml = xml .. '<group flat="true" layout="hbox">'
+        xml = xml .. '<label text="Selected target:" />'
+        xml = xml .. '<combobox id="${ui_combo_selection}" on-change="onSubTargetChanged">'
+        xml = xml .. '</combobox>'
+        xml = xml .. '</group>'
+        xml = xml .. '<group flat="true" layout="hbox">'
+        xml = xml .. '<label text="Filter:" />'
+        xml = xml .. '<edit id="${ui_filter}" value="' .. filterMatching .. '" on-change="updateFilter" />'
+        xml = xml .. '<checkbox id="${ui_filter_invert}" text="Invert" checked="' .. tostring(filterInvert) .. '" on-change="updateFilter" />'
+        xml = xml .. '</group>'
+        xml = xml .. '<table id="${ui_table}" selection-mode="row" editable="false" on-selection-change="onRowSelected" on-key-press="onKeyPress">'
+        xml = xml .. '<header><item>Name</item><item>Type</item><item>Value</item></header>'
+        xml = xml .. '</table>'
+        xml = xml .. '<button id="${ui_print}" enabled="false" text="Assign value" on-click="assignValue" />'
+        xml = xml .. '</ui>'
+        ui = simUI.create(xml)
+        tableRows = {}
     end
 end
 
