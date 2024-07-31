@@ -206,7 +206,7 @@ function onTargetChanged()
     end
     simUI.setProperties(ui, ui_table, tableRows.pname, tableRows.ptype, tableRows.pvalue)
     if selectedRow ~= -1 then
-        simUI.setPropertiesSelection(ui, ui_table, selectedRow - 1, 0, false)
+        simUI.setPropertiesSelection(ui, ui_table, selectedRow - 1, false)
         simUI.setEnabled(ui, ui_print, true)
     end
 end
