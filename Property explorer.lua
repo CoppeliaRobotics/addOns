@@ -143,7 +143,9 @@ function updateTableRow(i, updateSingle)
 
     if pname:sub(1, 1) == '#' then
         -- class group header
-        tableRows[i] = {'[' .. pname:sub(2) .. ']', '', ''}
+        tableRows.pname[i] = '[' .. pname:sub(2) .. ']'
+        tableRows.ptype[i] = ''
+        tableRows.pvalue[i] = ''
     else
         -- normal row
         local ptype = propertiesInfos[pname].type
@@ -153,13 +155,13 @@ function updateTableRow(i, updateSingle)
         if #pvalue > 30 then
             pvalue = pvalue:sub(1, 30) .. '...'
         end
-        tableRows[i] = {'    ' .. pname, ptype, pvalue}
+        tableRows.pname[i] = '    ' .. pname
+        tableRows.ptype[i] = ptype
+        tableRows.pvalue[i] = pvalue
     end
 
     if updateSingle then
-        for j = 1, 3 do
-            simUI.setItem(ui, ui_table, i - 1, j - 1, tableRows[i][j])
-        end
+        simUI.setPropertiesRow(ui, ui_table, i - 1, tableRows.pname[i], tableRows.ptype[i], tableRows.pvalue[i])
     end
 end
 
@@ -196,20 +198,15 @@ function onTargetChanged()
     end
     simUI.setComboboxItems(ui, ui_combo_selection, comboLabels, comboIdx)
     simUI.setEnabled(ui, ui_print, false)
-    simUI.clearTable(ui, ui_table)
-    simUI.setColumnCount(ui, ui_table, 3)
-    simUI.setColumnHeaderText(ui, ui_table, 0, 'Name')
-    simUI.setColumnHeaderText(ui, ui_table, 1, 'Type')
-    simUI.setColumnHeaderText(ui, ui_table, 2, 'Value')
-    simUI.setRowCount(ui, ui_table, #filteredPropertiesNames)
     selectedRow = -1
+    tableRows = {pname = {}, ptype = {}, pvalue = {}}
     for i, pname in ipairs(filteredPropertiesNames) do
         if selectedProperty == pname then selectedRow = i end
         updateTableRow(i)
     end
-    simUI.setItems(ui, ui_table, cbor.encode(tableRows))
+    simUI.setProperties(ui, ui_table, tableRows.pname, tableRows.ptype, tableRows.pvalue)
     if selectedRow ~= -1 then
-        simUI.setTableSelection(ui, ui_table, selectedRow - 1, 0, false)
+        simUI.setPropertiesSelection(ui, ui_table, selectedRow - 1, 0, false)
         simUI.setEnabled(ui, ui_print, true)
     end
 end
@@ -295,13 +292,11 @@ function createUi()
         xml = xml .. '<edit id="${ui_filter}" value="' .. filterMatching .. '" on-change="updateFilter" />'
         xml = xml .. '<checkbox id="${ui_filter_invert}" text="Invert" checked="' .. tostring(filterInvert) .. '" on-change="updateFilter" />'
         xml = xml .. '</group>'
-        xml = xml .. '<table id="${ui_table}" selection-mode="row" editable="false" on-selection-change="onRowSelected" on-key-press="onKeyPress">'
-        xml = xml .. '<header><item>Name</item><item>Type</item><item>Value</item></header>'
-        xml = xml .. '</table>'
+        xml = xml .. '<properties id="${ui_table}" on-selection-change="onRowSelected" on-key-press="onKeyPress">'
+        xml = xml .. '</properties>'
         xml = xml .. '<button id="${ui_print}" enabled="false" text="Assign value" on-click="assignValue" />'
         xml = xml .. '</ui>'
         ui = simUI.create(xml)
-        tableRows = {}
     end
 end
 
