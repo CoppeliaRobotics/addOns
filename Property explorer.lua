@@ -211,9 +211,13 @@ function onTargetChanged()
     end
 end
 
-function onRowSelected(ui, id, row, col)
+function onRowSelected(ui, id, row)
     selectedProperty = filteredPropertiesNames[row + 1]
     simUI.setEnabled(ui, ui_print, selectedProperty:sub(1, 1) ~= '#')
+end
+
+function onRowDoubleClicked(ui, id, row)
+    assignValue()
 end
 
 function onKeyPress(ui, id, key, text)
@@ -292,7 +296,7 @@ function createUi()
         xml = xml .. '<edit id="${ui_filter}" value="' .. filterMatching .. '" on-change="updateFilter" />'
         xml = xml .. '<checkbox id="${ui_filter_invert}" text="Invert" checked="' .. tostring(filterInvert) .. '" on-change="updateFilter" />'
         xml = xml .. '</group>'
-        xml = xml .. '<properties id="${ui_table}" on-selection-change="onRowSelected" on-key-press="onKeyPress">'
+        xml = xml .. '<properties id="${ui_table}" on-selection-change="onRowSelected" on-double-click="onRowDoubleClicked" on-key-press="onKeyPress">'
         xml = xml .. '</properties>'
         xml = xml .. '<button id="${ui_print}" enabled="false" text="Assign value" on-click="assignValue" />'
         xml = xml .. '</ui>'
