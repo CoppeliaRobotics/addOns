@@ -213,7 +213,7 @@ end
 
 function onRowSelected(ui, id, row, col)
     selectedProperty = filteredPropertiesNames[row + 1]
-    simUI.setEnabled(ui, ui_print, true)
+    simUI.setEnabled(ui, ui_print, selectedProperty:sub(1, 1) ~= '#')
 end
 
 function onKeyPress(ui, id, key, text)
