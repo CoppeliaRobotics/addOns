@@ -304,13 +304,17 @@ function render_callback(ui, id, v)
     sim.handleVisionSensor(visSens)
     sim.setObjectInt32Param(cam, sim.objintparam_visibility_layer, savedVisibilityMask)
     showImage()
-    local img, x, y = sim.getVisionSensorCharImage(visSens)
+    local img, resolution = sim.getVisionSensorImg(visSens)
     local rxy = {}
-    img, rxy = sim.getScaledImage(img, {x, y}, {800, 800}, 4)
+    img, rxy = sim.getScaledImage(img, resolution, {800, 800}, 4)
     simUI.setImageData(imUi, 1, img, rxy[1], rxy[2])
     local cutOff = 0
     if config.transparent then cutOff = 0.99 end
-    image, resX, resY = sim.getVisionSensorCharImage(visSens, 0, 0, 0, 0, cutOff)
+    local opt = 0
+    if config.transparent then
+        opt = 2
+    end
+    image, res = sim.getVisionSensorImg(visSens, opt, cutOff)
     sim.removeObjects({visSens})
 end
 
@@ -333,7 +337,7 @@ function save_callback(ui, id, v)
     end
     if #fileNames > 0 then
         local fileName = fileNames[1]
-        if sim.saveImage(image, {resX, resY}, options, fileName, -1) ~= -1 then
+        if sim.saveImage(image, res, options, fileName, -1) ~= -1 then
             sim.addLog(sim.verbosity_msgs, "Screenshot was saved to " .. fileName)
             simUI.msgBox(
                 simUI.msgbox_type.info, simUI.msgbox_buttons.ok, 'Screenshot',
