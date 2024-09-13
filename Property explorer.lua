@@ -148,8 +148,13 @@ function updateTableRow(i, updateSingle)
         tableRows.pvalue[i] = ''
     else
         -- normal row
+        local pflags = propertiesInfos[pname].flags
         local ptype = propertiesInfos[pname].type
         local pvalue = _S.anyToString(propertiesValues[pname])
+        local readable = pflags & 2 == 0
+        local writable = pflags & 1 == 0
+        local removable = pflags & 4 > 0
+        if not readable then pvalue = writable and '<write-only>' or '<not readable>' end
         ptype = sim.getPropertyTypeString(ptype)
         ptype = string.gsub(ptype, 'array$', '[]')
         if #pvalue > 30 then
