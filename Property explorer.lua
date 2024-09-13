@@ -149,13 +149,10 @@ function updateTableRow(i, updateSingle)
         tableRows.pvalue[i] = ''
     else
         -- normal row
-        local pflags = propertiesInfos[pname].flags
+        local f = propertiesInfos[pname].flags
         local ptype = propertiesInfos[pname].type
         local pvalue = _S.anyToString(propertiesValues[pname])
-        local readable = pflags & 2 == 0
-        local writable = pflags & 1 == 0
-        local removable = pflags & 4 > 0
-        if not readable then pvalue = writable and '<write-only>' or '<not readable>' end
+        if not f.readable then pvalue = f.writable and '<write-only>' or '<not readable>' end
         ptype = sim.getPropertyTypeString(ptype)
         ptype = string.gsub(ptype, 'array$', '[]')
         if #pvalue > 30 then
@@ -219,12 +216,16 @@ end
 function updateButtonsForSelectedProperty()
     local canAssign = false
     local canEdit = false
+    local canRemove = false
     if propertiesInfos[selectedProperty] and selectedProperty:sub(1, 1) ~= '#' then
-        canAssign = propertiesInfos[selectedProperty].flags & 2 == 0
-        canEdit = propertiesInfos[selectedProperty].type == sim.propertytype_string and propertiesInfos[selectedProperty].flags & 3 == 0
+        local f = propertiesInfos[selectedProperty].flags
+        canAssign = f.readable
+        canEdit = propertiesInfos[selectedProperty].type == sim.propertytype_string and f.readable and f.writable
+        canRemove = f.removable
     end
     simUI.setEnabled(ui, ui_assign, canAssign)
     simUI.setWidgetVisibility(ui, ui_edit, canEdit)
+    simUI.setWidgetVisibility(ui, ui_remove, canRemove)
     defaultAction = canAssign and assignValue or function() end
 end
 
@@ -296,8 +297,8 @@ end
 
 function removeSelected()
     if not selectedProperty then return end
-    local ptype, pflags, psize = sim.getPropertyInfo(target, selectedProperty)
-    if pflags & 0x04 > 0 then
+    if not propertiesInfos[selectedProperty] then return end
+    if propertiesInfos[selectedProperty].flags.removable then
         sim.removeProperty(target, selectedProperty)
     end
 end
@@ -332,6 +333,7 @@ function createUi()
         xml = xml .. '<group flat="true" layout="hbox" content-margins="0,0,0,0">'
         xml = xml .. '<button id="${ui_assign}" enabled="false" text="Assign" on-click="assignValue" />'
         xml = xml .. '<button id="${ui_edit}" visible="false" text="Edit..." on-click="editValue" />'
+        xml = xml .. '<button id="${ui_remove}" visible="false" text="Remove" on-click="removeSelected" />'
         xml = xml .. '</group>'
         xml = xml .. '</ui>'
         ui = simUI.create(xml)
