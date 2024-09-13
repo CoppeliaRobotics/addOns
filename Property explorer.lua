@@ -220,7 +220,7 @@ function updateButtonsForSelectedProperty()
     if propertiesInfos[selectedProperty] and selectedProperty:sub(1, 1) ~= '#' then
         local f = propertiesInfos[selectedProperty].flags
         canAssign = f.readable
-        canEdit = propertiesInfos[selectedProperty].type == sim.propertytype_string and f.readable and f.writable
+        canEdit = f.readable and f.writable
         canRemove = f.removable
     end
     simUI.setEnabled(ui, ui_assign, canAssign)
@@ -283,12 +283,14 @@ end
 
 function editValue()
     local pvalue = sim.getProperty(target, selectedProperty)
-    editorHandle = sim.textEditorOpen(pvalue, '<editor title="Edit property value" editable="true" searchable="true" tab-width="4" toolbar="false" statusbar="false" resizable="true" modal="true" on-close="editValueFinished" closeable="true" position="-20 400" size="400 300" placement="relative" activate="true" line-numbers="false"></editor>')
+    pvalue = sim.convertPropertyValue(pvalue, propertiesInfos[selectedProperty].type, sim.propertytype_string)
+    editorHandle = sim.textEditorOpen(pvalue, '<editor title="Edit &quot;' .. selectedProperty .. '&quot; value" editable="true" searchable="true" tab-width="4" toolbar="false" statusbar="false" resizable="true" modal="true" on-close="editValueFinished" closeable="true" position="-20 400" size="400 300" placement="relative" activate="true" line-numbers="false"></editor>')
 end
 
 function editValueFinished()
     if editorHandle then
         local newValue = sim.textEditorGetInfo(editorHandle)
+        newValue = sim.convertPropertyValue(newValue, sim.propertytype_string, propertiesInfos[selectedProperty].type)
         sim.setProperty(target, selectedProperty, newValue)
         sim.textEditorClose(editorHandle)
         editorHandle = nil
