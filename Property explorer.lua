@@ -12,6 +12,7 @@ function sysCall_init()
     selectedProperty = ''
     filterMatching = '*'
     filterInvert = false
+    defaultAction = function() end
 
     createUi()
 end
@@ -218,11 +219,13 @@ end
 
 function onRowSelected(ui, id, row)
     selectedProperty = filteredPropertiesNames[row + 1]
-    simUI.setEnabled(ui, ui_print, selectedProperty:sub(1, 1) ~= '#')
+    local canAssign = selectedProperty:sub(1, 1) ~= '#'
+    defaultAction = canAssign and assignValue or function() end
+    simUI.setEnabled(ui, ui_print, canAssign)
 end
 
 function onRowDoubleClicked(ui, id, row)
-    assignValue()
+    defaultAction()
 end
 
 function onKeyPress(ui, id, key, text)
