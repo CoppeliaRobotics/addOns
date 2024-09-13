@@ -203,7 +203,7 @@ function onTargetChanged()
         end
     end
     simUI.setComboboxItems(ui, ui_combo_selection, comboLabels, comboIdx)
-    simUI.setEnabled(ui, ui_print, false)
+    simUI.setEnabled(ui, ui_assign, false)
     selectedRow = -1
     tableRows = {pname = {}, ptype = {}, pvalue = {}}
     for i, pname in ipairs(filteredPropertiesNames) do
@@ -213,7 +213,7 @@ function onTargetChanged()
     simUI.setProperties(ui, ui_table, tableRows.pname, tableRows.ptype, tableRows.pvalue)
     if selectedRow ~= -1 then
         simUI.setPropertiesSelection(ui, ui_table, selectedRow - 1, false)
-        simUI.setEnabled(ui, ui_print, true)
+        simUI.setEnabled(ui, ui_assign, true)
     end
 end
 
@@ -221,7 +221,7 @@ function onRowSelected(ui, id, row)
     selectedProperty = filteredPropertiesNames[row + 1]
     local canAssign = selectedProperty:sub(1, 1) ~= '#'
     defaultAction = canAssign and assignValue or function() end
-    simUI.setEnabled(ui, ui_print, canAssign)
+    simUI.setEnabled(ui, ui_assign, canAssign)
 end
 
 function onRowDoubleClicked(ui, id, row)
@@ -306,7 +306,7 @@ function createUi()
         xml = xml .. '</group>'
         xml = xml .. '<properties id="${ui_table}" on-selection-change="onRowSelected" on-double-click="onRowDoubleClicked" on-key-press="onKeyPress">'
         xml = xml .. '</properties>'
-        xml = xml .. '<button id="${ui_print}" enabled="false" text="Assign value" on-click="assignValue" />'
+        xml = xml .. '<button id="${ui_assign}" enabled="false" text="Assign value" on-click="assignValue" />'
         xml = xml .. '</ui>'
         ui = simUI.create(xml)
     end
