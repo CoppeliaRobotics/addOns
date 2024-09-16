@@ -290,19 +290,23 @@ end
 
 function editValue()
     propertiesValues[selectedProperty] = sim.getProperty(target, selectedProperty)
-    editorHandle = sim.textEditorOpen(sim.convertPropertyValue(propertiesValues[selectedProperty], propertiesInfos[selectedProperty].type, sim.propertytype_string), '<editor title="' .. (propertiesInfos[selectedProperty].flags.writable and 'Edit' or 'View') .. ' &quot;' .. selectedProperty .. '&quot; value" editable="' .. _S.anyToString(propertiesInfos[selectedProperty].flags.writable) .. '" searchable="true" tab-width="4" toolbar="false" statusbar="false" resizable="true" modal="true" on-close="editValueFinished" closeable="true" position="-20 400" size="400 300" placement="relative" activate="true" line-numbers="false"></editor>')
+    initialEditorContent = sim.convertPropertyValue(propertiesValues[selectedProperty], propertiesInfos[selectedProperty].type, sim.propertytype_string)
+    editorHandle = sim.textEditorOpen(initialEditorContent, '<editor title="' .. (propertiesInfos[selectedProperty].flags.writable and 'Edit' or 'View') .. ' &quot;' .. selectedProperty .. '&quot; value" editable="' .. _S.anyToString(propertiesInfos[selectedProperty].flags.writable) .. '" searchable="true" tab-width="4" toolbar="false" statusbar="false" resizable="true" modal="true" on-close="editValueFinished" closeable="true" position="-20 400" size="400 300" placement="relative" activate="true" line-numbers="false"></editor>')
 end
 
 function editValueFinished()
     if editorHandle then
         local newValue, err = sim.textEditorGetInfo(editorHandle), nil
-        newValue, err = sim.convertPropertyValue(newValue, sim.propertytype_string, propertiesInfos[selectedProperty].type)
-        if err then
-            simUI.msgBox(simUI.msgbox_type.critical, simUI.msgbox_buttons.ok, 'Error', 'Failed to convert value: ' .. err)
-        elseif propertiesInfos[selectedProperty].flags.writable then
-            sim.setProperty(target, selectedProperty, newValue)
+        if newValue ~= initialEditorContent then
+            newValue, err = sim.convertPropertyValue(newValue, sim.propertytype_string, propertiesInfos[selectedProperty].type)
+            if err then
+                simUI.msgBox(simUI.msgbox_type.critical, simUI.msgbox_buttons.ok, 'Error', 'Failed to convert value: ' .. err)
+            elseif propertiesInfos[selectedProperty].flags.writable then
+                sim.setProperty(target, selectedProperty, newValue)
+            end
         end
         sim.textEditorClose(editorHandle)
+        initialEditorContent = nil
         editorHandle = nil
     end
 end
