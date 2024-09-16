@@ -12,7 +12,6 @@ function sysCall_init()
     selectedProperty = ''
     filterMatching = '*'
     filterInvert = false
-    defaultAction = function() end
 
     createUi()
 end
@@ -214,9 +213,9 @@ function onTargetChanged()
 end
 
 function updateButtonsForSelectedProperty()
-    local canAssign = false
-    local canEdit = false
-    local canRemove = false
+    canAssign = false
+    canEdit = false
+    canRemove = false
     if propertiesInfos[selectedProperty] and selectedProperty:sub(1, 1) ~= '#' then
         local f = propertiesInfos[selectedProperty].flags
         canAssign = f.readable
@@ -226,7 +225,6 @@ function updateButtonsForSelectedProperty()
     simUI.setEnabled(ui, ui_assign, canAssign)
     simUI.setWidgetVisibility(ui, ui_edit, canEdit)
     simUI.setWidgetVisibility(ui, ui_remove, canRemove)
-    defaultAction = canAssign and assignValue or function() end
 end
 
 function onRowSelected(ui, id, row)
@@ -235,7 +233,12 @@ function onRowSelected(ui, id, row)
 end
 
 function onRowDoubleClicked(ui, id, row)
-    defaultAction()
+    local m = simUI.getKeyboardModifiers()
+    if m.shift then
+        if canEdit then editValue() end
+    else
+        if canAssign then assignValue() end
+    end
 end
 
 function onKeyPress(ui, id, key, text)
