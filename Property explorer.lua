@@ -278,7 +278,11 @@ function assignValue()
     end
     sim.executeScriptString(string.format('value = sim.getProperty(%d, \'%s\')@lua', target, selectedProperty), sim.getScript(sim.scripttype_sandbox))
     print(string.format('> value = sim.getProperty(%s, \'%s\')', targetStr, selectedProperty))
-    print(pvalue)
+    if propertiesInfos[selectedProperty].flags.large then
+        print('-- (large data)')
+    else
+        print(pvalue)
+    end
 end
 
 function editValue()
