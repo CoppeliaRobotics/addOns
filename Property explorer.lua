@@ -286,9 +286,8 @@ function assignValue()
 end
 
 function editValue()
-    local pvalue = sim.getProperty(target, selectedProperty)
-    pvalue = sim.convertPropertyValue(pvalue, propertiesInfos[selectedProperty].type, sim.propertytype_string)
-    editorHandle = sim.textEditorOpen(pvalue, '<editor title="Edit &quot;' .. selectedProperty .. '&quot; value" editable="true" searchable="true" tab-width="4" toolbar="false" statusbar="false" resizable="true" modal="true" on-close="editValueFinished" closeable="true" position="-20 400" size="400 300" placement="relative" activate="true" line-numbers="false"></editor>')
+    propertiesValues[selectedProperty] = sim.getProperty(target, selectedProperty)
+    editorHandle = sim.textEditorOpen(sim.convertPropertyValue(propertiesValues[selectedProperty], propertiesInfos[selectedProperty].type, sim.propertytype_string), '<editor title="' .. (propertiesInfos[selectedProperty].flags.writable and 'Edit' or 'View') .. ' &quot;' .. selectedProperty .. '&quot; value" editable="' .. _S.anyToString(propertiesInfos[selectedProperty].flags.writable) .. '" searchable="true" tab-width="4" toolbar="false" statusbar="false" resizable="true" modal="true" on-close="editValueFinished" closeable="true" position="-20 400" size="400 300" placement="relative" activate="true" line-numbers="false"></editor>')
 end
 
 function editValueFinished()
@@ -297,7 +296,7 @@ function editValueFinished()
         newValue, err = sim.convertPropertyValue(newValue, sim.propertytype_string, propertiesInfos[selectedProperty].type)
         if err then
             simUI.msgBox(simUI.msgbox_type.critical, simUI.msgbox_buttons.ok, 'Error', 'Failed to convert value: ' .. err)
-        else
+        elseif propertiesInfos[selectedProperty].flags.writable then
             sim.setProperty(target, selectedProperty, newValue)
         end
         sim.textEditorClose(editorHandle)
