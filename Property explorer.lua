@@ -106,7 +106,7 @@ function propertyOrder(a, b)
 end
 
 function readTargetProperties()
-    propertiesValues, propertiesInfos = sim.getProperties(target)
+    propertiesValues, propertiesInfos = sim.getProperties(target, {skipLarge = true})
     propertiesNames = {}
     filteredPropertiesNames = {}
     local pat = getFilteringPattern()
@@ -151,7 +151,7 @@ function updateTableRow(i, updateSingle)
         -- normal row
         local f = propertiesInfos[pname].flags
         local ptype = propertiesInfos[pname].type
-        local pvalue = _S.anyToString(propertiesValues[pname])
+        local pvalue = f.large and '<big data>' or _S.anyToString(propertiesValues[pname])
         if not f.readable then pvalue = f.writable and '<write-only>' or '<not readable>' end
         ptype = sim.getPropertyTypeString(ptype)
         ptype = string.gsub(ptype, 'array$', '[]')
