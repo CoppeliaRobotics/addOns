@@ -289,9 +289,13 @@ end
 
 function editValueFinished()
     if editorHandle then
-        local newValue = sim.textEditorGetInfo(editorHandle)
-        newValue = sim.convertPropertyValue(newValue, sim.propertytype_string, propertiesInfos[selectedProperty].type)
-        sim.setProperty(target, selectedProperty, newValue)
+        local newValue, err = sim.textEditorGetInfo(editorHandle), nil
+        newValue, err = sim.convertPropertyValue(newValue, sim.propertytype_string, propertiesInfos[selectedProperty].type)
+        if err then
+            simUI.msgBox(simUI.msgbox_type.critical, simUI.msgbox_buttons.ok, 'Error', 'Failed to convert value: ' .. err)
+        else
+            sim.setProperty(target, selectedProperty, newValue)
+        end
         sim.textEditorClose(editorHandle)
         editorHandle = nil
     end
