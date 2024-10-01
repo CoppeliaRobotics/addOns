@@ -190,7 +190,7 @@ function onTargetChanged()
         table.insert(comboLabels, sim.getObjectAlias(superTarget, 1))
         table.insert(comboHandles, superTarget)
         if objectType == 'shape' or objectType == 'mesh' then
-            local meshes = sim.getIntVectorProperty(superTarget, 'meshes')
+            local meshes = sim.getIntArrayProperty(superTarget, 'meshes')
             for i, mesh in ipairs(meshes) do
                 table.insert(comboLabels, '    Mesh ' .. i)
                 table.insert(comboHandles, mesh)
