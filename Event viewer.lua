@@ -6,6 +6,9 @@ end
 
 function sysCall_init()
     cbor = require 'org.conman.cbor'
+    cbor.NULL_VALUE = setmetatable({}, {__tostring = function() return 'null' end})
+    cbor.SIMPLE[22] = function(pos) return cbor.NULL_VALUE, pos, 'null' end
+
     simUI = require 'simUI'
     ui = simUI.create [[<ui title="Event viewer" position="-400,100" size="640,220" placement="relative" closeable="true" resizable="true" on-close="onClose" content-margins="0,0,0,0">
         <text-browser id="1" type="plain" word-wrap="false" read-only="false" style="QTextBrowser { font-family: Courier New; }" />
