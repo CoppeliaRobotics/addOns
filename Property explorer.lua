@@ -232,9 +232,8 @@ function onRowSelected(ui, id, row)
     updateButtonsForSelectedProperty()
 end
 
-function onRowDoubleClicked(ui, id, row)
-    local m = simUI.getKeyboardModifiers()
-    if m.shift then
+function onRowDoubleClicked(ui, id, row, col)
+    if col == 2 then
         if canEdit then editValue() end
     else
         if canAssign then assignValue() end
