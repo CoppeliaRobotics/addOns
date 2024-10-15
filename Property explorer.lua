@@ -38,8 +38,8 @@ function sysCall_sensing()
 end
 
 function sysCall_selChange(inData)
-    if target == sim.handle_app or target == sim.handle_appstorage then
-        -- if app/appstorage selected, object selection won't switch target
+    if target == sim.handle_app then
+        -- if app selected, object selection won't switch target
         return
     else
         -- otherwise currently selected object or scene if empty selection
@@ -75,10 +75,6 @@ end
 
 function setTargetApp()
     target = sim.handle_app
-end
-
-function setTargetAppStorage()
-    target = sim.handle_appstorage
 end
 
 function setTargetSel()
@@ -174,9 +170,6 @@ function onTargetChanged()
     if target == sim.handle_app then
         table.insert(comboLabels, 'sim.handle_app')
         table.insert(comboHandles, sim.handle_app)
-    elseif target == sim.handle_appstorage then
-        table.insert(comboLabels, 'sim.handle_appstorage')
-        table.insert(comboHandles, sim.handle_appstorage)
     elseif target == sim.handle_scene then
         table.insert(comboLabels, 'sim.handle_scene')
         table.insert(comboHandles, sim.handle_scene)
@@ -273,8 +266,6 @@ function assignValue()
     local targetStr = 'SEL1'
     if target == sim.handle_app then
         targetStr = 'sim.handle_app'
-    elseif target == sim.handle_appstorage then
-        targetStr = 'sim.handle_appstorage'
     elseif target == sim.handle_scene then
         targetStr = 'sim.handle_scene'
     end
@@ -328,9 +319,8 @@ function createUi()
         xml = xml .. '<group flat="true" layout="hbox">'
         xml = xml .. '<label text="Target:" />'
         xml = xml .. '<group flat="true">'
-        xml = xml .. '<radiobutton text="App (session)" checked="' .. tostring(target == sim.handle_app) .. '" on-click="setTargetApp" />'
-        xml = xml .. '<radiobutton text="App (storage)" checked="' .. tostring(target == sim.handle_appstorage) .. '" on-click="setTargetAppStorage" />'
-        xml = xml .. '<radiobutton text="Selection (obj/scene)" checked="' .. tostring(target ~= sim.handle_app and target ~= sim.handle_appstorage) .. '" on-click="setTargetSel" />'
+        xml = xml .. '<radiobutton text="App" checked="' .. tostring(target == sim.handle_app) .. '" on-click="setTargetApp" />'
+        xml = xml .. '<radiobutton text="Selection (obj/scene)" checked="' .. tostring(target ~= sim.handle_app) .. '" on-click="setTargetSel" />'
         xml = xml .. '</group>'
         xml = xml .. '</group>'
         xml = xml .. '<group flat="true" layout="hbox">'
