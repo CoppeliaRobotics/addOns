@@ -101,7 +101,8 @@ function propertyOrder(a, b)
 end
 
 function readTargetProperties()
-    propertiesValues, propertiesInfos = sim.getProperties(target, {skipLarge = true})
+    propertiesValues = sim.getProperties(target, {skipLarge = true})
+    propertiesInfos = sim.getPropertiesInfos(target)
     propertiesNames = {}
     filteredPropertiesNames = {}
     local pat = getFilteringPattern()
