@@ -155,7 +155,7 @@ function generate()
     end
     appendLine("sim = require 'sim'")
     appendLine("simOMPL = require 'simOMPL'")
-    appendLine("robotConfigPath = require 'models.robotConfigPath'")
+    appendLine("robotConfigPath = require 'models.robotConfigPath-2'")
     appendLine("")
     appendLine("function sysCall_init()")
     appendLine("    model = sim.getObject '::'")
