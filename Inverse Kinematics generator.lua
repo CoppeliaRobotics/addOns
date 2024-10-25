@@ -314,6 +314,12 @@ function generate()
     sim.setObjectPose(ikScript, {0, 0, 0, 0, 0, 0, 1}, robotModel)
     sim.setObjectInt32Param(ikScript, sim.objintparam_visibility_layer, 0)
     sim.setObjectInt32Param(ikScript, sim.objintparam_manipulation_permissions, 0)
+    sim.setReferencedHandles(ikScript, {simBase}, 'ik.base')
+    sim.setReferencedHandles(ikScript, {simTip}, 'ik.tip')
+    sim.setReferencedHandles(ikScript, {simTarget}, 'ik.target')
+    if jointGroup then
+        sim.setReferencedHandles(ikScript, {jointGroup}, 'jointGroup')
+    end
 
     local scriptText = ''
     local function appendLine(...)
@@ -326,13 +332,11 @@ function generate()
     appendLine("function sysCall_init()")
     appendLine("    self = sim.getObject '.'")
     appendLine("")
-    appendLine("    simBase = sim.getObject '%s'", sim.getObjectAliasRelative(simBase, ikScript, 1))
-    appendLine("    simTip = sim.getObject '%s'", sim.getObjectAliasRelative(simTip, ikScript, 1))
-    appendLine("    simTarget = sim.getObject '%s'", sim.getObjectAliasRelative(simTarget, ikScript, 1))
+    appendLine("    simBase = sim.getReferencedHandle(self, 'ik.base')")
+    appendLine("    simTip = sim.getReferencedHandle(self, 'ik.tip')")
+    appendLine("    simTarget = sim.getReferencedHandle(self, 'ik.target')")
     if jointGroup then
-        appendLine(
-            "    jointGroup = sim.getObject '%s'", sim.getObjectAliasRelative(jointGroup, ikScript, 1)
-        )
+        appendLine("    jointGroup = sim.getReferencedHandle(self, 'jointGroup')")
         appendLine("    simJoints = sim.getReferencedHandles(jointGroup)")
     end
     appendLine("")

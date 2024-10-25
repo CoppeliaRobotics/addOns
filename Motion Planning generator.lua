@@ -147,19 +147,18 @@ function generate()
         sim.removeObjects {existingMotionPlanning}
     end
 
-    local jointGroupPath = sim.getObjectAliasRelative(jointGroup, robotModel, 1)
-
     local scriptText = ''
     local function appendLine(...)
         scriptText = scriptText .. string.format(...) .. '\n'
     end
     appendLine("sim = require 'sim'")
     appendLine("simOMPL = require 'simOMPL'")
-    appendLine("robotConfigPath = require 'models.robotConfigPath-2'")
+    appendLine("robotConfigPath = require 'models.robotConfigPath-3'")
     appendLine("")
     appendLine("function sysCall_init()")
+    appendLine("    self = sim.getObject '.'")
     appendLine("    model = sim.getObject '::'")
-    appendLine("    jointGroup = sim.getObject('%s', {proxy = model})", jointGroupPath)
+    appendLine("    jointGroup = sim.getReferencedHandle(self, 'jointGroup')")
     appendLine("    joints = sim.getReferencedHandles(jointGroup)")
     appendLine("")
     appendLine("    robotCollection = sim.createCollection()")
@@ -205,7 +204,7 @@ function generate()
     appendLine('%s', "    printf('solved: %s (%s)', solved, hasApproximateSolution() and 'approximate' or 'exact')")
     appendLine('%s', "    printf('path: %d states', #path)")
     appendLine("    if solved then")
-    appendLine("        robotConfigPath.create(path, model, '%s')", jointGroupPath)
+    appendLine("        robotConfigPath.create(path, model, jointGroup)")
     appendLine("    end")
     appendLine("end")
 
@@ -216,24 +215,27 @@ function generate()
     sim.setObjectPose(motionPlanningScript, {0, 0, 0, 0, 0, 0, 1}, robotModel)
     sim.setObjectInt32Param(motionPlanningScript, sim.objintparam_visibility_layer, 0)
     sim.setObjectInt32Param(motionPlanningScript, sim.objintparam_manipulation_permissions, 0)
+    sim.setReferencedHandles(motionPlanningScript, {jointGroup}, 'jointGroup')
 
-    local startStateScript = sim.createScript(sim.scripttype_customization, [[require 'models.robotConfig_customization-2'
+    local startStateScript = sim.createScript(sim.scripttype_customization, [[require 'models.robotConfig_customization-3'
 model = sim.getObject '::'
-jointGroupPath = ']] .. jointGroupPath .. "'")
+]])
     sim.setObjectAlias(startStateScript, 'StartState')
     sim.setObjectParent(startStateScript, motionPlanningScript, false)
     sim.setObjectPose(startStateScript, {0, 0, 0, 0, 0, 0, 1}, motionPlanningScript)
     sim.setObjectInt32Param(startStateScript, sim.objintparam_visibility_layer, 0)
     sim.setObjectInt32Param(startStateScript, sim.objintparam_manipulation_permissions, 0)
-    local goalStateScript = sim.createScript(sim.scripttype_customization, [[require 'models.robotConfig_customization-2'
+    sim.setReferencedHandles(startStateScript, {jointGroup}, 'jointGroup')
+    local goalStateScript = sim.createScript(sim.scripttype_customization, [[require 'models.robotConfig_customization-3'
 model = sim.getObject'::'
-jointGroupPath = ']] .. jointGroupPath .. [['
-color = {0, 1, 0}]])
+color = {0, 1, 0}
+]])
     sim.setObjectAlias(goalStateScript, 'GoalState')
     sim.setObjectParent(goalStateScript, motionPlanningScript, false)
     sim.setObjectPose(goalStateScript, {0, 0, 0, 0, 0, 0, 1}, motionPlanningScript)
     sim.setObjectInt32Param(goalStateScript, sim.objintparam_visibility_layer, 0)
     sim.setObjectInt32Param(goalStateScript, sim.objintparam_manipulation_permissions, 0)
+    sim.setReferencedHandles(goalStateScript, {jointGroup}, 'jointGroup')
 
     sim.announceSceneContentChange()
 
