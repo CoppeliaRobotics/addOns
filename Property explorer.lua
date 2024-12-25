@@ -203,30 +203,89 @@ function onTargetChanged()
     if selectedRow ~= -1 then
         simUI.setPropertiesSelection(ui, ui_table, selectedRow - 1, false)
     end
-    updateButtonsForSelectedProperty()
+    updateContextMenuForSelectedProperty()
 end
 
-function updateButtonsForSelectedProperty()
+function updateContextMenuForSelectedProperty()
     canAssign = false
     canEdit = false
     canRemove = false
+    contextMenuKeys, contextMenuTitles = {}, {}
+    local function addContextMenu(key, title)
+        table.insert(contextMenuKeys, key)
+        table.insert(contextMenuTitles, title)
+    end
     if propertiesInfos[selectedProperty] and selectedProperty:sub(1, 1) ~= '#' then
         local f = propertiesInfos[selectedProperty].flags
         canAssign = f.readable
         canEdit = f.readable and f.writable
         canRemove = f.removable
+        if canAssign then
+            addContextMenu('assign', 'Assign value to variable')
+        end
+        addContextMenu('copy', 'Copy name to clipboard')
+        if canAssign then
+            addContextMenu('copyValue', 'Copy value to clipboard')
+            addContextMenu('copyGetter', 'Copy get code to clipboard')
+            addContextMenu('copySetter', 'Copy set code to clipboard')
+        end
+        if canEdit then
+            addContextMenu('edit', 'Edit value')
+        end
+        if canRemove then
+            addContextMenu('--', '')
+            addContextMenu('remove', 'Remove property')
+        end
     end
-    simUI.setEnabled(ui, ui_assign, canAssign)
-    simUI.setWidgetVisibility(ui, ui_edit, canEdit)
-    simUI.setWidgetVisibility(ui, ui_remove, canRemove)
+    simUI.setPropertiesContextMenu(ui, ui_table, contextMenuKeys, contextMenuTitles)
+end
+
+function onPropertyContextMenuTriggered(ui, id, key)
+    _G['onContextMenu_' .. key]()
+end
+
+function onContextMenu_assign()
+    assignValue()
+end
+
+function onContextMenu_print()
+    print('not implemented yet')
+end
+
+function onContextMenu_copy()
+    simUI.setClipboardText(selectedProperty)
+end
+
+function onContextMenu_copyValue()
+    local pvalue = sim.getProperty(target, selectedProperty)
+    simUI.setClipboardText(pvalue)
+end
+
+function onContextMenu_copyGetter()
+    local code = 'sim.getProperty(\'' .. selectedProperty .. '\')'
+    simUI.setClipboardText(code)
+end
+
+function onContextMenu_copySetter()
+    local code = 'sim.setProperty(\'' .. selectedProperty .. '\', nil)'
+    simUI.setClipboardText(code)
+end
+
+function onContextMenu_edit()
+    editValue()
+end
+
+function onContextMenu_remove()
+    removeSelected()
 end
 
 function onRowSelected(ui, id, row)
     selectedProperty = filteredPropertiesNames[row + 1]
-    updateButtonsForSelectedProperty()
+    updateContextMenuForSelectedProperty()
 end
 
 function onRowDoubleClicked(ui, id, row, col)
+    local f = propertiesInfos[selectedProperty].flags
     if col == 2 then
         if canEdit then editValue() end
     else
@@ -334,13 +393,8 @@ function createUi()
         xml = xml .. '<edit id="${ui_filter}" value="' .. filterMatching .. '" on-change="updateFilter" />'
         xml = xml .. '<checkbox id="${ui_filter_invert}" text="Invert" checked="' .. tostring(filterInvert) .. '" on-change="updateFilter" />'
         xml = xml .. '</group>'
-        xml = xml .. '<properties id="${ui_table}" on-selection-change="onRowSelected" on-double-click="onRowDoubleClicked" on-key-press="onKeyPress">'
+        xml = xml .. '<properties id="${ui_table}" on-selection-change="onRowSelected" on-double-click="onRowDoubleClicked" on-key-press="onKeyPress" on-context-menu-triggered="onPropertyContextMenuTriggered">'
         xml = xml .. '</properties>'
-        xml = xml .. '<group flat="true" layout="hbox" content-margins="0,0,0,0">'
-        xml = xml .. '<button id="${ui_assign}" enabled="false" text="Assign" on-click="assignValue" />'
-        xml = xml .. '<button id="${ui_edit}" visible="false" text="Edit..." on-click="editValue" />'
-        xml = xml .. '<button id="${ui_remove}" visible="false" text="Remove" on-click="removeSelected" />'
-        xml = xml .. '</group>'
         xml = xml .. '</ui>'
         ui = simUI.create(xml)
     end
