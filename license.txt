@@ -7,7 +7,7 @@ under the same terms of the files in the parent directory otherwise.
 -----------------------------------------------------------------------
 Add-ons for CoppeliaSim
 
-Copyright (C) 2021-2024 Coppelia Robotics AG
+Copyright (C) 2021-2025 Coppelia Robotics AG
 
 BSD License 2.0
 
