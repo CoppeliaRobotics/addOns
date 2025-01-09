@@ -321,7 +321,11 @@ end
 function onRowDoubleClicked(ui, id, row, col)
     if selectedProperty == '.' then -- it is a group
         -- toggle collapse
-        uiCollapseProps[selectedPropertyPrefix] = not uiCollapseProps[selectedPropertyPrefix]
+        if uiCollapseProps[selectedPropertyPrefix] then
+            uiCollapseProps[selectedPropertyPrefix] = nil
+        else
+            uiCollapseProps[selectedPropertyPrefix] = true
+        end
         sim.setTableProperty(sim.handle_app, 'customData.propertyExplorer.uiCollapseProps', uiCollapseProps)
         onTargetChanged()
         return
