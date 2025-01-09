@@ -13,6 +13,9 @@ function sysCall_init()
     filterMatching = '*'
     filterInvert = false
 
+    uiPos = sim.getTableProperty(sim.handle_app, 'customData.propertyExplorer.uiPos', {noError=true})
+    uiSize = sim.getTableProperty(sim.handle_app, 'customData.propertyExplorer.uiSize', {noError=true})
+
     createUi()
 end
 
@@ -371,11 +374,14 @@ end
 
 function createUi()
     if not ui then
-        local pos = 'position="-30,160" placement="relative"'
+        local pos, sz = 'position="-30,160" placement="relative"', ''
         if uiPos then
-            pos = 'position="' .. uiPos[1] .. ',' .. uiPos[2] .. '" placement="absolute"'
+            pos = ' position="' .. uiPos[1] .. ',' .. uiPos[2] .. '" placement="absolute"'
         end
-        xml = '<ui title="Property Explorer" activate="false" closeable="true" on-close="onCloseClicked" resizable="true" ' .. pos .. '>'
+        if uiSize then
+            sz = ' size="' .. uiSize[1] .. ',' .. uiSize[2] .. '"'
+        end
+        xml = '<ui title="Property Explorer" activate="false" closeable="true" on-close="onCloseClicked" resizable="true"' .. pos .. sz .. '>'
         xml = xml .. '<group flat="true" layout="hbox">'
         xml = xml .. '<radiobutton text="App" checked="' .. tostring(target == sim.handle_app) .. '" on-click="setTargetApp" />'
         xml = xml .. '<radiobutton text="Sel:" checked="' .. tostring(target ~= sim.handle_app) .. '" on-click="setTargetSel" />'
@@ -396,8 +402,10 @@ end
 
 function destroyUi()
     if ui then
-        uiPos = {}
-        uiPos[1], uiPos[2] = simUI.getPosition(ui)
+        uiPos = {simUI.getPosition(ui)}
+        uiSize = {simUI.getSize(ui)}
+        sim.setTableProperty(sim.handle_app, 'customData.propertyExplorer.uiPos', uiPos)
+        sim.setTableProperty(sim.handle_app, 'customData.propertyExplorer.uiSize', uiSize)
         simUI.destroy(ui)
         ui = nil
     end
