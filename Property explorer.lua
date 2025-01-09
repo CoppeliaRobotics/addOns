@@ -16,6 +16,7 @@ function sysCall_init()
     uiPos = sim.getTableProperty(sim.handle_app, 'customData.propertyExplorer.uiPos', {noError=true})
     uiSize = sim.getTableProperty(sim.handle_app, 'customData.propertyExplorer.uiSize', {noError=true})
     uiPropsState = sim.getBufferProperty(sim.handle_app, 'customData.propertyExplorer.uiPropsState', {noError=true})
+    uiCollapseProps = sim.getTableProperty(sim.handle_app, 'customData.propertyExplorer.uiCollapseProps', {noError=true}) or {}
 
     createUi()
 end
@@ -144,7 +145,9 @@ function readTargetProperties()
             prefix = ''
         end
 
-        table.insert(filteredPropertiesNames, {prefix, pname})
+        if not uiCollapseProps[prefix] then
+            table.insert(filteredPropertiesNames, {prefix, pname})
+        end
     end
 
     -- optimization to avoid repopulation of whole table:
@@ -164,7 +167,7 @@ function updateTableRow(i, updateSingle)
         tableRows.pvalue[i] = ''
     elseif pname == '.' then
         -- prefix group header
-        tableRows.pname[i] = '    ' .. prefix .. ''
+        tableRows.pname[i] = ' ' .. (uiCollapseProps[prefix] and '+' or '-') .. ' ' .. prefix .. ''
         tableRows.ptype[i] = '{...}'
         tableRows.pvalue[i] = ''
     else
@@ -219,9 +222,11 @@ function onTargetChanged()
     simUI.setComboboxItems(ui, ui_combo_selection, comboLabels, comboIdx)
     selectedRow = -1
     tableRows = {pname = {}, ptype = {}, pvalue = {}}
-    for i, pnameAndPrefix in ipairs(filteredPropertiesNames) do
-        local prefix, pname = table.unpack(pnameAndPrefix)
-        if selectedProperty == pname then selectedRow = i end
+    for i, pprefixAndName in ipairs(filteredPropertiesNames) do
+        local prefix, pname = table.unpack(pprefixAndName)
+        if selectedProperty == pname and selectedPropertyPrefix == prefix then
+            selectedRow = i
+        end
         updateTableRow(i)
     end
     simUI.setProperties(ui, ui_table, tableRows.pname, tableRows.ptype, tableRows.pvalue)
@@ -305,11 +310,19 @@ function onContextMenu_remove()
 end
 
 function onRowSelected(ui, id, row)
-    selectedProperty = filteredPropertiesNames[row + 1][2]
+    selectedPropertyPrefix, selectedProperty = table.unpack(filteredPropertiesNames[row + 1])
     updateContextMenuForSelectedProperty()
 end
 
 function onRowDoubleClicked(ui, id, row, col)
+    if selectedProperty == '.' then -- it is a group
+        -- toggle collapse
+        uiCollapseProps[selectedPropertyPrefix] = not uiCollapseProps[selectedPropertyPrefix]
+        sim.setTableProperty(sim.handle_app, 'customData.propertyExplorer.uiCollapseProps', uiCollapseProps)
+        onTargetChanged()
+        return
+    end
+
     local f = propertiesInfos[selectedProperty].flags
     if col == 2 then
         if canEdit then editValue() end
