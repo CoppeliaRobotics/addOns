@@ -17,6 +17,9 @@ function sysCall_init()
     uiSize = sim.getTableProperty(sim.handle_app, 'customData.propertyExplorer.uiSize', {noError=true})
     uiPropsState = sim.getBufferProperty(sim.handle_app, 'customData.propertyExplorer.uiPropsState', {noError=true})
     uiCollapseProps = sim.getTableProperty(sim.handle_app, 'customData.propertyExplorer.uiCollapseProps', {noError=true}) or {}
+    uiTargetRadio = sim.getIntProperty(sim.handle_app, 'customData.propertyExplorer.uiTargetRadio', {noError=true}) or 1
+
+    if uiTargetRadio == 1 then target = sim.handle_app end
 
     createUi()
 end
@@ -195,6 +198,7 @@ function onTargetChanged()
     readTargetProperties()
     comboLabels, comboHandles = {}, {}
     local comboIdx = 0
+    sim.setIntProperty(sim.handle_app, 'customData.propertyExplorer.uiTargetRadio', target == sim.handle_app and 1 or 2)
     if target == sim.handle_app then
         table.insert(comboLabels, 'sim.handle_app')
         table.insert(comboHandles, sim.handle_app)
