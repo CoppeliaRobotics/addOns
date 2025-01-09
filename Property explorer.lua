@@ -155,7 +155,7 @@ function readTargetProperties()
 
     -- optimization to avoid repopulation of whole table:
     propertyNameToIndex = {}
-    for i, pname in ipairs(filteredPropertiesNames) do propertyNameToIndex[pname] = i end
+    for i, pn in ipairs(filteredPropertiesNames) do propertyNameToIndex[pn[2]] = i end
 end
 
 function updateTableRow(i, updateSingle)
