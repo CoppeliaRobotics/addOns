@@ -120,17 +120,31 @@ function readTargetProperties()
     table.sort(propertiesNames, propertyOrder)
     table.sort(filteredPropertiesNames, propertyOrder)
 
-    -- insert header at class break:
     local fpn = filteredPropertiesNames
     filteredPropertiesNames = {}
     local lastPClass = nil
+    local prefix = ''
     for _, pname in ipairs(fpn) do
+        -- insert header at class break:
         local pclass = propertiesInfos[pname].class
         if pclass ~= lastPClass then
-            table.insert(filteredPropertiesNames, '#' .. pclass)
+            table.insert(filteredPropertiesNames, {'', '#' .. pclass, ''})
             lastPClass = pclass
         end
-        table.insert(filteredPropertiesNames, pname)
+
+        -- check for prefix, add header & strip prefix from names:
+        local pnamea = string.split(pname, '%.')
+        if #pnamea > 1 then
+            local newPrefix = table.join(table.slice(pnamea, 1, #pnamea - 1), '.') .. '.'
+            if newPrefix ~= prefix then
+                table.insert(filteredPropertiesNames, {newPrefix, '.'})
+            end
+            prefix = newPrefix
+        else
+            prefix = ''
+        end
+
+        table.insert(filteredPropertiesNames, {prefix, pname})
     end
 
     -- optimization to avoid repopulation of whole table:
@@ -139,13 +153,19 @@ function readTargetProperties()
 end
 
 function updateTableRow(i, updateSingle)
-    local pname = filteredPropertiesNames[i]
-    assert(pname)
+    assert(filteredPropertiesNames[i])
+    local prefix = filteredPropertiesNames[i][1]
+    local pname = filteredPropertiesNames[i][2]
 
     if pname:sub(1, 1) == '#' then
         -- class group header
         tableRows.pname[i] = '[' .. pname:sub(2) .. ']'
         tableRows.ptype[i] = ''
+        tableRows.pvalue[i] = ''
+    elseif pname == '.' then
+        -- prefix group header
+        tableRows.pname[i] = '    ' .. prefix .. ''
+        tableRows.ptype[i] = '{...}'
         tableRows.pvalue[i] = ''
     else
         -- normal row
@@ -158,7 +178,7 @@ function updateTableRow(i, updateSingle)
         if #pvalue > 30 then
             pvalue = pvalue:sub(1, 30) .. '...'
         end
-        tableRows.pname[i] = '    ' .. pname
+        tableRows.pname[i] = '    ' .. (#prefix > 0 and '    ' or '') .. pname:sub(#prefix + 1)
         tableRows.ptype[i] = ptype
         tableRows.pvalue[i] = pvalue
     end
@@ -199,7 +219,8 @@ function onTargetChanged()
     simUI.setComboboxItems(ui, ui_combo_selection, comboLabels, comboIdx)
     selectedRow = -1
     tableRows = {pname = {}, ptype = {}, pvalue = {}}
-    for i, pname in ipairs(filteredPropertiesNames) do
+    for i, pnameAndPrefix in ipairs(filteredPropertiesNames) do
+        local prefix, pname = table.unpack(pnameAndPrefix)
         if selectedProperty == pname then selectedRow = i end
         updateTableRow(i)
     end
@@ -284,7 +305,7 @@ function onContextMenu_remove()
 end
 
 function onRowSelected(ui, id, row)
-    selectedProperty = filteredPropertiesNames[row + 1]
+    selectedProperty = filteredPropertiesNames[row + 1][2]
     updateContextMenuForSelectedProperty()
 end
 
