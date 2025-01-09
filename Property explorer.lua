@@ -270,6 +270,8 @@ function updateContextMenuForSelectedProperty()
             addContextMenu('--', '')
             addContextMenu('remove', 'Remove property')
         end
+    elseif selectedProperty == '.' then
+        addContextMenu('removeall', 'Remove all in this group')
     end
     simUI.setPropertiesContextMenu(ui, ui_table, contextMenuKeys, contextMenuTitles)
 end
@@ -311,6 +313,16 @@ end
 
 function onContextMenu_remove()
     removeSelected()
+end
+
+function onContextMenu_removeall()
+    if selectedProperty == '.' then
+        for pname, pvalue in pairs(sim.getProperties(target)) do
+            if string.startswith(pname, selectedPropertyPrefix) and propertiesInfos[pname].flags.removable then
+                sim.removeProperty(target, pname)
+            end
+        end
+    end
 end
 
 function onRowSelected(ui, id, row)
