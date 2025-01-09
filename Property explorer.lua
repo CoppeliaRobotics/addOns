@@ -15,6 +15,7 @@ function sysCall_init()
 
     uiPos = sim.getTableProperty(sim.handle_app, 'customData.propertyExplorer.uiPos', {noError=true})
     uiSize = sim.getTableProperty(sim.handle_app, 'customData.propertyExplorer.uiSize', {noError=true})
+    uiPropsState = sim.getBufferProperty(sim.handle_app, 'customData.propertyExplorer.uiPropsState', {noError=true})
 
     createUi()
 end
@@ -397,6 +398,9 @@ function createUi()
         xml = xml .. '</properties>'
         xml = xml .. '</ui>'
         ui = simUI.create(xml)
+        if uiPropsState then
+            simUI.setPropertiesState(ui, ui_table, uiPropsState)
+        end
     end
 end
 
@@ -404,8 +408,10 @@ function destroyUi()
     if ui then
         uiPos = {simUI.getPosition(ui)}
         uiSize = {simUI.getSize(ui)}
+        uiPropsState = simUI.getPropertiesState(ui, ui_table)
         sim.setTableProperty(sim.handle_app, 'customData.propertyExplorer.uiPos', uiPos)
         sim.setTableProperty(sim.handle_app, 'customData.propertyExplorer.uiSize', uiSize)
+        sim.setBufferProperty(sim.handle_app, 'customData.propertyExplorer.uiPropsState', uiPropsState)
         simUI.destroy(ui)
         ui = nil
     end
