@@ -1,7 +1,7 @@
 sim = require 'sim'
 
 function sysCall_info()
-    return {autoStart = sim.getNamedBoolParam('propertyExplorer.autoStart') ~= false, menu = 'Developer tools\nProperty explorer'}
+    return {autoStart = sim.getNamedBoolParam('propertyExplorer.autoStart') == true, menu = 'Developer tools\nProperty explorer'}
 end
 
 function sysCall_init()
