@@ -42,6 +42,7 @@ function sysCall_nonSimulation()
 end
 
 function sysCall_sensing()
+    if leaveNow then return {cmd = 'cleanup'} end
     checkTargetChanged()
 end
 
