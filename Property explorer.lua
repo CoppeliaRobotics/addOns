@@ -250,7 +250,7 @@ function updateContextMenuForSelectedProperty()
         table.insert(contextMenuKeys, key)
         table.insert(contextMenuTitles, title)
     end
-    if propertiesInfos[selectedProperty] and selectedProperty:sub(1, 1) ~= '#' then
+    if selectedProperty and propertiesInfos[selectedProperty] and selectedProperty:sub(1, 1) ~= '#' then
         local f = propertiesInfos[selectedProperty].flags
         canAssign = f.readable
         canEdit = f.readable and f.writable
@@ -330,7 +330,11 @@ function onContextMenu_removeall()
 end
 
 function onRowSelected(ui, id, row)
-    selectedPropertyPrefix, selectedProperty = table.unpack(filteredPropertiesNames[row + 1])
+    if row == -1 then
+        selectedPropertyPrefix, selectedProperty = nil, nil
+    else
+        selectedPropertyPrefix, selectedProperty = table.unpack(filteredPropertiesNames[row + 1])
+    end
     selectedRow = row
     updateContextMenuForSelectedProperty()
 end
@@ -367,8 +371,12 @@ function onKeyPress(ui, id, key, text)
     end
 end
 
-function onCloseClicked()
-    leaveNow = true
+function onClose()
+    if selectedRow >= 0 then
+        simUI.setPropertiesSelection(ui, ui_table, -1, false)
+    else
+        leaveNow = true
+    end
 end
 
 function setFilter(flt, inv)
@@ -443,7 +451,7 @@ function createUi()
         if uiSize then
             sz = ' size="' .. uiSize[1] .. ',' .. uiSize[2] .. '"'
         end
-        xml = '<ui title="Property Explorer" activate="false" closeable="true" on-close="onCloseClicked" resizable="true"' .. pos .. sz .. '>'
+        xml = '<ui title="Property Explorer" activate="false" closeable="true" on-close="onClose" resizable="true"' .. pos .. sz .. '>'
         xml = xml .. '<group flat="true" layout="hbox">'
         xml = xml .. '<radiobutton text="App" checked="' .. tostring(target == sim.handle_app) .. '" on-click="setTargetApp" />'
         xml = xml .. '<radiobutton text="Sel:" checked="' .. tostring(target ~= sim.handle_app) .. '" on-click="setTargetSel" />'
