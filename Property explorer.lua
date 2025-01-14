@@ -330,6 +330,7 @@ end
 
 function onRowSelected(ui, id, row)
     selectedPropertyPrefix, selectedProperty = table.unpack(filteredPropertiesNames[row + 1])
+    selectedRow = row
     updateContextMenuForSelectedProperty()
 end
 
