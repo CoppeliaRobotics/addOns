@@ -298,12 +298,15 @@ function onContextMenu_copyValue()
 end
 
 function onContextMenu_copyGetter()
-    local code = 'sim.getProperty(\'' .. selectedProperty .. '\')'
+    local alias = sim.getObjectAlias(target, 1)
+    local code = 'sim.getProperty(sim.getObject \'' .. alias .. '\', \'' .. selectedProperty .. '\')'
     simUI.setClipboardText(code)
 end
 
 function onContextMenu_copySetter()
-    local code = 'sim.setProperty(\'' .. selectedProperty .. '\', nil)'
+    local alias = sim.getObjectAlias(target, 1)
+    local pvalue = sim.getProperty(target, selectedProperty)
+    local code = 'sim.setProperty(sim.getObject \'' .. alias .. '\', \'' .. selectedProperty .. '\', ' .. _S.anyToString(pvalue) .. ')'
     simUI.setClipboardText(code)
 end
 
