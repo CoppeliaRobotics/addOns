@@ -60,16 +60,20 @@ function sysCall_event(events)
     for _, e in ipairs(cbor.decode(tostring(events))) do
         if e.handle == target and e.event == 'objectChanged' then
             local oldPropertiesNames = propertiesNames
-            readTargetProperties()
 
-            if not table.eq(oldPropertiesNames, propertiesNames) then
-                -- some property was added or removed
-                onTargetChanged()
-            else
-                for pname, pvalue in pairs(table.flatten(e.data)) do
-                    local i = propertyNameToIndex[pname]
-                    if i then updateTableRow(i, true) end
+            if pcall(readTargetProperties) then
+                if not table.eq(oldPropertiesNames, propertiesNames) then
+                    -- some property was added or removed
+                    onTargetChanged()
+                else
+                    for pname, pvalue in pairs(table.flatten(e.data)) do
+                        local i = propertyNameToIndex[pname]
+                        if i then updateTableRow(i, true) end
+                    end
                 end
+            elseif target ~= sim.handle_app then
+                -- readTargetProperties failed: maybe target was removed. switch to scene:
+                target = sim.handle_scene
             end
         end
     end
