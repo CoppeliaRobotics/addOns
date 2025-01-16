@@ -433,7 +433,11 @@ function editValueFinished()
             if err then
                 simUI.msgBox(simUI.msgbox_type.critical, simUI.msgbox_buttons.ok, 'Error', 'Failed to convert value: ' .. err)
             elseif propertiesInfos[selectedProperty].flags.writable then
-                sim.setProperty(target, selectedProperty, newValue)
+                if propertiesInfos[selectedProperty].type == sim.propertytype_color then
+                    sim.setColorProperty(target, selectedProperty, newValue)
+                else
+                    sim.setProperty(target, selectedProperty, newValue)
+                end
             end
         end
         sim.textEditorClose(editorHandle)
