@@ -376,6 +376,8 @@ function onKeyPress(ui, id, key, text)
         setFilter('*', false)
     elseif text == 'c' or text == 'C' then
         setFilter('customData.*', text == 'C')
+    elseif key == 4 then
+        if canEdit then editValue() end
     end
 end
 
