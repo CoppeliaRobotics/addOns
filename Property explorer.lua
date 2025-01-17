@@ -422,7 +422,9 @@ end
 function editValue()
     propertiesValues[selectedProperty] = sim.getProperty(target, selectedProperty)
     initialEditorContent = sim.convertPropertyValue(propertiesValues[selectedProperty], propertiesInfos[selectedProperty].type, sim.propertytype_string)
-    editorHandle = sim.textEditorOpen(initialEditorContent, '<editor title="' .. (propertiesInfos[selectedProperty].flags.writable and 'Edit' or 'View') .. ' &quot;' .. selectedProperty .. '&quot; value" editable="' .. _S.anyToString(propertiesInfos[selectedProperty].flags.writable) .. '" searchable="true" tab-width="4" toolbar="false" statusbar="false" resizable="true" modal="true" on-close="editValueFinished" closeable="true" position="-20 400" size="400 300" placement="relative" activate="true" line-numbers="false"></editor>')
+    local sz = 2 * math.max(10, #initialEditorContent)
+    local w, h = math.min(400, 14 * sz), math.min(300, sz)
+    editorHandle = sim.textEditorOpen(initialEditorContent, '<editor title="' .. (propertiesInfos[selectedProperty].flags.writable and 'Edit' or 'View') .. ' &quot;' .. selectedProperty .. '&quot; value" editable="' .. _S.anyToString(propertiesInfos[selectedProperty].flags.writable) .. '" searchable="true" tab-width="4" toolbar="false" statusbar="false" resizable="true" modal="true" on-close="editValueFinished" closeable="true" size="' .. w .. ' ' .. h .. '" placement="center" activate="true" line-numbers="false"></editor>')
 end
 
 function editValueFinished()
