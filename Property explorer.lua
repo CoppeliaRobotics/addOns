@@ -170,32 +170,43 @@ function updateTableRow(i, updateSingle)
 
     if pname:sub(1, 1) == '#' then
         -- class group header
-        tableRows.pname[i] = '[' .. pname:sub(2) .. ']'
+        tableRows.pname[i] = ''
         tableRows.ptype[i] = ''
         tableRows.pvalue[i] = ''
+        tableRows.pflags[i] = -1
+        tableRows.pdisplayk[i] = '[' .. pname:sub(2) .. ']'
+        tableRows.pdisplayv[i] = ''
     elseif pname == '.' then
         -- prefix group header
-        tableRows.pname[i] = ' ' .. (uiCollapseProps[prefix] and '+' or '-') .. ' ' .. prefix .. ''
+        tableRows.pname[i] = ''
         tableRows.ptype[i] = '{...}'
         tableRows.pvalue[i] = ''
+        tableRows.pflags[i] = -2
+        tableRows.pdisplayk[i] = ' ' .. (uiCollapseProps[prefix] and '+' or '-') .. ' ' .. prefix .. ''
+        tableRows.pdisplayv[i] = ''
     else
         -- normal row
-        local f = propertiesInfos[pname].flags
-        local ptype = propertiesInfos[pname].type
-        local pvalue = f.large and '<big data>' or _S.anyToString(propertiesValues[pname])
-        if not f.readable then pvalue = f.writable and '<write-only>' or '<not readable>' end
-        ptype = sim.getPropertyTypeString(ptype)
-        ptype = string.gsub(ptype, 'array$', '[]')
-        if #pvalue > 30 then
-            pvalue = pvalue:sub(1, 30) .. '...'
+        local flags = propertiesInfos[pname].flags
+        tableRows.pname[i] = pname
+        tableRows.ptype[i] = string.gsub(sim.getPropertyTypeString(propertiesInfos[pname].type), 'array$', '[]')
+        tableRows.pvalue[i] = sim.convertPropertyValue(propertiesValues[pname], propertiesInfos[pname].type, sim.propertytype_string)
+        if tableRows.pvalue[i] == nil then tableRows.pvalue[i] = '' end
+        tableRows.pflags[i] = flags.value
+        tableRows.pdisplayk[i] = '    ' .. (#prefix > 0 and '    ' or '') .. pname:sub(#prefix + 1)
+        if flags.large then
+            tableRows.pdisplayv[i] = '<big data>'
+        elseif not flags.readable then
+            tableRows.pdisplayv[i] = flags.writable and '<write-only>' or '<not readable>'
+        else
+            tableRows.pdisplayv[i] = _S.anyToString(propertiesValues[pname])
+            if #tableRows.pdisplayv[i] > 30 then
+                tableRows.pdisplayv[i] = tableRows.pdisplayv[i]:sub(1, 30) .. '...'
+            end
         end
-        tableRows.pname[i] = '    ' .. (#prefix > 0 and '    ' or '') .. pname:sub(#prefix + 1)
-        tableRows.ptype[i] = ptype
-        tableRows.pvalue[i] = pvalue
     end
 
     if updateSingle then
-        simUI.setPropertiesRow(ui, ui_table, i - 1, tableRows.pname[i], tableRows.ptype[i], tableRows.pvalue[i])
+        simUI.setPropertiesRow(ui, ui_table, i - 1, tableRows.pname[i], tableRows.ptype[i], tableRows.pvalue[i], tableRows.pflags[i], tableRows.pdisplayk[i], tableRows.pdisplayv[i])
     end
 end
 
@@ -230,7 +241,7 @@ function onTargetChanged()
     end
     simUI.setComboboxItems(ui, ui_combo_selection, comboLabels, comboIdx)
     selectedRow = -1
-    tableRows = {pname = {}, ptype = {}, pvalue = {}}
+    tableRows = {pname = {}, ptype = {}, pvalue = {}, pflags = {}, pdisplayk = {}, pdisplayv = {}}
     for i, pprefixAndName in ipairs(filteredPropertiesNames) do
         local prefix, pname = table.unpack(pprefixAndName)
         if selectedProperty == pname and selectedPropertyPrefix == prefix then
@@ -238,7 +249,7 @@ function onTargetChanged()
         end
         updateTableRow(i)
     end
-    simUI.setProperties(ui, ui_table, tableRows.pname, tableRows.ptype, tableRows.pvalue)
+    simUI.setProperties(ui, ui_table, tableRows.pname, tableRows.ptype, tableRows.pvalue, tableRows.pflags, tableRows.pdisplayk, tableRows.pdisplayv)
     if selectedRow ~= -1 then
         simUI.setPropertiesSelection(ui, ui_table, selectedRow - 1, false)
     end
@@ -268,9 +279,6 @@ function updateContextMenuForSelectedProperty()
             addContextMenu('copyGetter', 'Copy get code to clipboard')
             addContextMenu('copySetter', 'Copy set code to clipboard')
         end
-        if canEdit then
-            addContextMenu('edit', 'Edit value')
-        end
         if canRemove then
             addContextMenu('--', '')
             addContextMenu('remove', 'Remove property')
@@ -299,6 +307,7 @@ end
 
 function onContextMenu_copyValue()
     local pvalue = sim.getProperty(target, selectedProperty)
+    pvalue = sim.convertPropertyValue(pvalue, propertiesInfos[selectedProperty].type, sim.propertytype_string)
     simUI.setClipboardText(pvalue)
 end
 
@@ -317,10 +326,6 @@ function onContextMenu_copySetter()
     local valueStr = _S.anyToString(sim.getProperty(target, selectedProperty))
     local code = 'sim.setProperty(' .. targetStr .. ', \'' .. selectedProperty .. '\', ' .. valueStr .. ')'
     simUI.setClipboardText(code)
-end
-
-function onContextMenu_edit()
-    editValue()
 end
 
 function onContextMenu_remove()
@@ -360,24 +365,19 @@ function onRowDoubleClicked(ui, id, row, col)
         return
     end
 
-    local f = propertiesInfos[selectedProperty].flags
-    if col == 2 then
-        if canEdit then editValue() end
-    else
-        if canAssign then assignValue() end
-    end
+    if canAssign then assignValue() end
 end
 
-function onKeyPress(ui, id, key, text)
-    key = key & 0x00FFFFFF
-    if key == 3 or key == 7 then
-        removeSelected()
-    elseif text == '*' then
-        setFilter('*', false)
-    elseif text == 'c' or text == 'C' then
-        setFilter('customData.*', text == 'C')
-    elseif key == 4 then
-        if canEdit then editValue() end
+function onPropertyEdit(ui, id, key, value)
+    local newValue, err = sim.convertPropertyValue(value, sim.propertytype_string, propertiesInfos[key].type)
+    if err then
+        simUI.msgBox(simUI.msgbox_type.critical, simUI.msgbox_buttons.ok, 'Error', 'Failed to convert value: ' .. err)
+    elseif propertiesInfos[selectedProperty].flags.writable then
+        if propertiesInfos[selectedProperty].type == sim.propertytype_color then
+            sim.setColorProperty(target, selectedProperty, newValue)
+        else
+            sim.setProperty(target, selectedProperty, newValue)
+        end
     end
 end
 
@@ -421,35 +421,6 @@ function assignValue()
     end
 end
 
-function editValue()
-    propertiesValues[selectedProperty] = sim.getProperty(target, selectedProperty)
-    initialEditorContent = sim.convertPropertyValue(propertiesValues[selectedProperty], propertiesInfos[selectedProperty].type, sim.propertytype_string)
-    local sz = 2 * math.max(10, #initialEditorContent)
-    local w, h = math.min(400, 14 * sz), math.min(300, sz)
-    editorHandle = sim.textEditorOpen(initialEditorContent, '<editor title="' .. (propertiesInfos[selectedProperty].flags.writable and 'Edit' or 'View') .. ' &quot;' .. selectedProperty .. '&quot; value" editable="' .. _S.anyToString(propertiesInfos[selectedProperty].flags.writable) .. '" searchable="true" tab-width="4" toolbar="false" statusbar="false" resizable="true" modal="true" on-close="editValueFinished" closeable="true" size="' .. w .. ' ' .. h .. '" placement="center" activate="true" line-numbers="false"></editor>')
-end
-
-function editValueFinished()
-    if editorHandle then
-        local newValue, err = sim.textEditorGetInfo(editorHandle), nil
-        if newValue ~= initialEditorContent then
-            newValue, err = sim.convertPropertyValue(newValue, sim.propertytype_string, propertiesInfos[selectedProperty].type)
-            if err then
-                simUI.msgBox(simUI.msgbox_type.critical, simUI.msgbox_buttons.ok, 'Error', 'Failed to convert value: ' .. err)
-            elseif propertiesInfos[selectedProperty].flags.writable then
-                if propertiesInfos[selectedProperty].type == sim.propertytype_color then
-                    sim.setColorProperty(target, selectedProperty, newValue)
-                else
-                    sim.setProperty(target, selectedProperty, newValue)
-                end
-            end
-        end
-        sim.textEditorClose(editorHandle)
-        initialEditorContent = nil
-        editorHandle = nil
-    end
-end
-
 function removeSelected()
     if not selectedProperty then return end
     if not propertiesInfos[selectedProperty] then return end
@@ -479,7 +450,7 @@ function createUi()
         xml = xml .. '<edit id="${ui_filter}" value="' .. filterMatching .. '" on-change="updateFilter" />'
         xml = xml .. '<checkbox id="${ui_filter_invert}" text="Invert" checked="' .. tostring(filterInvert) .. '" on-change="updateFilter" />'
         xml = xml .. '</group>'
-        xml = xml .. '<properties id="${ui_table}" on-selection-change="onRowSelected" on-double-click="onRowDoubleClicked" on-key-press="onKeyPress" on-context-menu-triggered="onPropertyContextMenuTriggered">'
+        xml = xml .. '<properties id="${ui_table}" on-selection-change="onRowSelected" on-double-click="onRowDoubleClicked" on-property-edit="onPropertyEdit" on-context-menu-triggered="onPropertyContextMenuTriggered">'
         xml = xml .. '</properties>'
         xml = xml .. '</ui>'
         ui = simUI.create(xml)
