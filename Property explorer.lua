@@ -311,18 +311,26 @@ function onContextMenu_copyValue()
     simUI.setClipboardText(pvalue)
 end
 
+function gen_getObject(handle)
+    if sim.isHandle(target) then
+        return 'sim.getObject \'' .. sim.getObjectAlias(target, 1) .. '\''
+    elseif target == sim.handle_scene then
+        return 'sim.handle_scene'
+    elseif target == sim.handle_app then
+        return 'sim.handle_app'
+    else
+        return tostring(target)
+    end
+end
+
 function onContextMenu_copyGetter()
-    local alias = sim.getObjectAlias(target, 1)
-    local code = 'sim.getProperty(sim.getObject \'' .. alias .. '\', \'' .. selectedProperty .. '\')'
+    local targetStr = gen_getObject(target)
+    local code = 'sim.getProperty(' .. targetStr .. ', \'' .. selectedProperty .. '\')'
     simUI.setClipboardText(code)
 end
 
 function onContextMenu_copySetter()
-    local targetStr = tostring(target)
-    pcall(function()
-        local alias = sim.getObjectAlias(target, 1)
-        targetStr = 'sim.getObject \'' .. alias .. '\''
-    end)
+    local targetStr = gen_getObject(target)
     local valueStr = _S.anyToString(sim.getProperty(target, selectedProperty))
     local code = 'sim.setProperty(' .. targetStr .. ', \'' .. selectedProperty .. '\', ' .. valueStr .. ')'
     simUI.setClipboardText(code)
