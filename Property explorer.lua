@@ -279,6 +279,9 @@ function updateContextMenuForSelectedProperty()
             addContextMenu('copyGetter', 'Copy get code to clipboard')
             addContextMenu('copySetter', 'Copy set code to clipboard')
         end
+        if canEdit then
+            addContextMenu('editInCodeEditor', 'Edit in code editor...')
+        end
         if canRemove then
             addContextMenu('--', '')
             addContextMenu('remove', 'Remove property')
@@ -334,6 +337,36 @@ function onContextMenu_copySetter()
     local valueStr = _S.anyToString(sim.getProperty(target, selectedProperty))
     local code = 'sim.setProperty(' .. targetStr .. ', \'' .. selectedProperty .. '\', ' .. valueStr .. ')'
     simUI.setClipboardText(code)
+end
+
+function onContextMenu_editInCodeEditor()
+    propertiesValues[selectedProperty] = sim.getProperty(target, selectedProperty)
+    initialEditorContent = sim.convertPropertyValue(propertiesValues[selectedProperty], propertiesInfos[selectedProperty].type, sim.propertytype_string)
+    local sz = 2 * math.min(500, #initialEditorContent)
+    local w = math.max(200, math.min(800, 60 * math.log(sz) + 85.21))
+    local h = math.max(40, math.min(1200, 50 * math.pow(sz, 0.353)))
+    editorHandle = sim.textEditorOpen(initialEditorContent, '<editor title="' .. (propertiesInfos[selectedProperty].flags.writable and 'Edit' or 'View') .. ' &quot;' .. selectedProperty .. '&quot; value" editable="' .. _S.anyToString(propertiesInfos[selectedProperty].flags.writable) .. '" searchable="true" tab-width="4" toolbar="false" statusbar="false" resizable="true" modal="true" on-close="editValueFinished" closeable="true" size="' .. math.floor(w) .. ' ' .. math.floor(h) .. '" placement="center" activate="true" line-numbers="false"></editor>')
+end
+
+function editValueFinished()
+    if editorHandle then
+        local newValue, err = sim.textEditorGetInfo(editorHandle), nil
+        if newValue ~= initialEditorContent then
+            newValue, err = sim.convertPropertyValue(newValue, sim.propertytype_string, propertiesInfos[selectedProperty].type)
+            if err then
+                simUI.msgBox(simUI.msgbox_type.critical, simUI.msgbox_buttons.ok, 'Error', 'Failed to convert value: ' .. err)
+            elseif propertiesInfos[selectedProperty].flags.writable then
+                if propertiesInfos[selectedProperty].type == sim.propertytype_color then
+                    sim.setColorProperty(target, selectedProperty, newValue)
+                else
+                    sim.setProperty(target, selectedProperty, newValue)
+                end
+            end
+        end
+        sim.textEditorClose(editorHandle)
+        initialEditorContent = nil
+        editorHandle = nil
+    end
 end
 
 function onContextMenu_remove()
