@@ -270,14 +270,22 @@ function updateContextMenuForSelectedProperty()
         canAssign = f.readable
         canEdit = f.readable and f.writable
         canRemove = f.removable
-        if canAssign then
-            addContextMenu('assign', 'Assign value to variable')
+        if propertiesInfos[selectedProperty].label ~= '' then
+            addContextMenu('#', propertiesInfos[selectedProperty].label)
+            addContextMenu('--', '')
         end
+        addContextMenu('#', 'Name:')
         addContextMenu('copy', 'Copy name to clipboard')
+        if propertiesInfos[selectedProperty].descr ~= '' then
+            addContextMenu('printDescr', 'Print description to console')
+        end
+        addContextMenu('--', '')
+        addContextMenu('#', 'Value:')
         if canAssign then
             addContextMenu('copyValue', 'Copy value to clipboard')
             addContextMenu('copyGetter', 'Copy get code to clipboard')
             addContextMenu('copySetter', 'Copy set code to clipboard')
+            addContextMenu('assign', 'Assign value to variable')
         end
         if canEdit then
             addContextMenu('editInCodeEditor', 'Edit in code editor...')
@@ -294,6 +302,10 @@ end
 
 function onPropertyContextMenuTriggered(ui, id, key)
     _G['onContextMenu_' .. key]()
+end
+
+function onContextMenu_printDescr()
+    print(propertiesInfos[selectedProperty].descr)
 end
 
 function onContextMenu_assign()
