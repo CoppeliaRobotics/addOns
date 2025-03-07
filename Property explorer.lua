@@ -8,6 +8,12 @@ function sysCall_init()
     cbor = require 'org.conman.cbor'
     simUI = require 'simUI'
 
+    disableDuringSim = sim.getBoolProperty(sim.handle_app, 'customData.propertyExplorer.disableDuringSim', {noError = true})
+    if disableDuringSim == nil then
+        disableDuringSim = false
+        sim.setBoolProperty(sim.handle_app, 'customData.propertyExplorer.disableDuringSim', disableDuringSim)
+    end
+
     target = sim.handle_scene
     selectedProperty = ''
     filterMatching = '*'
