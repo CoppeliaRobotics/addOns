@@ -24,6 +24,23 @@ function sysCall_init()
     createUi()
 end
 
+function sysCall_beforeSimulation()
+    disableDuringSim = sim.getBoolProperty(sim.handle_app, 'customData.propertyExplorer.disableDuringSim', {noError = true}) == true
+    if disableDuringSim then
+        restoreAfterSimulation = {target = target}
+        destroyUi()
+    end
+end
+
+function sysCall_afterSimulation()
+    if restoreAfterSimulation then
+        target = restoreAfterSimulation.target
+        createUi()
+        onTargetChanged()
+        restoreAfterSimulation = nil
+    end
+end
+
 function sysCall_addOnScriptSuspend()
     return {cmd = 'cleanup'}
 end
@@ -57,6 +74,7 @@ function sysCall_selChange(inData)
 end
 
 function sysCall_event(events)
+    if not ui then return end
     for _, e in ipairs(cbor.decode(tostring(events))) do
         if e.handle == target and e.event == 'objectChanged' then
             local oldPropertiesNames = propertiesNames
