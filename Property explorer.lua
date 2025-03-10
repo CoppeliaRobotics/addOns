@@ -278,6 +278,7 @@ function onTargetChanged()
         simUI.setPropertiesSelection(ui, ui_table, selectedRow - 1, false)
     end
     updateContextMenuForSelectedProperty()
+    sim.setEventFilters{[target] = {}}
 end
 
 function updateContextMenuForSelectedProperty()
