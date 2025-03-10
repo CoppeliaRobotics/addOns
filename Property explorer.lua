@@ -82,62 +82,70 @@ end
 function sysCall_event(events)
     if not ui then return end
 
-    local changedRows = {}
-    local plistChanged = false
+    events = cbor.decode(events)
 
-    for _, e in ipairs(cbor.decode(tostring(events))) do
+    local b = false
+    for _, e in ipairs(events) do
         if e.handle == target and e.event == 'objectChanged' then
-            local oldPropertiesNames = propertiesNames
+            b = true
+        end
+    end
+    if not b then return end
 
-            if pcall(readTargetProperties) then
-                if not table.eq(oldPropertiesNames, propertiesNames) then
-                    -- some property was added or removed
-                    plistChanged = true
-                else
-                    for pname, pvalue in pairs(table.flatten(e.data)) do
-                        local i = propertyNameToIndex[pname]
-                        if i then
-                            updateTableRow(i)
-                            changedRows[i - 1] = {
-                                pname = tableRows.pname[i],
-                                ptype = tableRows.ptype[i],
-                                pvalue = tableRows.pvalue[i],
-                                pflag = tableRows.pflags[i],
-                                pdisplayk = tableRows.pdisplayk[i],
-                                pdisplayv = tableRows.pdisplayv[i],
-                            }
-                        end
-                    end
+    -- re-read target properties to detect added/removed properties:
+    local oldPropertiesNames = propertiesNames
+    if not pcall(readTargetProperties) then
+        -- readTargetProperties failed: maybe target was removed. switch to scene:
+        if target ~= sim.handle_app then
+            target = sim.handle_scene
+            onTargetChanged()
+        end
+        return
+    end
+    if not table.eq(oldPropertiesNames, propertiesNames) then
+        -- some property was added or removed
+        onTargetChanged()
+        return
+    end
+
+    local changedRows = {}
+    for _, e in ipairs(events) do
+        if e.handle == target and e.event == 'objectChanged' then
+            for pname, pvalue in pairs(e.data) do
+                local i = propertyNameToIndex[pname]
+                if i then
+                    updateTableRow(i)
+                    changedRows[i - 1] = {
+                        pname = tableRows.pname[i],
+                        ptype = tableRows.ptype[i],
+                        pvalue = tableRows.pvalue[i],
+                        pflag = tableRows.pflags[i],
+                        pdisplayk = tableRows.pdisplayk[i],
+                        pdisplayv = tableRows.pdisplayv[i],
+                    }
                 end
-            elseif target ~= sim.handle_app then
-                -- readTargetProperties failed: maybe target was removed. switch to scene:
-                target = sim.handle_scene
             end
         end
     end
 
-    if plistChanged then
-        onTargetChanged()
-    else
-        local changedIndexes = {}
-        local pnames = {}
-        local ptypes = {}
-        local pvalues = {}
-        local pflags = {}
-        local pdisplayk = {}
-        local pdisplayv = {}
-        for i, chg in pairs(changedRows) do
-            table.insert(changedIndexes, i)
-            table.insert(pnames, chg.pname)
-            table.insert(ptypes, chg.ptype)
-            table.insert(pvalues, chg.pvalue)
-            table.insert(pflags, chg.pflag)
-            table.insert(pdisplayk, chg.pdisplayk)
-            table.insert(pdisplayv, chg.pdisplayv)
-        end
-        if #changedIndexes > 0 then
-            simUI.setPropertiesRows(ui, ui_table, changedIndexes, pnames, ptypes, pvalues, pflags, pdisplayk, pdisplayv)
-        end
+    local changedIndexes = {}
+    local pnames = {}
+    local ptypes = {}
+    local pvalues = {}
+    local pflags = {}
+    local pdisplayk = {}
+    local pdisplayv = {}
+    for i, chg in pairs(changedRows) do
+        table.insert(changedIndexes, i)
+        table.insert(pnames, chg.pname)
+        table.insert(ptypes, chg.ptype)
+        table.insert(pvalues, chg.pvalue)
+        table.insert(pflags, chg.pflag)
+        table.insert(pdisplayk, chg.pdisplayk)
+        table.insert(pdisplayv, chg.pdisplayv)
+    end
+    if #changedIndexes > 0 then
+        simUI.setPropertiesRows(ui, ui_table, changedIndexes, pnames, ptypes, pvalues, pflags, pdisplayk, pdisplayv)
     end
 end
 
