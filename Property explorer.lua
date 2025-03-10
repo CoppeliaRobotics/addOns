@@ -81,6 +81,9 @@ end
 
 function sysCall_event(events)
     if not ui then return end
+
+    local changedRows = {}
+
     for _, e in ipairs(cbor.decode(tostring(events))) do
         if e.handle == target and e.event == 'objectChanged' then
             local oldPropertiesNames = propertiesNames
@@ -92,7 +95,17 @@ function sysCall_event(events)
                 else
                     for pname, pvalue in pairs(table.flatten(e.data)) do
                         local i = propertyNameToIndex[pname]
-                        if i then updateTableRow(i, true) end
+                        if i then
+                            updateTableRow(i)
+                            changedRows[i - 1] = {
+                                pname = tableRows.pname[i],
+                                ptype = tableRows.ptype[i],
+                                pvalue = tableRows.pvalue[i],
+                                pflag = tableRows.pflags[i],
+                                pdisplayk = tableRows.pdisplayk[i],
+                                pdisplayv = tableRows.pdisplayv[i],
+                            }
+                        end
                     end
                 end
             elseif target ~= sim.handle_app then
@@ -100,6 +113,26 @@ function sysCall_event(events)
                 target = sim.handle_scene
             end
         end
+    end
+
+    local changedIndexes = {}
+    local pnames = {}
+    local ptypes = {}
+    local pvalues = {}
+    local pflags = {}
+    local pdisplayk = {}
+    local pdisplayv = {}
+    for i, chg in pairs(changedRows) do
+        table.insert(changedIndexes, i)
+        table.insert(pnames, chg.pname)
+        table.insert(ptypes, chg.ptype)
+        table.insert(pvalues, chg.pvalue)
+        table.insert(pflags, chg.pflag)
+        table.insert(pdisplayk, chg.pdisplayk)
+        table.insert(pdisplayv, chg.pdisplayv)
+    end
+    if #changedIndexes > 0 then
+        simUI.setPropertiesRows(ui, ui_table, changedIndexes, pnames, ptypes, pvalues, pflags, pdisplayk, pdisplayv)
     end
 end
 
