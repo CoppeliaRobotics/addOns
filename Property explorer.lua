@@ -83,6 +83,7 @@ function sysCall_event(events)
     if not ui then return end
 
     local changedRows = {}
+    local plistChanged = false
 
     for _, e in ipairs(cbor.decode(tostring(events))) do
         if e.handle == target and e.event == 'objectChanged' then
@@ -91,7 +92,7 @@ function sysCall_event(events)
             if pcall(readTargetProperties) then
                 if not table.eq(oldPropertiesNames, propertiesNames) then
                     -- some property was added or removed
-                    onTargetChanged()
+                    plistChanged = true
                 else
                     for pname, pvalue in pairs(table.flatten(e.data)) do
                         local i = propertyNameToIndex[pname]
@@ -115,24 +116,28 @@ function sysCall_event(events)
         end
     end
 
-    local changedIndexes = {}
-    local pnames = {}
-    local ptypes = {}
-    local pvalues = {}
-    local pflags = {}
-    local pdisplayk = {}
-    local pdisplayv = {}
-    for i, chg in pairs(changedRows) do
-        table.insert(changedIndexes, i)
-        table.insert(pnames, chg.pname)
-        table.insert(ptypes, chg.ptype)
-        table.insert(pvalues, chg.pvalue)
-        table.insert(pflags, chg.pflag)
-        table.insert(pdisplayk, chg.pdisplayk)
-        table.insert(pdisplayv, chg.pdisplayv)
-    end
-    if #changedIndexes > 0 then
-        simUI.setPropertiesRows(ui, ui_table, changedIndexes, pnames, ptypes, pvalues, pflags, pdisplayk, pdisplayv)
+    if plistChanged then
+        onTargetChanged()
+    else
+        local changedIndexes = {}
+        local pnames = {}
+        local ptypes = {}
+        local pvalues = {}
+        local pflags = {}
+        local pdisplayk = {}
+        local pdisplayv = {}
+        for i, chg in pairs(changedRows) do
+            table.insert(changedIndexes, i)
+            table.insert(pnames, chg.pname)
+            table.insert(ptypes, chg.ptype)
+            table.insert(pvalues, chg.pvalue)
+            table.insert(pflags, chg.pflag)
+            table.insert(pdisplayk, chg.pdisplayk)
+            table.insert(pdisplayv, chg.pdisplayv)
+        end
+        if #changedIndexes > 0 then
+            simUI.setPropertiesRows(ui, ui_table, changedIndexes, pnames, ptypes, pvalues, pflags, pdisplayk, pdisplayv)
+        end
     end
 end
 
