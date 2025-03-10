@@ -265,7 +265,6 @@ function updateTableRow(i, updateSingle)
     else
         -- normal row
         local ptype, pflags, descr = sim.getPropertyInfo(target, pname)
-        propertiesValues[pname] = sim.getProperty(target, pname)
         propertiesInfos[pname] = {
             type = ptype,
             flags = {
@@ -279,6 +278,11 @@ function updateTableRow(i, updateSingle)
             descr = descr,
         }
         local flags = propertiesInfos[pname].flags
+        if flags.readable then
+            if not flags.large then
+                propertiesValues[pname] = sim.getProperty(target, pname)
+            end
+        end
         tableRows.pname[i] = pname
         tableRows.ptype[i] = string.gsub(sim.getPropertyTypeString(propertiesInfos[pname].type), 'array$', '[]')
         tableRows.pvalue[i] = sim.convertPropertyValue(propertiesValues[pname], propertiesInfos[pname].type, sim.propertytype_string)
