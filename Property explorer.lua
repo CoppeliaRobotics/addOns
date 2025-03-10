@@ -6,6 +6,9 @@ end
 
 function sysCall_init()
     cbor = require 'org.conman.cbor'
+    cbor.NULL_VALUE = setmetatable({}, {__tostring = function() return 'null' end})
+    cbor.SIMPLE[22] = function(pos) return cbor.NULL_VALUE, pos, 'null' end
+
     simUI = require 'simUI'
 
     disableDuringSim = sim.getBoolProperty(sim.handle_app, 'customData.propertyExplorer.disableDuringSim', {noError = true})
@@ -82,27 +85,32 @@ end
 function sysCall_event(events)
     if not ui then return end
 
-    events = cbor.decode(events)
-
-    local b = false
-    for _, e in ipairs(events) do
-        if e.handle == target and e.event == 'objectChanged' then
-            b = true
-        end
-    end
-    if not b then return end
-
-    -- re-read target properties to detect added/removed properties:
-    local oldPropertiesNames = propertiesNames
-    if not pcall(readTargetProperties) then
-        -- readTargetProperties failed: maybe target was removed. switch to scene:
+    if not sim.isHandle(target) then
+        -- target was removed. switch to scene:
         if target ~= sim.handle_app then
             target = sim.handle_scene
             onTargetChanged()
         end
         return
     end
-    if not table.eq(oldPropertiesNames, propertiesNames) then
+
+    events = cbor.decode(events)
+
+    local b, plistChanged = false, false
+    for _, e in ipairs(events) do
+        if e.handle == target and e.event == 'objectChanged' then
+            b = true
+            for k, v in pairs(e.data) do
+                if propertiesInfos[k] == nil and v ~= cbor.NULL_VALUE then
+                    plistChanged = true
+                elseif propertiesInfos[k] ~= nil and v == cbor.NULL_VALUE then
+                    plistChanged = true
+                end
+            end
+        end
+    end
+    if not b then return end
+    if plistChanged then
         -- some property was added or removed
         onTargetChanged()
         return
@@ -256,6 +264,20 @@ function updateTableRow(i, updateSingle)
         tableRows.pdisplayv[i] = ''
     else
         -- normal row
+        local ptype, pflags, descr = sim.getPropertyInfo(target, pname)
+        propertiesValues[pname] = sim.getProperty(target, pname)
+        propertiesInfos[pname] = {
+            type = ptype,
+            flags = {
+                value = pflags,
+                readable = pflags & 2 == 0,
+                writable = pflags & 1 == 0,
+                removable = pflags & 4 > 0,
+                large = pflags & 256 > 0,
+            },
+            label = ({sim.getPropertyInfo(target, pname, {shortInfoTxt=true})})[3],
+            descr = descr,
+        }
         local flags = propertiesInfos[pname].flags
         tableRows.pname[i] = pname
         tableRows.ptype[i] = string.gsub(sim.getPropertyTypeString(propertiesInfos[pname].type), 'array$', '[]')
