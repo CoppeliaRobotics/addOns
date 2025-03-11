@@ -62,6 +62,11 @@ function sysCall_afterInstanceSwitch()
     sysCall_selChange {sel = sim.getObjectSel()}
 end
 
+function sysCall_suspended()
+    if leaveNow then return {cmd = 'cleanup'} end
+    checkTargetChanged()
+end
+
 function sysCall_nonSimulation()
     if leaveNow then return {cmd = 'cleanup'} end
     checkTargetChanged()
