@@ -89,6 +89,7 @@ end
 
 function sysCall_event(events)
     if not ui then return end
+    if target == nil or propertiesInfos == nil then return end
 
     if not sim.isHandle(target) then
         -- target was removed. switch to scene:
