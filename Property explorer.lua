@@ -1,7 +1,7 @@
 sim = require 'sim'
 
 function sysCall_info()
-    return {autoStart = sim.getNamedBoolParam('propertyExplorer.autoStart') == true, menu = 'Developer tools\nProperty explorer'}
+    return {menu = 'Developer tools\nProperty explorer'}
 end
 
 function sysCall_init()
@@ -628,3 +628,5 @@ function destroyUi()
         ui = nil
     end
 end
+
+require('addOns.autoStart').setup{ns = 'propertyExplorer'}

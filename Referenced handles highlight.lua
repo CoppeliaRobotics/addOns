@@ -2,7 +2,6 @@ sim = require 'sim'
 
 function sysCall_info()
     return {
-        autoStart = sim.getNamedBoolParam('referencedHandlesHighlight.autoStart') ~= false,
         menu = 'Misc\nReferences handles highlight',
     }
 end
@@ -76,3 +75,5 @@ end
 function sysCall_afterInstanceSwitch()
     update()
 end
+
+require('addOns.autoStart').setup{ns = 'referencedHandlesHighlight'}
