@@ -3,7 +3,7 @@ extModel = require 'addOns.extModel'
 
 function sysCall_info()
     return {
-        autoStart = sim.getBoolProperty(sim.handle_app, 'customData.extModel.autoStart', {noError = true}) ~= false,
+        autoStart = sim.getBoolProperty(sim.handle_app, 'customData.extModel.autoStart', {noError = true}) == true,
         menu = 'Developer tools\nExternal model auto reload and save',
     }
 end
