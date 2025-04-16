@@ -3,16 +3,18 @@ extModel = require 'addOns.extModel'
 
 function sysCall_info()
     return {
-        autoStart = sim.getNamedBoolParam('externalModelService.autoStart') ~= false,
+        autoStart = sim.getBoolProperty(sim.handle_app, 'customData.extModel.autoStart', {noError = true}) ~= false,
         menu = 'Developer tools\nExternal model auto reload and save',
     }
 end
 
 function sysCall_addOnScriptSuspend()
+    sim.setBoolProperty(sim.handle_app, 'customData.extModel.autoStart', false)
     return {cmd = 'cleanup'}
 end
 
 function sysCall_init()
+    sim.setBoolProperty(sim.handle_app, 'customData.extModel.autoStart', true)
 end
 
 function sysCall_afterLoad()
