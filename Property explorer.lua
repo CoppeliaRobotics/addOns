@@ -91,7 +91,7 @@ function sysCall_event(events)
     if not ui then return end
     if target == nil or propertiesInfos == nil then return end
 
-    if not sim.isHandle(target) then
+    if target ~= sim.handle_app and target ~= sim.handle_scene and not sim.isHandle(target) then
         -- target was removed. switch to scene:
         if target ~= sim.handle_app then
             target = sim.handle_scene
