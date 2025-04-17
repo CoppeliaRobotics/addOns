@@ -541,6 +541,7 @@ function onClose()
     if selectedRow >= 0 then
         simUI.setPropertiesSelection(ui, ui_table, -1, false)
     else
+        sim.setBoolProperty(sim.handle_app, 'customData.propertyExplorer.autoStart', false)
         leaveNow = true
     end
 end
