@@ -76,4 +76,4 @@ function sysCall_afterInstanceSwitch()
     update()
 end
 
-require('addOns.autoStart').setup{ns = 'referencedHandlesHighlight'}
+require('addOns.autoStart').setup{ns = 'referencedHandlesHighlight', default = true}
