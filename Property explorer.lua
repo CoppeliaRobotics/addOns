@@ -60,6 +60,11 @@ end
 
 function sysCall_afterInstanceSwitch()
     sysCall_selChange {sel = sim.getObjectSel()}
+
+    -- force a target change event, otherwise switching scene where the same
+    -- handle is selected won't trigger a target change:
+    onTargetChanged()
+    oldTarget = target
 end
 
 function sysCall_suspended()
