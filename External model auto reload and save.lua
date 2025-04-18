@@ -18,6 +18,11 @@ function sysCall_afterLoad()
     extModel.scanForExtModelsToReload()
 end
 
+function sysCall_beforeInstanceSwitch()
+    extModel.changedModelsBannerDestroy()
+    extModel.changedModelsDialogDestroy()
+end
+
 function sysCall_afterInstanceSwitch()
     extModel.scanForExtModelsToReload()
 end
