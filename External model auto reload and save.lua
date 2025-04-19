@@ -12,6 +12,7 @@ function sysCall_addOnScriptSuspend()
 end
 
 function sysCall_init()
+    scanInterval = 5.
 end
 
 function sysCall_afterLoad()
@@ -30,6 +31,14 @@ end
 function sysCall_beforeSave(inData)
     if inData.regularSave then
         extModel.scanForExtModelsToSave()
+    end
+end
+
+function sysCall_nonSimulation()
+    local t = sim.getSystemTime()
+    if (lastScanTime or 0) + scanInterval < t then
+        lastScanTime = t
+        extModel.scanForExtModelsToReload()
     end
 end
 
