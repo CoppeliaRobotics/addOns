@@ -15,7 +15,7 @@ function sysCall_init()
             end
         end
     else
-        selExtModels = filter(extModel.hasExternalModel, sel)
+        selExtModels = filter(extModel.getModelInfo, sel)
         if #selExtModels ~= #sel then
             if #sel == 1 then
                 sim.addLog(sim.verbosity_errors, 'Object does not reference an external model')
@@ -30,7 +30,7 @@ function sysCall_init()
         end
 
         for _, modelHandle in ipairs(selExtModels) do
-            extModel.loadModel(modelHandle, nil, true)
+            extModel.reloadModelInteractive(modelHandle)
         end
     end
     return {cmd = 'cleanup'}

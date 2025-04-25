@@ -30,30 +30,7 @@ function sysCall_init()
         return {cmd = 'cleanup'}
     end
 
-    if extModel.hasExternalModel(sel[1]) then
-        extModel.saveModel(sel[1])
-        return {cmd = 'cleanup'}
-    end
-
-    if extModel.prompt('Object %s does not reference an external model.\n\nDo you want to choose one?', sim.getObjectAlias(sel[1], 2)) then
-        local simUI = require 'simUI'
-        local lfsx = require 'lfsx'
-        local initPath = lfsx.dirname(sim.getStringProperty(sim.handle_scene, 'scenePath'))
-        files = simUI.fileDialog(simUI.filedialog_type.save, 'Save model...', initPath, '', 'Model files', 'ttm;simmodel.xml')
-        if #files > 1 then
-            sim.addLog(sim.verbosity_errors, 'Please choose exactly one file')
-        elseif #files == 1 then
-            local f = io.open(files[1], 'r')
-            local exists = false
-            if f then
-                f:close()
-                exists = true
-            end
-            if not exists or extModel.prompt('File %s already exists.\n\nDo you want to overwrite it?', files[1]) then
-                extModel.saveModel(sel[1], files[1])
-            end
-        end
-    end
+    extModel.saveModelInteractive(sel[1])
 
     return {cmd = 'cleanup'}
 end
