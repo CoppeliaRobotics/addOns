@@ -19,15 +19,18 @@ function sysCall_init()
         if #selExtModels ~= #sel then
             if #sel == 1 then
                 sim.addLog(sim.verbosity_errors, 'Object does not reference an external model')
+                return {cmd = 'cleanup'}
             elseif #selExtModels == 0 then
                 sim.addLog(sim.verbosity_errors, 'Objects do not reference any external model')
+                return {cmd = 'cleanup'}
             elseif #selExtModels < #sel then
                 sim.addLog(sim.verbosity_errors, 'Not all selected objects reference an external model')
-            else
-                for _, modelHandle in ipairs(selExtModels) do
-                    extModel.loadModel(modelHandle)
-                end
+                return {cmd = 'cleanup'}
             end
+        end
+
+        for _, modelHandle in ipairs(selExtModels) do
+            extModel.loadModel(modelHandle, nil, true)
         end
     end
     return {cmd = 'cleanup'}
