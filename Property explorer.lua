@@ -221,7 +221,7 @@ function readTargetProperties()
     local fpn = filteredPropertiesNames
     filteredPropertiesNames = {}
     local lastPClass = nil
-    local prefix = ''
+    local prefix, prefixa = '', {}
     for _, pname in ipairs(fpn) do
         -- insert header at class break:
         local pclass = propertiesInfos[pname].class
@@ -233,13 +233,17 @@ function readTargetProperties()
         -- check for prefix, add header & strip prefix from names:
         local pnamea = string.split(pname, '%.')
         if #pnamea > 1 then
-            local newPrefix = table.join(table.slice(pnamea, 1, #pnamea - 1), '.') .. '.'
+            local newPrefixa = table.slice(pnamea, 1, #pnamea - 1)
+            local newPrefix = table.join(newPrefixa, '.') .. '.'
             if newPrefix ~= prefix and string.startswith(newPrefix, prefix) then
-                table.insert(filteredPropertiesNames, {newPrefix, '.'})
+                for i = #prefixa + 1, #newPrefixa do
+                    local p = prefix .. table.join(table.slice(newPrefixa, #prefixa + 1, i), '.') .. '.'
+                    table.insert(filteredPropertiesNames, {p, '.'})
+                end
             end
-            prefix = newPrefix
+            prefix, prefixa = newPrefix, newPrefixa
         else
-            prefix = ''
+            prefix, prefixa = '', {}
         end
 
         if not uiCollapseProps[prefix] then
