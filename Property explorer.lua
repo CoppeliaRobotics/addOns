@@ -234,7 +234,7 @@ function readTargetProperties()
         local pnamea = string.split(pname, '%.')
         if #pnamea > 1 then
             local newPrefix = table.join(table.slice(pnamea, 1, #pnamea - 1), '.') .. '.'
-            if newPrefix ~= prefix then
+            if newPrefix ~= prefix and string.startswith(newPrefix, prefix) then
                 table.insert(filteredPropertiesNames, {newPrefix, '.'})
             end
             prefix = newPrefix
@@ -271,7 +271,9 @@ function updateTableRow(i, updateSingle)
         tableRows.ptype[i] = '{...}'
         tableRows.pvalue[i] = ''
         tableRows.pflags[i] = -2
-        tableRows.pdisplayk[i] = ' ' .. (uiCollapseProps[prefix] and '+' or '-') .. ' ' .. prefix .. ''
+        local prefixa = string.split(prefix, '%.')
+        local indent = string.rep('    ', #prefixa - 2)
+        tableRows.pdisplayk[i] = indent .. ' ' .. (uiCollapseProps[prefix] and '+' or '-') .. ' ' .. prefixa[#prefixa - 1] .. ''
         tableRows.pdisplayv[i] = ''
     else
         -- normal row
@@ -299,7 +301,12 @@ function updateTableRow(i, updateSingle)
         tableRows.pvalue[i] = sim.convertPropertyValue(propertiesValues[pname], propertiesInfos[pname].type, sim.propertytype_string)
         if tableRows.pvalue[i] == nil then tableRows.pvalue[i] = '' end
         tableRows.pflags[i] = flags.value
-        tableRows.pdisplayk[i] = '    ' .. (#prefix > 0 and '    ' or '') .. pname:sub(#prefix + 1)
+        if #prefix > 0 then
+            local indent = string.rep('    ', #string.split(prefix, '%.') - 1)
+            tableRows.pdisplayk[i] = '    ' .. indent .. pname:sub(#prefix + 1)
+        else
+            tableRows.pdisplayk[i] = '    ' .. pname
+        end
         if flags.large then
             tableRows.pdisplayv[i] = '<big data>'
         elseif not flags.readable then
