@@ -202,84 +202,103 @@ function propertyOrder(a, b)
     return ca < cb or (ca == cb and a < b)
 end
 
+function generateTree(pnames)
+    -- 1) insert nodes
+    -- 2) generate propertyNameToIndex table
+
+    tableRows = {type = {}, pname = {}, ptype = {}, pvalue = {}, pflags = {}, pdisplayk = {}, pdisplayv = {}}
+
+    propertyNameToIndex = {} -- index for single row update
+
+    local function isCollapsed(pa)
+        for i = 1, #pa do
+            local p = table.join(table.slice(pa, 1, i), '.')
+            if uiCollapseProps[p .. '.'] then return true end
+        end
+    end
+
+    local function indent(i)
+        return string.rep('    ', i)
+    end
+
+    local lastPClass = nil
+    local prefix, prefixa = '', {}
+    local newPrefix, newPrefixa
+    for _, pname in ipairs(matchingPropertiesNames) do
+        local pnamea = string.split(pname, '%.')
+
+        -- insert header at class break:
+        local pclass = propertiesInfos[pname].class
+        if pclass ~= lastPClass then
+            table.insert(tableRows.type, 'classHeader')
+            table.insert(tableRows.pname, pclass)
+            table.insert(tableRows.pdisplayk, '[' .. pname .. ']')
+            lastPClass = pclass
+            propertyNameToIndex[pclass] = #tableRows.pname
+        end
+
+        -- check for prefix, add header & strip prefix from names:
+        newPrefixa = table.slice(pnamea, 1, #pnamea - 1)
+        newPrefix = table.join(newPrefixa, '.') .. '.'
+        if newPrefix ~= prefix then
+            local m = 0
+            while prefixa[m+1] == newPrefixa[m+1] and (prefixa[m+1] or newPrefixa[m+1]) do m = m + 1 end
+            for i = m + 1, #newPrefixa do
+                local px = table.join(table.slice(newPrefixa, 1, i), '.') .. '.'
+                if i <= 1 or not isCollapsed(table.slice(newPrefixa, 1, i - 1)) then
+                    table.insert(tableRows.type, 'treeNode')
+                    table.insert(tableRows.pname, px)
+                    local pm = ' ' .. (uiCollapseProps[px] and '+' or '-') .. ' '
+                    table.insert(tableRows.pdisplayk, indent(i - 1) .. pm .. newPrefixa[i])
+                    propertyNameToIndex[px] = #tableRows.pname
+                end
+            end
+        end
+        prefix, prefixa = newPrefix, newPrefixa
+
+        if not isCollapsed(prefixa) then
+            table.insert(tableRows.type, 'property')
+            table.insert(tableRows.pname, pname)
+            table.insert(tableRows.pdisplayk, indent(#pnamea - 1) .. '    ' .. pnamea[#pnamea])
+            propertyNameToIndex[pname] = #tableRows.pname
+        end
+    end
+end
+
 function readTargetProperties()
     propertiesValues = sim.getProperties(target, {skipLarge = true})
     propertiesInfos = sim.getPropertiesInfos(target)
     propertiesNames = {}
-    filteredPropertiesNames = {}
+    matchingPropertiesNames = {}
     local pat = getFilteringPattern()
     for pname, _ in pairs(propertiesInfos) do
         table.insert(propertiesNames, pname)
         local m = string.find(pname, pat)
         if (m and not filterInvert) or (not m and filterInvert) then
-            table.insert(filteredPropertiesNames, pname)
+            table.insert(matchingPropertiesNames, pname)
         end
     end
     table.sort(propertiesNames, propertyOrder)
-    table.sort(filteredPropertiesNames, propertyOrder)
-
-    local fpn = filteredPropertiesNames
-    filteredPropertiesNames = {}
-    local lastPClass = nil
-    local prefix, prefixa = '', {}
-    for _, pname in ipairs(fpn) do
-        -- insert header at class break:
-        local pclass = propertiesInfos[pname].class
-        if pclass ~= lastPClass then
-            table.insert(filteredPropertiesNames, {'', '#' .. pclass, ''})
-            lastPClass = pclass
-        end
-
-        -- check for prefix, add header & strip prefix from names:
-        local pnamea = string.split(pname, '%.')
-        if #pnamea > 1 then
-            local newPrefixa = table.slice(pnamea, 1, #pnamea - 1)
-            local newPrefix = table.join(newPrefixa, '.') .. '.'
-            if newPrefix ~= prefix and string.startswith(newPrefix, prefix) then
-                for i = #prefixa + 1, #newPrefixa do
-                    local p = prefix .. table.join(table.slice(newPrefixa, #prefixa + 1, i), '.') .. '.'
-                    table.insert(filteredPropertiesNames, {p, '.'})
-                end
-            end
-            prefix, prefixa = newPrefix, newPrefixa
-        else
-            prefix, prefixa = '', {}
-        end
-
-        if not uiCollapseProps[prefix] then
-            table.insert(filteredPropertiesNames, {prefix, pname})
-        end
-    end
-
-    -- optimization to avoid repopulation of whole table:
-    propertyNameToIndex = {}
-    for i, pn in ipairs(filteredPropertiesNames) do propertyNameToIndex[pn[2]] = i end
+    table.sort(matchingPropertiesNames, propertyOrder)
+    generateTree(matchingPropertiesNames)
 end
 
 function updateTableRow(i, updateSingle)
-    assert(filteredPropertiesNames[i])
-    local prefix = filteredPropertiesNames[i][1]
-    local pname = filteredPropertiesNames[i][2]
-
-    if pname:sub(1, 1) == '#' then
+    local pname = tableRows.pname[i]
+    if tableRows.type[i] == 'classHeader' then
         -- class group header
-        tableRows.pname[i] = ''
         tableRows.ptype[i] = ''
         tableRows.pvalue[i] = ''
         tableRows.pflags[i] = -1
-        tableRows.pdisplayk[i] = '[' .. pname:sub(2) .. ']'
         tableRows.pdisplayv[i] = ''
-    elseif pname == '.' then
+    elseif tableRows.type[i] == 'treeNode' then
         -- prefix group header
-        tableRows.pname[i] = ''
         tableRows.ptype[i] = '{...}'
         tableRows.pvalue[i] = ''
         tableRows.pflags[i] = -2
-        local prefixa = string.split(prefix, '%.')
-        local indent = string.rep('    ', #prefixa - 2)
-        tableRows.pdisplayk[i] = indent .. ' ' .. (uiCollapseProps[prefix] and '+' or '-') .. ' ' .. prefixa[#prefixa - 1] .. ''
+        local prefixa = string.split(pname, '%.')
         tableRows.pdisplayv[i] = ''
-    else
+    elseif tableRows.type[i] == 'property' then
         -- normal row
         local ptype, pflags, descr = sim.getPropertyInfo(target, pname)
         propertiesInfos[pname] = {
@@ -300,17 +319,10 @@ function updateTableRow(i, updateSingle)
                 propertiesValues[pname] = sim.getProperty(target, pname)
             end
         end
-        tableRows.pname[i] = pname
         tableRows.ptype[i] = string.gsub(sim.getPropertyTypeString(propertiesInfos[pname].type), 'array$', '[]')
         tableRows.pvalue[i] = sim.convertPropertyValue(propertiesValues[pname], propertiesInfos[pname].type, sim.propertytype_string)
         if tableRows.pvalue[i] == nil then tableRows.pvalue[i] = '' end
         tableRows.pflags[i] = flags.value
-        if #prefix > 0 then
-            local indent = string.rep('    ', #string.split(prefix, '%.') - 1)
-            tableRows.pdisplayk[i] = '    ' .. indent .. pname:sub(#prefix + 1)
-        else
-            tableRows.pdisplayk[i] = '    ' .. pname
-        end
         if flags.large then
             tableRows.pdisplayv[i] = '<big data>'
         elseif not flags.readable then
@@ -322,7 +334,6 @@ function updateTableRow(i, updateSingle)
             end
         end
     end
-
     if updateSingle then
         simUI.setPropertiesRow(ui, ui_table, i - 1, tableRows.pname[i], tableRows.ptype[i], tableRows.pvalue[i], tableRows.pflags[i], tableRows.pdisplayk[i], tableRows.pdisplayv[i])
     end
@@ -359,10 +370,8 @@ function onTargetChanged()
     end
     simUI.setComboboxItems(ui, ui_combo_selection, comboLabels, comboIdx)
     selectedRow = -1
-    tableRows = {pname = {}, ptype = {}, pvalue = {}, pflags = {}, pdisplayk = {}, pdisplayv = {}}
-    for i, pprefixAndName in ipairs(filteredPropertiesNames) do
-        local prefix, pname = table.unpack(pprefixAndName)
-        if selectedProperty == pname and selectedPropertyPrefix == prefix then
+    for i, pname in ipairs(tableRows.pname) do
+        if selectedProperty == pname then
             selectedRow = i
         end
         updateTableRow(i)
@@ -413,8 +422,8 @@ function updateContextMenuForSelectedProperty()
             addContextMenu('--', '')
             addContextMenu('remove', 'Remove property')
         end
-    elseif selectedProperty == '.' then
-        addContextMenu('removeall', 'Remove ' .. selectedPropertyPrefix .. '*')
+    elseif selectedProperty:endswith '.' then
+        addContextMenu('removeall', 'Remove ' .. selectedProperty .. '*')
     end
     simUI.setPropertiesContextMenu(ui, ui_table, contextMenuKeys, contextMenuTitles)
 end
@@ -507,7 +516,7 @@ end
 function onContextMenu_removeall()
     if selectedProperty == '.' then
         for pname, pvalue in pairs(sim.getProperties(target)) do
-            if string.startswith(pname, selectedPropertyPrefix) and propertiesInfos[pname].flags.removable then
+            if string.startswith(pname, selectedProperty) and propertiesInfos[pname].flags.removable then
                 sim.removeProperty(target, pname)
             end
         end
@@ -516,21 +525,21 @@ end
 
 function onRowSelected(ui, id, row)
     if row == -1 then
-        selectedPropertyPrefix, selectedProperty = nil, nil
+        selectedProperty = nil
     else
-        selectedPropertyPrefix, selectedProperty = table.unpack(filteredPropertiesNames[row + 1])
+        selectedProperty = tableRows.pname[row + 1]
     end
     selectedRow = row
     updateContextMenuForSelectedProperty()
 end
 
 function onRowDoubleClicked(ui, id, row, col)
-    if selectedProperty == '.' then -- it is a group
+    if string.endswith(selectedProperty, '.') then -- it is a group
         -- toggle collapse
-        if uiCollapseProps[selectedPropertyPrefix] then
-            uiCollapseProps[selectedPropertyPrefix] = nil
+        if uiCollapseProps[selectedProperty] then
+            uiCollapseProps[selectedProperty] = nil
         else
-            uiCollapseProps[selectedPropertyPrefix] = true
+            uiCollapseProps[selectedProperty] = true
         end
         sim.setTableProperty(sim.handle_app, 'customData.propertyExplorer.uiCollapseProps', uiCollapseProps)
         onTargetChanged()
