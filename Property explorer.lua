@@ -236,7 +236,7 @@ function generateTree(pnames)
             table.insert(tableRows.type, 'classHeader')
             table.insert(tableRows.icon, 0)
             table.insert(tableRows.pname, pclass)
-            table.insert(tableRows.pdisplayk, '[' .. pname .. ']')
+            table.insert(tableRows.pdisplayk, '[' .. pclass .. ']')
             lastPClass = pclass
             propertyNameToIndex[pclass] = #tableRows.pname
         end
@@ -253,7 +253,7 @@ function generateTree(pnames)
                     table.insert(tableRows.type, 'treeNode')
                     table.insert(tableRows.icon, uiCollapseProps[px] and 2 or 1)
                     table.insert(tableRows.pname, px)
-                    table.insert(tableRows.pdisplayk, indent(i - 1) .. newPrefixa[i])
+                    table.insert(tableRows.pdisplayk, indent(i) .. newPrefixa[i])
                     propertyNameToIndex[px] = #tableRows.pname
                 end
             end
@@ -264,7 +264,7 @@ function generateTree(pnames)
             table.insert(tableRows.type, 'property')
             table.insert(tableRows.icon, 0)
             table.insert(tableRows.pname, pname)
-            table.insert(tableRows.pdisplayk, indent(#pnamea - 1) .. pnamea[#pnamea])
+            table.insert(tableRows.pdisplayk, indent(#pnamea) .. pnamea[#pnamea])
             propertyNameToIndex[pname] = #tableRows.pname
         end
     end
