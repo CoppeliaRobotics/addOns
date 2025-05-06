@@ -141,6 +141,7 @@ function sysCall_event(events)
                         pflag = tableRows.pflags[i],
                         pdisplayk = tableRows.pdisplayk[i],
                         pdisplayv = tableRows.pdisplayv[i],
+                        icon = tableRows.icon[i],
                     }
                 end
             end
@@ -154,6 +155,7 @@ function sysCall_event(events)
     local pflags = {}
     local pdisplayk = {}
     local pdisplayv = {}
+    local icons = {}
     for i, chg in pairs(changedRows) do
         table.insert(changedIndexes, i)
         table.insert(pnames, chg.pname)
@@ -162,9 +164,10 @@ function sysCall_event(events)
         table.insert(pflags, chg.pflag)
         table.insert(pdisplayk, chg.pdisplayk)
         table.insert(pdisplayv, chg.pdisplayv)
+        table.insert(icons, chg.icon)
     end
     if #changedIndexes > 0 then
-        simUI.setPropertiesRows(ui, ui_table, changedIndexes, pnames, ptypes, pvalues, pflags, pdisplayk, pdisplayv)
+        simUI.setPropertiesRows(ui, ui_table, changedIndexes, pnames, ptypes, pvalues, pflags, pdisplayk, pdisplayv, icons)
     end
 end
 
@@ -206,7 +209,7 @@ function generateTree(pnames)
     -- 1) insert nodes
     -- 2) generate propertyNameToIndex table
 
-    tableRows = {type = {}, pname = {}, ptype = {}, pvalue = {}, pflags = {}, pdisplayk = {}, pdisplayv = {}}
+    tableRows = {type = {}, icon = {}, pname = {}, ptype = {}, pvalue = {}, pflags = {}, pdisplayk = {}, pdisplayv = {}}
 
     propertyNameToIndex = {} -- index for single row update
 
@@ -231,6 +234,7 @@ function generateTree(pnames)
         local pclass = propertiesInfos[pname].class
         if pclass ~= lastPClass then
             table.insert(tableRows.type, 'classHeader')
+            table.insert(tableRows.icon, 0)
             table.insert(tableRows.pname, pclass)
             table.insert(tableRows.pdisplayk, '[' .. pname .. ']')
             lastPClass = pclass
@@ -247,9 +251,9 @@ function generateTree(pnames)
                 local px = table.join(table.slice(newPrefixa, 1, i), '.') .. '.'
                 if i <= 1 or not isCollapsed(table.slice(newPrefixa, 1, i - 1)) then
                     table.insert(tableRows.type, 'treeNode')
+                    table.insert(tableRows.icon, uiCollapseProps[px] and 2 or 1)
                     table.insert(tableRows.pname, px)
-                    local pm = ' ' .. (uiCollapseProps[px] and '+' or '-') .. ' '
-                    table.insert(tableRows.pdisplayk, indent(i - 1) .. pm .. newPrefixa[i])
+                    table.insert(tableRows.pdisplayk, indent(i - 1) .. newPrefixa[i])
                     propertyNameToIndex[px] = #tableRows.pname
                 end
             end
@@ -258,8 +262,9 @@ function generateTree(pnames)
 
         if not isCollapsed(prefixa) then
             table.insert(tableRows.type, 'property')
+            table.insert(tableRows.icon, 0)
             table.insert(tableRows.pname, pname)
-            table.insert(tableRows.pdisplayk, indent(#pnamea - 1) .. '    ' .. pnamea[#pnamea])
+            table.insert(tableRows.pdisplayk, indent(#pnamea - 1) .. pnamea[#pnamea])
             propertyNameToIndex[pname] = #tableRows.pname
         end
     end
@@ -376,7 +381,7 @@ function onTargetChanged()
         end
         updateTableRow(i)
     end
-    simUI.setProperties(ui, ui_table, tableRows.pname, tableRows.ptype, tableRows.pvalue, tableRows.pflags, tableRows.pdisplayk, tableRows.pdisplayv)
+    simUI.setProperties(ui, ui_table, tableRows.pname, tableRows.ptype, tableRows.pvalue, tableRows.pflags, tableRows.pdisplayk, tableRows.pdisplayv, tableRows.icon)
     if selectedRow ~= -1 then
         simUI.setPropertiesSelection(ui, ui_table, selectedRow - 1, false)
     end
