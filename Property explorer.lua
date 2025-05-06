@@ -422,7 +422,7 @@ function updateContextMenuForSelectedProperty()
             addContextMenu('--', '')
             addContextMenu('remove', 'Remove property')
         end
-    elseif selectedProperty:endswith '.' then
+    elseif selectedProperty and selectedProperty:endswith '.' then
         addContextMenu('removeall', 'Remove ' .. selectedProperty .. '*')
     end
     simUI.setPropertiesContextMenu(ui, ui_table, contextMenuKeys, contextMenuTitles)
