@@ -519,7 +519,7 @@ function onContextMenu_remove()
 end
 
 function onContextMenu_removeall()
-    if selectedProperty == '.' then
+    if selectedProperty:endswith('.') then
         for pname, pvalue in pairs(sim.getProperties(target)) do
             if string.startswith(pname, selectedProperty) and propertiesInfos[pname].flags.removable then
                 sim.removeProperty(target, pname)
