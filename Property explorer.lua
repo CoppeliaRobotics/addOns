@@ -298,7 +298,7 @@ function updateTableRow(i, updateSingle)
         tableRows.pdisplayv[i] = ''
     elseif tableRows.type[i] == 'treeNode' then
         -- prefix group header
-        tableRows.ptype[i] = '{...}'
+        tableRows.ptype[i] = '...'
         tableRows.pvalue[i] = ''
         tableRows.pflags[i] = -2
         local prefixa = string.split(pname, '%.')
