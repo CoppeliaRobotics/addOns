@@ -394,8 +394,9 @@ function updateContextMenuForSelectedProperty()
     canEdit = false
     canRemove = false
     contextMenuKeys, contextMenuTitles = {}, {}
-    local function addContextMenu(key, title)
-        table.insert(contextMenuKeys, key)
+    local function addContextMenu(key, title, enabled)
+        enabled = enabled ~= false
+        table.insert(contextMenuKeys, (enabled and '' or '#') .. key)
         table.insert(contextMenuTitles, title)
     end
     if selectedProperty and propertiesInfos[selectedProperty] and selectedProperty:sub(1, 1) ~= '#' then
@@ -409,24 +410,16 @@ function updateContextMenuForSelectedProperty()
         end
         addContextMenu('#', 'Name:')
         addContextMenu('copy', 'Copy name to clipboard')
-        if propertiesInfos[selectedProperty].descr ~= '' then
-            addContextMenu('printDescr', 'Print description to console')
-        end
+        addContextMenu('printDescr', 'Print description to console', propertiesInfos[selectedProperty].descr ~= '')
         addContextMenu('--', '')
         addContextMenu('#', 'Value:')
-        if canAssign then
-            addContextMenu('copyValue', 'Copy value to clipboard')
-            addContextMenu('copyGetter', 'Copy get code to clipboard')
-            addContextMenu('copySetter', 'Copy set code to clipboard')
-            addContextMenu('assign', 'Assign value to variable')
-        end
-        if canEdit then
-            addContextMenu('editInCodeEditor', 'Edit in code editor...')
-        end
-        if canRemove then
-            addContextMenu('--', '')
-            addContextMenu('remove', 'Remove property')
-        end
+        addContextMenu('copyValue', 'Copy value to clipboard', canAssign)
+        addContextMenu('copyGetter', 'Copy get code to clipboard', canAssign)
+        addContextMenu('copySetter', 'Copy set code to clipboard', canAssign)
+        addContextMenu('assign', 'Assign value to variable', canAssign)
+        addContextMenu('editInCodeEditor', 'Edit in code editor...', canEdit)
+        addContextMenu('--', '')
+        addContextMenu('remove', 'Remove property', canRemove)
     elseif selectedProperty and selectedProperty:endswith '.' then
         addContextMenu('removeall', 'Remove ' .. selectedProperty .. '*')
     end
