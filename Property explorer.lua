@@ -421,7 +421,14 @@ function updateContextMenuForSelectedProperty()
         addContextMenu('--', '')
         addContextMenu('remove', 'Remove property', canRemove)
     elseif selectedProperty and selectedProperty:endswith '.' then
-        addContextMenu('removeall', 'Remove ' .. selectedProperty .. '*')
+        local cando = true
+        for pname, pinfo in pairs(propertiesInfos) do
+            if pname:startswith(selectedProperty) and not pinfo.flags.removable then
+                cando = false
+                break
+            end
+        end
+        addContextMenu('removeall', 'Remove ' .. selectedProperty .. '*', cando)
     end
     simUI.setPropertiesContextMenu(ui, ui_table, contextMenuKeys, contextMenuTitles)
 end
