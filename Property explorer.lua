@@ -330,8 +330,10 @@ function updateTableRow(i, updateSingle)
         tableRows.pflags[i] = flags.value
         if flags.large then
             tableRows.pdisplayv[i] = '<big data>'
+            tableRows.pflags[i] = -3
         elseif not flags.readable then
             tableRows.pdisplayv[i] = flags.writable and '<write-only>' or '<not readable>'
+            tableRows.pflags[i] = -3
         else
             tableRows.pdisplayv[i] = _S.anyToString(propertiesValues[pname])
             if #tableRows.pdisplayv[i] > 30 then
