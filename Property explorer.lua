@@ -335,7 +335,7 @@ function updateTableRow(i, updateSingle)
             tableRows.pdisplayv[i] = flags.writable and '<write-only>' or '<not readable>'
             tableRows.pflags[i] = -3
         else
-            tableRows.pdisplayv[i] = _S.anyToString(propertiesValues[pname])
+            tableRows.pdisplayv[i] = _S.anyToString(propertiesValues[pname], {omitQuotes = true})
             if #tableRows.pdisplayv[i] > 30 then
                 tableRows.pdisplayv[i] = tableRows.pdisplayv[i]:sub(1, 30) .. '...'
             end
