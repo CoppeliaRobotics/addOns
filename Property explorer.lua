@@ -387,6 +387,7 @@ function onTargetChanged()
         end
     end
     simUI.setComboboxItems(ui, ui_combo_selection, comboLabels, comboIdx)
+    simUI.setEnabled(ui, ui_combo_selection, #comboLabels > 1)
     selectedRow = -1
     for i, pname in ipairs(tableRows.pname) do
         if selectedProperty == pname then
