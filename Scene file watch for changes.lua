@@ -21,6 +21,10 @@ function sysCall_afterLoad()
     sim.setIntProperty(sim.handle_scene, 'signal.sceneFileChangeWatch.modTime', sceneFileMTime)
 end
 
+function sysCall_afterSave(inData)
+    if inData.regularSave then sysCall_afterLoad() end
+end
+
 function sysCall_beforeInstanceSwitch()
     if bannerId then
         simUI.bannerDestroy(bannerId)
