@@ -605,13 +605,8 @@ end
 function assignValue()
     local pvalue = sim.getProperty(target, selectedProperty)
     pvalue = _S.anyToString(pvalue)
-    local targetStr = 'SEL1'
-    if target == sim.handle_app then
-        targetStr = 'sim.handle_app'
-    elseif target == sim.handle_scene then
-        targetStr = 'sim.handle_scene'
-    end
-    local code = string.format('value = sim.getProperty(%d, \'%s\')', target, selectedProperty)
+    local targetStr = gen_getObject(target)
+    local code = string.format('value = sim.getProperty(%s, \'%s\')', targetStr, selectedProperty)
     print('> ' .. code)
     if pcall(sim.executeScriptString, code .. '@lua', sim.getScript(sim.scripttype_sandbox)) then
         if propertiesInfos[selectedProperty].flags.large then
