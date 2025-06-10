@@ -142,6 +142,7 @@ function sysCall_event(events)
                         pdisplayk = tableRows.pdisplayk[i],
                         pdisplayv = tableRows.pdisplayv[i],
                         icon = tableRows.icon[i],
+                        description = tableRows.description[i],
                     }
                 end
             end
@@ -156,6 +157,7 @@ function sysCall_event(events)
     local pdisplayk = {}
     local pdisplayv = {}
     local icons = {}
+    local descriptions = {}
     for i, chg in pairs(changedRows) do
         table.insert(changedIndexes, i)
         table.insert(pnames, chg.pname)
@@ -165,9 +167,10 @@ function sysCall_event(events)
         table.insert(pdisplayk, chg.pdisplayk)
         table.insert(pdisplayv, chg.pdisplayv)
         table.insert(icons, chg.icon)
+        table.insert(descriptions, chg.description)
     end
     if #changedIndexes > 0 then
-        simUI.setPropertiesRows(ui, ui_table, changedIndexes, pnames, ptypes, pvalues, pflags, pdisplayk, pdisplayv, icons)
+        simUI.setPropertiesRows(ui, ui_table, changedIndexes, pnames, ptypes, pvalues, pflags, pdisplayk, pdisplayv, icons, descriptions)
     end
 end
 
@@ -209,7 +212,7 @@ function generateTree(pnames)
     -- 1) insert nodes
     -- 2) generate propertyNameToIndex table
 
-    tableRows = {type = {}, icon = {}, pname = {}, ptype = {}, pvalue = {}, pflags = {}, pdisplayk = {}, pdisplayv = {}}
+    tableRows = {type = {}, icon = {}, pname = {}, ptype = {}, pvalue = {}, pflags = {}, pdisplayk = {}, pdisplayv = {}, description = {}}
 
     propertyNameToIndex = {} -- index for single row update
 
@@ -296,6 +299,7 @@ function updateTableRow(i, updateSingle)
         tableRows.pvalue[i] = ''
         tableRows.pflags[i] = -1
         tableRows.pdisplayv[i] = ''
+        tableRows.description[i] = ''
     elseif tableRows.type[i] == 'treeNode' then
         -- prefix group header
         tableRows.ptype[i] = '...'
@@ -303,6 +307,7 @@ function updateTableRow(i, updateSingle)
         tableRows.pflags[i] = -2
         local prefixa = string.split(pname, '%.')
         tableRows.pdisplayv[i] = ''
+        tableRows.description[i] = ''
     elseif tableRows.type[i] == 'property' then
         -- normal row
         local ptype, pflags, descr = sim.getPropertyInfo(target, pname)
@@ -326,6 +331,7 @@ function updateTableRow(i, updateSingle)
         end
         tableRows.ptype[i] = string.gsub(sim.getPropertyTypeString(propertiesInfos[pname].type), 'array$', '[]')
         tableRows.pvalue[i] = sim.convertPropertyValue(propertiesValues[pname], propertiesInfos[pname].type, sim.propertytype_string)
+        tableRows.description[i] = propertiesInfos[pname].descr
         if tableRows.pvalue[i] == nil then tableRows.pvalue[i] = '' end
         tableRows.pflags[i] = flags.value
         if flags.large then
@@ -353,7 +359,7 @@ function updateTableRow(i, updateSingle)
         end
     end
     if updateSingle then
-        simUI.setPropertiesRow(ui, ui_table, i - 1, tableRows.pname[i], tableRows.ptype[i], tableRows.pvalue[i], tableRows.pflags[i], tableRows.pdisplayk[i], tableRows.pdisplayv[i])
+        simUI.setPropertiesRow(ui, ui_table, i - 1, tableRows.pname[i], tableRows.ptype[i], tableRows.pvalue[i], tableRows.pflags[i], tableRows.pdisplayk[i], tableRows.pdisplayv[i], tableRows.icon[i], tableRows.description[i])
     end
 end
 
@@ -395,7 +401,7 @@ function onTargetChanged()
         end
         updateTableRow(i)
     end
-    simUI.setProperties(ui, ui_table, tableRows.pname, tableRows.ptype, tableRows.pvalue, tableRows.pflags, tableRows.pdisplayk, tableRows.pdisplayv, tableRows.icon)
+    simUI.setProperties(ui, ui_table, tableRows.pname, tableRows.ptype, tableRows.pvalue, tableRows.pflags, tableRows.pdisplayk, tableRows.pdisplayv, tableRows.icon, tableRows.description)
     if selectedRow ~= -1 then
         simUI.setPropertiesSelection(ui, ui_table, selectedRow - 1, false)
     end
