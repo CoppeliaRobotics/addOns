@@ -1,4 +1,5 @@
-sim = require 'sim'
+local sim = require 'sim'
+local simUI
 
 function sysCall_info()
     return {autoStart = false, menu = 'Geometry / Mesh\n3D text generator...'}
@@ -10,7 +11,6 @@ end
 
 function sysCall_init()
     simUI = require 'simUI'
-    textUtils = require 'textUtils'
     sim.addLog(
         sim.verbosity_scriptinfos,
         "This tool allows to generate 3D text. Courtesy of 'Mechatronics Ninja'"
@@ -151,9 +151,8 @@ function update(generateNew)
         doNothing = (parentDummy == nil)
     end
     if not doNothing then
-        local h = textUtils.generateTextShape(
-                      config.text, config.color, config.height, config.centered, nil, parentDummy
-                  )
+        local textUtils = require 'textUtils'
+        local h = textUtils.generateTextShape(config.text, config.color, config.height, config.centered, nil, parentDummy)
         sim.writeCustomTableData(h, '__info__', {type = '3dText'})
         sim.writeCustomTableData(h, '__config__', config)
         sim.announceSceneContentChange()

@@ -1,4 +1,5 @@
-sim = require 'sim'
+local sim = require 'sim'
+local simOMPL
 
 function sysCall_info()
     return {autoStart = true, menu = 'Connectivity\nPyRep'}

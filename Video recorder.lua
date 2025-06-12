@@ -1,4 +1,6 @@
-sim = require 'sim'
+local sim = require 'sim'
+local simUI
+local simSubprocess
 
 function sysCall_info()
     return {autoStart = false, menu = 'Exporters\nVideo recorder...'}

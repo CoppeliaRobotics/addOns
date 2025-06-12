@@ -1,4 +1,4 @@
-sim = require 'sim'
+local sim = require 'sim'
 
 function sysCall_info()
     return {autoStart = false, menu = 'Developer tools\nPlugin enumerator'}

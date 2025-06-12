@@ -1,5 +1,7 @@
-sim = require 'sim'
-require 'addOns.jointGroup'
+local sim = require 'sim'
+local jointGroup = require 'addOns.jointGroup'
+local simUI
+local simOMPL
 
 function sysCall_info()
     return {autoStart = false, menu = 'Kinematics\nMotion planning generator...'}
@@ -105,7 +107,7 @@ function populateComboJointGroup()
     comboJointGroupName = {}
     comboJointGroupHandle = {}
     if robotModel then
-        for _, h in ipairs(getJointGroups(robotModel)) do
+        for _, h in ipairs(jointGroup.getJointGroups(robotModel)) do
             table.insert(comboJointGroupName, sim.getObjectAlias(h))
             table.insert(comboJointGroupHandle, h)
             if h == oldJointGroup then idx = #comboJointGroupHandle end

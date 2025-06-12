@@ -1,4 +1,5 @@
-sim = require 'sim'
+local sim = require 'sim'
+local simUI
 
 function sysCall_info()
     return {autoStart = false, menu = 'Tools\nScreenshot tool'}
@@ -29,7 +30,7 @@ function sysCall_init()
 
     pcall(
         function()
-            simPovRay = require 'simPovRay'
+            require 'simPovRay'
             config.povray.available = true
         end
     )

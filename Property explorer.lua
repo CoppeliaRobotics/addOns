@@ -1,4 +1,6 @@
-sim = require 'sim'
+local sim = require 'sim'
+local simUI
+local cbor
 
 function sysCall_info()
     return {menu = 'Developer tools\nProperty explorer'}

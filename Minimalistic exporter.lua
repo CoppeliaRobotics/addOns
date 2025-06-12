@@ -1,12 +1,14 @@
 -- this add-on function is a minimalistic scene content exporter, meant as an example.
-sim = require 'sim'
-lfs = require 'lfsx'
+local sim = require 'sim'
+local simUI
+local lfs
 
 function sysCall_info()
     return {autoStart = false, menu = 'Exporters\nMinimalistic exporter...'}
 end
 
 function sysCall_init()
+    lfs = require 'lfsx'
     simUI = require 'simUI'
     if simUI.msgbox_result.yes == simUI.msgBox(
         simUI.msgbox_type.info, simUI.msgbox_buttons.yesno, "Minimalistic Exporter",

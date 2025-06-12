@@ -1,4 +1,6 @@
-sim = require 'sim'
+local sim = require 'sim'
+local simUI
+local cbor
 
 function sysCall_info()
     return {autoStart = false, menu = 'Exporters\nScript capture'}

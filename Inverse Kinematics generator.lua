@@ -1,8 +1,8 @@
-sim = require 'sim'
+local sim = require 'sim'
 
 require 'functional'
 
-require 'addOns.jointGroup'
+local jointGroup = require 'addOns.jointGroup'
 
 function sysCall_info()
     return {autoStart = false, menu = 'Kinematics\nInverse kinematics generator...'}
@@ -224,7 +224,7 @@ function populateComboJointGroup()
     comboJointGroupName = {}
     comboJointGroupHandle = {}
     if robotModel then
-        for _, h in ipairs(getJointGroups(robotModel)) do
+        for _, h in ipairs(jointGroup.getJointGroups(robotModel)) do
             table.insert(comboJointGroupName, sim.getObjectAlias(h))
             table.insert(comboJointGroupHandle, h)
             if h == oldJointGroup then idx = #comboJointGroupHandle end
@@ -284,7 +284,7 @@ function generate()
     local simBase = getRobotBaseHandle()
     local simTip = getRobotTipHandle()
     local simTarget = getRobotTargetHandle()
-    local jointGroup = getJointGroupHandle()
+    local jointGroupHandle = getJointGroupHandle()
     local existingIK = sim.getObject('./IK', {proxy = robotModel, noError = true})
     if existingIK ~= -1 then
         if simUI.msgbox_result.ok ~= simUI.msgBox(
@@ -317,8 +317,8 @@ function generate()
     sim.setReferencedHandles(ikScript, {simBase}, 'ik.base')
     sim.setReferencedHandles(ikScript, {simTip}, 'ik.tip')
     sim.setReferencedHandles(ikScript, {simTarget}, 'ik.target')
-    if jointGroup then
-        sim.setReferencedHandles(ikScript, {jointGroup}, 'jointGroup')
+    if jointGroupHandle then
+        sim.setReferencedHandles(ikScript, {jointGroupHandle}, 'jointGroup')
     end
 
     local scriptText = ''
@@ -335,9 +335,9 @@ function generate()
     appendLine("    simBase = sim.getReferencedHandle(self, 'ik.base')")
     appendLine("    simTip = sim.getReferencedHandle(self, 'ik.tip')")
     appendLine("    simTarget = sim.getReferencedHandle(self, 'ik.target')")
-    if jointGroup then
-        appendLine("    jointGroup = sim.getReferencedHandle(self, 'jointGroup')")
-        appendLine("    simJoints = sim.getReferencedHandles(jointGroup)")
+    if jointGroupHandle then
+        appendLine("    jointGroupHandle = sim.getReferencedHandle(self, 'jointGroup')")
+        appendLine("    simJoints = sim.getReferencedHandles(jointGroupHandle)")
     end
     appendLine("")
     appendLine("    enabled = %s", enabled)
@@ -368,7 +368,7 @@ function generate()
     end
     appendLine("    _, ikHandleMap, simHandleMap = simIK.addElementFromScene(ikEnv, ikGroup, simBase, simTip, simTarget, constraint)")
     appendLine("")
-    appendLine("    if jointGroup then")
+    appendLine("    if jointGroupHandle then")
     appendLine("        -- disable joints not part of the joint group")
     appendLine("        ikJoints = {}")
     appendLine("        for i, ikJoint in ipairs(simIK.getGroupJoints(ikEnv, ikGroup)) do")

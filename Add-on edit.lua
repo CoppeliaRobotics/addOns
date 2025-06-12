@@ -1,4 +1,5 @@
-sim = require 'sim'
+local sim = require 'sim'
+local simUI
 
 function closeUi()
     leaveNow = true
@@ -36,7 +37,7 @@ end
 
 function sysCall_init()
     simUI = require 'simUI'
-    lfs = require 'lfs'
+    local lfs = require 'lfs'
 
     addonDir = sim.getStringParam(sim.stringparam_addondir)
 
