@@ -431,6 +431,7 @@ function updateContextMenuForSelectedProperty()
             addContextMenu('--', '')
         end
         addContextMenu('#', 'Name:')
+        addContextMenu('#', '    ' .. selectedProperty)
         addContextMenu('copy', 'Copy name to clipboard')
         addContextMenu('printDescr', 'Print description to console', propertiesInfos[selectedProperty].descr ~= '')
         addContextMenu('--', '')
