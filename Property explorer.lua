@@ -7,7 +7,7 @@ function sysCall_info()
 end
 
 function sysCall_init()
-    cbor = require 'org.conman.cbor'
+    cbor = require 'simCBOR'
     cbor.NULL_VALUE = setmetatable({}, {__tostring = function() return 'null' end})
     cbor.SIMPLE[22] = function(pos) return cbor.NULL_VALUE, pos, 'null' end
 

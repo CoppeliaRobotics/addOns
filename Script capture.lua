@@ -8,7 +8,7 @@ end
 
 function sysCall_init()
     simUI = require 'simUI'
-    cbor = require 'org.conman.cbor'
+    cbor = require 'simCBOR'
     sim.test('sim.enableEvents', true)
     sim.test('sim.mergeEvents', true)
     sim.test('sim.cborEvents', true)
