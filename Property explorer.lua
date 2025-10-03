@@ -496,14 +496,18 @@ end
 
 function onContextMenu_copyGetter()
     local targetStr = gen_getObject(target)
-    local code = 'sim.getProperty(' .. targetStr .. ', \'' .. selectedProperty .. '\')'
+    local code = string.format('sim.get%sProperty(%s, \'%s\')',
+        sim.getPropertyTypeString(propertiesInfos[selectedProperty].type, true),
+        targetStr, selectedProperty)
     simUI.setClipboardText(code)
 end
 
 function onContextMenu_copySetter()
     local targetStr = gen_getObject(target)
     local valueStr = _S.anyToString(sim.getProperty(target, selectedProperty))
-    local code = 'sim.setProperty(' .. targetStr .. ', \'' .. selectedProperty .. '\', ' .. valueStr .. ')'
+    local code = string.format('sim.set%sProperty(%s, \'%s\', %s)',
+        sim.getPropertyTypeString(propertiesInfos[selectedProperty].type, true),
+        targetStr, selectedProperty, valueStr)
     simUI.setClipboardText(code)
 end
 
