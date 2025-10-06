@@ -1,10 +1,13 @@
 local sim = require 'sim'
+local simUI
 
 function sysCall_info()
     return {autoStart = false, menu = 'Developer tools\nCheck selected model'}
 end
 
 function sysCall_init()
+    simUI = require 'simUI'
+    showGraph = simUI.getKeyboardModifiers().shift
     local sel = sim.getObjectSel()
     if #sel == 0 or #sel > 1 then
         sim.addLog(sim.verbosity_scripterrors, "This add-on requires one object to be selected.")
@@ -41,6 +44,11 @@ function check()
     sim.addLog(sim.verbosity_scriptwarnings, "Checking...")
     local checkmodel = require 'checkmodel'
     local sel = sim.getObjectSel()
+    assert(#sel == 1)
+    if showGraph then
+        local g = checkmodel.buildObjectsGraph(sel[1])
+        checkmodel.showObjectsGraph(g)
+    end
     local results = ''
     for handle, issues in pairs(checkmodel.check(sel[1])) do
         results = results .. string.format("  Object %s (handle: %d)", sim.getObjectAlias(handle, 2), handle) .. '\n'
