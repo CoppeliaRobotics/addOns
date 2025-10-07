@@ -441,6 +441,7 @@ function updateContextMenuForSelectedProperty()
         addContextMenu('copySetter', 'Copy set code to clipboard', canAssign)
         addContextMenu('assign', 'Assign value to variable', canAssign)
         addContextMenu('editInCodeEditor', 'Edit in code editor...', canEdit)
+        addContextMenu('saveValueToFile', 'Save value to file...', canAssign)
         addContextMenu('--', '')
         addContextMenu('remove', 'Remove property', canRemove)
     elseif selectedProperty and selectedProperty:endswith '.' then
@@ -518,6 +519,20 @@ function onContextMenu_editInCodeEditor()
     local w = math.max(200, math.min(800, 60 * math.log(sz) + 85.21))
     local h = math.max(40, math.min(1200, 50 * math.pow(sz, 0.353)))
     editorHandle = sim.textEditorOpen(initialEditorContent, '<editor title="' .. (propertiesInfos[selectedProperty].flags.writable and 'Edit' or 'View') .. ' &quot;' .. selectedProperty .. '&quot; value" editable="' .. _S.anyToString(propertiesInfos[selectedProperty].flags.writable) .. '" searchable="true" tab-width="4" toolbar="false" statusbar="false" resizable="true" modal="true" on-close="editValueFinished" closeable="true" size="' .. math.floor(w) .. ' ' .. math.floor(h) .. '" placement="center" activate="true" line-numbers="false"></editor>')
+end
+
+function onContextMenu_saveValueToFile()
+    propertiesValues[selectedProperty] = sim.getProperty(target, selectedProperty)
+    local value = sim.convertPropertyValue(propertiesValues[selectedProperty], propertiesInfos[selectedProperty].type, sim.propertytype_string)
+    local lfsx = require 'lfsx'
+    local sceneDir = lfsx.dirname(sim.getStringProperty(sim.handle_scene, 'scenePath'))
+    local result = simUI.fileDialog(simUI.filedialog_type.save, 'Save file', sceneDir, '', '', '', true)
+    if #result == 1 then
+        local file = io.open(result[1], 'w')
+        file:write(value)
+        file:close()
+        print('Value of "' .. selectedProperty .. '" saved to ' .. result[1])
+    end
 end
 
 function editValueFinished()
