@@ -13,31 +13,32 @@ function sysCall_init()
         sim.addLog(sim.verbosity_scripterrors, "This add-on requires one object to be selected.")
         return {cmd = 'cleanup'}
     end
-    if sim.getSimulationState() == sim.simulation_paused then
-        check()
-        return {cmd = 'cleanup'}
-    else
-        sim.addLog(sim.verbosity_scriptwarnings, "This add-on works with paused simulation.")
-        if sim.getSimulationState() == sim.simulation_advancing_running then
-            sim.pauseSimulation()
-            afterCheck = sim.startSimulation
-        elseif sim.getSimulationState() == sim.simulation_stopped then
-            pause = true
-            sim.startSimulation()
-            afterCheck = sim.stopSimulation
-        end
+
+    step = 0
+    if sim.getSimulationState() == sim.simulation_stopped then
+        stop = true
+        sim.startSimulation()
     end
 end
 
 function sysCall_sensing()
-    if pause then
-        sim.pauseSimulation()
+    step = step + 1
+    if step > 1 then
+        check()
+        if stop then
+            sim.stopSimulation()
+        end
     end
+    if leaveNow then return {cmd = 'cleanup'} end
+end
+
+function sysCall_nonSimulation()
+    if leaveNow then return {cmd = 'cleanup'} end
 end
 
 function sysCall_suspended()
     check()
-    return {cmd = 'cleanup'}
+    if leaveNow then return {cmd = 'cleanup'} end
 end
 
 function check()
@@ -49,14 +50,44 @@ function check()
         local g = checkmodel.buildObjectsGraph(sel[1])
         checkmodel.showObjectsGraph(g)
     end
-    local results = ''
-    for handle, issues in pairs(checkmodel.check(sel[1])) do
-        results = results .. string.format("  Object %s (handle: %d)", sim.getObjectAlias(handle, 2), handle) .. '\n'
-        for _, issue in ipairs(issues) do
-            results = results .. "    " .. issue .. '\n'
-        end
-    end
     check = function() end
-    if afterCheck then afterCheck() end
-    sim.addLog(sim.verbosity_scriptwarnings, 'Check finished. Results:\n\n' .. results)
+    local issues = checkmodel.check(sel[1])
+    showReport(issues)
+end
+
+function showReport(issues)
+    if next(issues) == nil then
+        simUI.msgBox(
+            simUI.msgbox_type.info, simUI.msgbox_buttons.ok, 'Check Model - Results',
+            'No issues were found.'
+        )
+        return
+    end
+
+    local items = {}
+    for handle, issues in pairs(issues) do
+        local itemText = '<h4>Object ' .. sim.getObjectAlias(handle, 9) .. ' (handle: ' .. handle .. ')</h4>'
+        itemText = itemText .. '<ul>'
+        for _, issue in ipairs(issues) do
+            itemText = itemText .. '<li>' .. issue .. '</li>'
+        end
+        itemText = itemText .. '</ul>'
+        table.insert(items, itemText)
+    end
+    simUI.create([[
+        <ui
+                title="Check Model - Results"
+                resizable="true"
+                closeable="true"
+                placement="center"
+                modal="true"
+                size="600,400"
+                on-close="closed">
+            <text-browser text="]] .. string.escapehtml(table.concat(items, '')) .. [["></text-browser>
+        </ui>
+    ]])
+end
+
+function closed()
+    leaveNow = true
 end
