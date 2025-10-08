@@ -441,6 +441,7 @@ function updateContextMenuForSelectedProperty()
         addContextMenu('copySetter', 'Copy set code to clipboard', canAssign)
         addContextMenu('assign', 'Assign value to variable', canAssign)
         addContextMenu('editInCodeEditor', 'Edit in code editor...', canEdit)
+        addContextMenu('loadValueFromFile', 'Load value from file...', canEdit)
         addContextMenu('saveValueToFile', 'Save value to file...', canAssign)
         addContextMenu('--', '')
         addContextMenu('remove', 'Remove property', canRemove)
@@ -521,20 +522,6 @@ function onContextMenu_editInCodeEditor()
     editorHandle = sim.textEditorOpen(initialEditorContent, '<editor title="' .. (propertiesInfos[selectedProperty].flags.writable and 'Edit' or 'View') .. ' &quot;' .. selectedProperty .. '&quot; value" editable="' .. _S.anyToString(propertiesInfos[selectedProperty].flags.writable) .. '" searchable="true" tab-width="4" toolbar="false" statusbar="false" resizable="true" modal="true" on-close="editValueFinished" closeable="true" size="' .. math.floor(w) .. ' ' .. math.floor(h) .. '" placement="center" activate="true" line-numbers="false"></editor>')
 end
 
-function onContextMenu_saveValueToFile()
-    propertiesValues[selectedProperty] = sim.getProperty(target, selectedProperty)
-    local value = sim.convertPropertyValue(propertiesValues[selectedProperty], propertiesInfos[selectedProperty].type, sim.propertytype_string)
-    local lfsx = require 'lfsx'
-    local sceneDir = lfsx.dirname(sim.getStringProperty(sim.handle_scene, 'scenePath'))
-    local result = simUI.fileDialog(simUI.filedialog_type.save, 'Save file', sceneDir, '', '', '', true)
-    if #result == 1 then
-        local file = io.open(result[1], 'w')
-        file:write(value)
-        file:close()
-        print('Value of "' .. selectedProperty .. '" saved to ' .. result[1])
-    end
-end
-
 function editValueFinished()
     if editorHandle then
         local newValue, err = sim.textEditorGetInfo(editorHandle), nil
@@ -553,6 +540,41 @@ function editValueFinished()
         sim.textEditorClose(editorHandle)
         initialEditorContent = nil
         editorHandle = nil
+    end
+end
+
+function onContextMenu_loadValueFromFile()
+    local lfsx = require 'lfsx'
+    local sceneDir = lfsx.dirname(sim.getStringProperty(sim.handle_scene, 'scenePath'))
+    local result = simUI.fileDialog(simUI.filedialog_type.load, 'Load file', sceneDir, '', '', '', true)
+    if #result == 1 then
+        local file = io.open(result[1], 'r')
+        local newValue = file:read('*all')
+        file:close()
+        newValue, err = sim.convertPropertyValue(newValue, sim.propertytype_string, propertiesInfos[selectedProperty].type)
+        if err then
+            simUI.msgBox(simUI.msgbox_type.critical, simUI.msgbox_buttons.ok, 'Error', 'Failed to convert value: ' .. err)
+        elseif propertiesInfos[selectedProperty].flags.writable then
+            if propertiesInfos[selectedProperty].type == sim.propertytype_color then
+                sim.setColorProperty(target, selectedProperty, newValue)
+            else
+                sim.setProperty(target, selectedProperty, newValue)
+            end
+        end
+    end
+end
+
+function onContextMenu_saveValueToFile()
+    propertiesValues[selectedProperty] = sim.getProperty(target, selectedProperty)
+    local value = sim.convertPropertyValue(propertiesValues[selectedProperty], propertiesInfos[selectedProperty].type, sim.propertytype_string)
+    local lfsx = require 'lfsx'
+    local sceneDir = lfsx.dirname(sim.getStringProperty(sim.handle_scene, 'scenePath'))
+    local result = simUI.fileDialog(simUI.filedialog_type.save, 'Save file', sceneDir, '', '', '', true)
+    if #result == 1 then
+        local file = io.open(result[1], 'w')
+        file:write(value)
+        file:close()
+        print('Value of "' .. selectedProperty .. '" saved to ' .. result[1])
     end
 end
 
