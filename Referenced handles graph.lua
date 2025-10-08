@@ -27,23 +27,31 @@ function sysCall_init()
             end
         end
     end
-    local outFile = sim.getStringProperty(sim.handle_app, 'tempPath') .. '/graph.png'
-    g:render{
-        nodeStyle = function(id)
-            local node = g:getVertex(id)
-            return {
-                shape = 'box',
-                label = '"' .. node.name .. '"',
-            }
-        end,
-        edgeStyle = function(id1, id2)
-            local edge = g:getEdge(id1, id2)
-            return {
-                label = '"' .. edge.name .. '"',
-            }
-        end,
-        outFile = outFile,
-    }
-    sim.openFile(outFile)
+    if g:vertexCount() == 0 then
+        local simUI = require 'simUI'
+        simUI.msgBox(
+            simUI.msgbox_type.info, simUI.msgbox_buttons.ok, 'Empty result',
+            'There are no objects with referenced handles in this scene.'
+        )
+    else
+        local outFile = sim.getStringProperty(sim.handle_app, 'tempPath') .. '/graph.png'
+        g:render{
+            nodeStyle = function(id)
+                local node = g:getVertex(id)
+                return {
+                    shape = 'box',
+                    label = '"' .. node.name .. '"',
+                }
+            end,
+            edgeStyle = function(id1, id2)
+                local edge = g:getEdge(id1, id2)
+                return {
+                    label = '"' .. edge.name .. '"',
+                }
+            end,
+            outFile = outFile,
+        }
+        sim.openFile(outFile)
+    end
     return {cmd = 'cleanup'}
 end
