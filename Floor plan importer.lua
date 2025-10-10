@@ -119,7 +119,7 @@ function sysCall_init()
         optimizationEnabled = simUI.getCheckboxValue(ui, 901) > 0
         invertImageValues = simUI.getCheckboxValue(ui, 902) > 0
         respondable = simUI.getCheckboxValue(ui, 911) > 0
-        im, res = sim.loadImage(0, imageFiles)
+        im, res = sim.loadImage(0, imageFiles[1])
         c = {res[1] / 2, res[2] / 2}
         im = sim.transformBuffer(im, sim.buffer_uint8rgb, 1, 0, sim.buffer_uint8)
         im = sim.unpackUInt8Table(im)
