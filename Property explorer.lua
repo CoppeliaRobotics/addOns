@@ -281,13 +281,19 @@ function readTargetProperties()
     propertiesNames = {}
     matchingPropertiesNames = {}
     local pat = getFilteringPattern()
+    local strFindError
     for pname, _ in pairs(propertiesInfos) do
         table.insert(propertiesNames, pname)
-        local m = string.find(pname, pat)
-        if (m and not filterInvert) or (not m and filterInvert) then
-            table.insert(matchingPropertiesNames, pname)
+        local ok, m = pcall(string.find, pname, pat)
+        if ok then
+            if (m and not filterInvert) or (not m and filterInvert) then
+                table.insert(matchingPropertiesNames, pname)
+            end
+        else
+            strFindError = strFindError or m
         end
     end
+    simUI.setStyleSheet(ui, ui_filter, strFindError and 'border: 1px solid red' or '')
     table.sort(propertiesNames, propertyOrder)
     table.sort(matchingPropertiesNames, propertyOrder)
     generateTree(matchingPropertiesNames)
