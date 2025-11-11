@@ -318,7 +318,7 @@ function updateTableRow(i, updateSingle)
         tableRows.description[i] = ''
     elseif tableRows.type[i] == 'property' then
         -- normal row
-        propertiesInfos[pname] = sim.getPropertyInfos(target, pname)
+        propertiesInfos[pname] = sim.getPropertyInfos(target, pname, {label=true})
         local flags = propertiesInfos[pname].flags
         if flags.readable then
             if not flags.large then
