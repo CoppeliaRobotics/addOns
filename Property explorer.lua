@@ -226,7 +226,7 @@ function generateTree(pnames)
     end
 
     local function indent(i)
-        return string.rep('    ', i)
+        return string.rep('    ', i - 1)
     end
 
     local lastPClass = nil
