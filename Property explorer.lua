@@ -318,19 +318,7 @@ function updateTableRow(i, updateSingle)
         tableRows.description[i] = ''
     elseif tableRows.type[i] == 'property' then
         -- normal row
-        local ptype, pflags, descr = sim.getPropertyInfo(target, pname)
-        propertiesInfos[pname] = {
-            type = ptype,
-            flags = {
-                value = pflags,
-                readable = pflags & 2 == 0,
-                writable = pflags & 1 == 0,
-                removable = pflags & 4 > 0,
-                large = pflags & 256 > 0,
-            },
-            label = ({sim.getPropertyInfo(target, pname, {shortInfoTxt=true})})[3],
-            descr = descr,
-        }
+        propertiesInfos[pname] = sim.getPropertyInfos(target, pname)
         local flags = propertiesInfos[pname].flags
         if flags.readable then
             if not flags.large then
@@ -344,6 +332,9 @@ function updateTableRow(i, updateSingle)
         tableRows.pflags[i] = flags.value
         if flags.large then
             tableRows.pdisplayv[i] = '<big data>'
+            tableRows.pflags[i] = -3
+        elseif flags.silent then
+            tableRows.pdisplayv[i] = '<silent>'
             tableRows.pflags[i] = -3
         elseif not flags.readable then
             tableRows.pdisplayv[i] = flags.writable and '<write-only>' or '<not readable>'
