@@ -325,7 +325,10 @@ function updateTableRow(i, updateSingle)
                 propertiesValues[pname] = sim.getProperty(target, pname)
             end
         end
-        tableRows.ptype[i] = string.gsub(sim.getPropertyTypeString(propertiesInfos[pname].type), 'array$', '[]')
+        local ptypeStr = sim.getPropertyTypeString(propertiesInfos[pname].type)
+        ptypeStr = ptypeStr:gsub('array(%d+)$', '[%1]')
+        ptypeStr = ptypeStr:gsub('array$', '[]')
+        tableRows.ptype[i] = ptypeStr
         tableRows.pvalue[i] = sim.convertPropertyValue(propertiesValues[pname], propertiesInfos[pname].type, sim.propertytype_string)
         tableRows.description[i] = propertiesInfos[pname].descr
         if tableRows.pvalue[i] == nil then tableRows.pvalue[i] = '' end
@@ -493,8 +496,8 @@ end
 
 function onContextMenu_copyGetter()
     local targetStr = gen_getObject(target)
-    local code = string.format('sim.get%sProperty(%s, \'%s\')',
-        sim.getPropertyTypeString(propertiesInfos[selectedProperty].type, true),
+    local code = string.format('sim.%s(%s, \'%s\')',
+        sim.getPropertyGetter(propertiesInfos[selectedProperty].type, true),
         targetStr, selectedProperty)
     simUI.setClipboardText(code)
 end
@@ -502,8 +505,8 @@ end
 function onContextMenu_copySetter()
     local targetStr = gen_getObject(target)
     local valueStr = _S.anyToString(sim.getProperty(target, selectedProperty))
-    local code = string.format('sim.set%sProperty(%s, \'%s\', %s)',
-        sim.getPropertyTypeString(propertiesInfos[selectedProperty].type, true),
+    local code = string.format('sim.%s(%s, \'%s\', %s)',
+        sim.getPropertySetter(propertiesInfos[selectedProperty].type, true),
         targetStr, selectedProperty, valueStr)
     simUI.setClipboardText(code)
 end
