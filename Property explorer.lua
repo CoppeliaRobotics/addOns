@@ -350,9 +350,7 @@ function updateTableRow(i, updateSingle)
             tableRows.pflags[i] = -3
         else
             tableRows.pdisplayv[i] = _S.anyToString(propertiesValues[pname], {omitQuotes = true})
-            if #tableRows.pdisplayv[i] > 30 then
-                tableRows.pdisplayv[i] = tableRows.pdisplayv[i]:sub(1, 30) .. '...'
-            end
+            tableRows.pdisplayv[i] = string.elide(tableRows.pdisplayv[i], 30, {truncateAtNewLine=true})
 
             local impr = sim.getBoolProperty(sim.handle_app, 'customData.propertyExplorer.impr', {noError = true}) ~= false
             if impr and pname:endswith 'Time' and (ptype == sim.propertytype_float or ptype == sim.propertytype_int) then
