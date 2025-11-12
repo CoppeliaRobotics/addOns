@@ -651,18 +651,13 @@ function updateFilter()
 end
 
 function assignValue()
+    local simCmd = require 'simCmd'
     local pvalue = sim.getProperty(target, selectedProperty)
     pvalue = _S.anyToString(pvalue)
     local targetStr = gen_getObject(target)
     local code = string.format('value = sim.getProperty(%s, \'%s\')', targetStr, selectedProperty)
-    print('> ' .. code)
-    if pcall(sim.executeScriptString, code .. '@lua', sim.getScript(sim.scripttype_sandbox)) then
-        if propertiesInfos[selectedProperty].flags.large then
-            print('-- (large data)')
-        else
-            print(pvalue)
-        end
-    end
+    simCmd.exec('lua', code)
+    simCmd.exec('lua', 'value')
 end
 
 function removeSelected()
