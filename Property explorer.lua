@@ -483,14 +483,14 @@ function onContextMenu_copyValue()
 end
 
 function gen_getObject(handle)
-    if sim.isHandle(target) then
-        return 'sim.getObject \'' .. sim.getObjectAlias(target, 1) .. '\''
-    elseif target == sim.handle_scene then
+    if sim.isHandle(handle) then
+        return 'sim.getObject \'' .. sim.getObjectAlias(handle, 1) .. '\''
+    elseif handle == sim.handle_scene then
         return 'sim.handle_scene'
-    elseif target == sim.handle_app then
+    elseif handle == sim.handle_app then
         return 'sim.handle_app'
     else
-        return tostring(target)
+        return tostring(handle)
     end
 end
 
