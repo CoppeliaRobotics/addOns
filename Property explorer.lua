@@ -204,10 +204,31 @@ function getFilteringPattern()
     return pat
 end
 
+local CLASS_PRIORITY = {
+    object = 1,
+    sceneObject = 2,
+}
+
+local function classOrder(ca, cb)
+    local pa = CLASS_PRIORITY[ca] or 100
+    local pb = CLASS_PRIORITY[cb] or 100
+
+    if pa ~= pb then
+        return pa < pb
+    else
+        return ca < cb
+    end
+end
+
 function propertyOrder(a, b)
     local ca = propertiesInfos[a].class
     local cb = propertiesInfos[b].class
-    return ca < cb or (ca == cb and a < b)
+
+    if ca ~= cb then
+        return classOrder(ca, cb)
+    else
+        return a < b
+    end
 end
 
 function generateTree(pnames)
