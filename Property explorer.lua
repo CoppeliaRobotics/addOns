@@ -114,7 +114,7 @@ function sysCall_event(events)
 
     local b, plistChanged = false, false
     for _, e in ipairs(events) do
-        if e.handle == target and e.event == 'objectChanged' then
+        if e.handle == target.handle and e.event == 'objectChanged' then
             b = true
             for k, v in pairs(e.data) do
                 if propertiesInfos[k] == nil and v ~= cbor.NULL_VALUE then
@@ -134,7 +134,7 @@ function sysCall_event(events)
 
     local changedRows = {}
     for _, e in ipairs(events) do
-        if e.handle == target and e.event == 'objectChanged' then
+        if e.handle == target.handle and e.event == 'objectChanged' then
             for pname, pvalue in pairs(e.data) do
                 local i = propertyNameToIndex[pname]
                 if i then
