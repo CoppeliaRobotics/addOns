@@ -706,8 +706,6 @@ end
 
 function assignValue()
     local simCmd = require 'simCmd'
-    local pvalue = sim.getProperty(target, selectedProperty)
-    pvalue = _S.anyToString(pvalue)
     local targetStr = gen_getObject(target)
     local code = string.format('value = sim.getProperty(%s, \'%s\')', targetStr, selectedProperty)
     simCmd.exec('lua', code)
