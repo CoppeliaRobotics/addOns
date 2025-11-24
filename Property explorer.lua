@@ -13,30 +13,30 @@ function sysCall_init()
 
     simUI = require 'simUI'
 
-    disableDuringSim = sim.getBoolProperty(sim.handle_app, 'customData.propertyExplorer.disableDuringSim', {noError = true})
+    disableDuringSim = sim.app.customData['propertyExplorer.disableDuringSim']
     if disableDuringSim == nil then
         disableDuringSim = false
-        sim.setBoolProperty(sim.handle_app, 'customData.propertyExplorer.disableDuringSim', disableDuringSim)
+        sim.app.customData['propertyExplorer.disableDuringSim'] = disableDuringSim
     end
 
-    target = sim.handle_scene
+    target = sim.scene
     selectedProperty = ''
     filterMatching = '*'
     filterInvert = false
 
-    uiPos = sim.getTableProperty(sim.handle_app, 'customData.propertyExplorer.uiPos', {noError=true})
-    uiSize = sim.getTableProperty(sim.handle_app, 'customData.propertyExplorer.uiSize', {noError=true})
-    uiPropsState = sim.getBufferProperty(sim.handle_app, 'customData.propertyExplorer.uiPropsState', {noError=true})
-    uiCollapseProps = sim.getTableProperty(sim.handle_app, 'customData.propertyExplorer.uiCollapseProps', {noError=true}) or {}
-    uiTargetRadio = sim.getIntProperty(sim.handle_app, 'customData.propertyExplorer.uiTargetRadio', {noError=true}) or 1
+    uiPos = sim.app.customData['propertyExplorer.uiPos']
+    uiSize = sim.app.customData['propertyExplorer.uiSize']
+    uiPropsState = sim.app.customData['propertyExplorer.uiPropsState']
+    uiCollapseProps = sim.app.customData['propertyExplorer.uiCollapseProps'] or {}
+    uiTargetRadio = sim.app.customData['propertyExplorer.uiTargetRadio'] or 1
 
-    if uiTargetRadio == 1 then target = sim.handle_app end
+    if uiTargetRadio == 1 then target = sim.app end
 
     createUi()
 end
 
 function sysCall_beforeSimulation()
-    disableDuringSim = sim.getBoolProperty(sim.handle_app, 'customData.propertyExplorer.disableDuringSim', {noError = true}) == true
+    disableDuringSim = sim.app.customData['propertyExplorer.disableDuringSim'] == true
     if disableDuringSim then
         restoreAfterSimulation = {target = target}
         destroyUi()
@@ -61,7 +61,7 @@ function sysCall_cleanup()
 end
 
 function sysCall_afterInstanceSwitch()
-    sysCall_selChange {sel = sim.getObjectSel()}
+    sysCall_selChange {sel = sim.scene.selection}
 
     -- force a target change event, otherwise switching scene where the same
     -- handle is selected won't trigger a target change:
@@ -85,12 +85,15 @@ function sysCall_sensing()
 end
 
 function sysCall_selChange(inData)
-    if target == sim.handle_app then
+    if target == sim.app then
         -- if app selected, object selection won't switch target
         return
+    elseif #inData.sel == 0 then
+        -- scene if empty selection
+        target = sim.scene
     else
-        -- otherwise currently selected object or scene if empty selection
-        target = inData.sel[#inData.sel] or sim.handle_scene
+        -- otherwise currently selected object
+        target = sim.Object:toobject(inData.sel[#inData.sel])
     end
 end
 
@@ -98,10 +101,10 @@ function sysCall_event(events)
     if not ui then return end
     if target == nil or propertiesInfos == nil then return end
 
-    if target ~= sim.handle_app and target ~= sim.handle_scene and not sim.isHandle(target) then
+    if target ~= sim.app and target ~= sim.scene and not sim.isHandle(target) then
         -- target was removed. switch to scene:
-        if target ~= sim.handle_app then
-            target = sim.handle_scene
+        if target ~= sim.app then
+            target = sim.scene
             onTargetChanged()
         end
         return
@@ -177,7 +180,6 @@ function sysCall_event(events)
 end
 
 function getSubObjects(obj)
-    obj = sim.Object:toobject(obj)
     if obj.objectType == 'shape' then
         return obj.meshes
     elseif obj.objectType == 'script' then
@@ -186,9 +188,8 @@ function getSubObjects(obj)
 end
 
 function getSuperObject(obj)
-    obj = sim.Object:toobject(obj)
     if obj.objectType == 'mesh' then
-        return sim.getHandleProperty(target, 'shape')
+        return obj.shape
     elseif obj.objectType == 'detachedScript' then
         for _, obj1 in ipairs(sim.scene.objects) do
             if obj1.objectType == 'script' and obj1.detachedScript == obj then
@@ -208,16 +209,20 @@ function checkTargetChanged()
 end
 
 function setTargetApp()
-    target = sim.handle_app
+    target = sim.app
 end
 
 function setTargetSel()
-    local sel = sim.getObjectSel()
-    target = sel[#sel] or sim.handle_scene
+    local sel = sim.scene.selection
+    if #sel == 0 then
+        target = sim.scene
+    else
+        target = sim.Object:toobject(sel[#sel])
+    end
 end
 
 function onSubTargetChanged(ui, id, i)
-    target = comboHandles[i + 1]
+    target = sim.Object:toobject(comboHandles[i + 1])
 end
 
 function getFilteringPattern()
@@ -391,7 +396,7 @@ function updateTableRow(i, updateSingle)
             tableRows.pdisplayv[i] = _S.anyToString(propertiesValues[pname], {omitQuotes = true})
             tableRows.pdisplayv[i] = string.elide(tableRows.pdisplayv[i], 30, {truncateAtNewLine=true})
 
-            local impr = sim.getBoolProperty(sim.handle_app, 'customData.propertyExplorer.impr', {noError = true}) ~= false
+            local impr = sim.app.customData.propertyExplorer.impr ~= false
             if impr and pname:endswith 'Time' and (ptype == sim.propertytype_float or ptype == sim.propertytype_int) then
                 local seconds = math.floor(propertiesValues[pname])
                 local milliseconds = math.floor((propertiesValues[pname] - seconds) * 1000)
@@ -412,16 +417,16 @@ function onTargetChanged()
     readTargetProperties()
     comboLabels, comboHandles = {}, {}
     local comboIdx = 0
-    sim.setIntProperty(sim.handle_app, 'customData.propertyExplorer.uiTargetRadio', target == sim.handle_app and 1 or 2)
-    if target == sim.handle_app then
-        table.insert(comboLabels, 'sim.handle_app')
-        table.insert(comboHandles, sim.handle_app)
-    elseif target == sim.handle_scene then
-        table.insert(comboLabels, 'sim.handle_scene')
-        table.insert(comboHandles, sim.handle_scene)
+    sim.app.customData.propertyExplorer.uiTargetRadio = target == sim.app and 1 or 2
+    if target == sim.app then
+        table.insert(comboLabels, 'sim.app')
+        table.insert(comboHandles, sim.app)
+    elseif target == sim.scene then
+        table.insert(comboLabels, 'sim.scene')
+        table.insert(comboHandles, sim.scene)
     else
         local superTarget = getSuperObject(target) or target
-        table.insert(comboLabels, sim.getObjectAlias(superTarget, 1))
+        table.insert(comboLabels, superTarget:getAlias(1))
         table.insert(comboHandles, superTarget)
         local subObjects = getSubObjects(superTarget)
         for i, subObject in ipairs(subObjects or {}) do
@@ -520,12 +525,12 @@ function onContextMenu_copyValue()
     simUI.setClipboardText(pvalue)
 end
 
-function gen_getObject(handle)
-    if sim.isHandle(handle) then
-        return 'sim.getObject \'' .. sim.getObjectAlias(handle, 1) .. '\''
-    elseif handle == sim.handle_scene then
+function gen_getObject(o)
+    if sim.isHandle(o) then
+        return 'sim.getObject \'' .. o:getAlias(1) .. '\''
+    elseif handle == sim.scene then
         return 'sim.handle_scene'
-    elseif handle == sim.handle_app then
+    elseif handle == sim.app then
         return 'sim.handle_app'
     else
         return tostring(handle)
@@ -581,7 +586,7 @@ end
 
 function onContextMenu_loadValueFromFile()
     local lfsx = require 'lfsx'
-    local sceneDir = lfsx.dirname(sim.getStringProperty(sim.handle_scene, 'scenePath'))
+    local sceneDir = lfsx.dirname(sim.scene.scenePath)
     local result = simUI.fileDialog(simUI.filedialog_type.load, 'Load file', sceneDir, '', '', '', true)
     if #result == 1 then
         local file = io.open(result[1], 'r')
@@ -604,7 +609,7 @@ function onContextMenu_saveValueToFile()
     propertiesValues[selectedProperty] = sim.getProperty(target, selectedProperty)
     local value = sim.convertPropertyValue(propertiesValues[selectedProperty], propertiesInfos[selectedProperty].type, sim.propertytype_string)
     local lfsx = require 'lfsx'
-    local sceneDir = lfsx.dirname(sim.getStringProperty(sim.handle_scene, 'scenePath'))
+    local sceneDir = lfsx.dirname(sim.scene.scenePath)
     local result = simUI.fileDialog(simUI.filedialog_type.save, 'Save file', sceneDir, '', '', '', true)
     if #result == 1 then
         local file = io.open(result[1], 'w')
@@ -646,7 +651,7 @@ function onRowDoubleClicked(ui, id, row, col)
         else
             uiCollapseProps[selectedProperty] = true
         end
-        sim.setTableProperty(sim.handle_app, 'customData.propertyExplorer.uiCollapseProps', uiCollapseProps)
+        sim.app.customData.propertyExplorer.uiCollapseProps = uiCollapseProps
         onTargetChanged()
         return
     end
@@ -671,7 +676,7 @@ function onClose()
     if selectedRow >= 0 then
         simUI.setPropertiesSelection(ui, ui_table, -1, false)
     else
-        sim.setBoolProperty(sim.handle_app, 'customData.propertyExplorer.autoStart', false)
+        sim.app.customData.propertyExplorer.autoStart = false
         leaveNow = true
     end
 end
@@ -717,8 +722,8 @@ function createUi()
         end
         xml = '<ui title="Property Explorer" activate="false" closeable="true" on-close="onClose" resizable="true"' .. pos .. sz .. '>'
         xml = xml .. '<group flat="true" layout="hbox" content-margins="0,0,0,0">'
-        xml = xml .. '<radiobutton text="App" checked="' .. tostring(target == sim.handle_app) .. '" on-click="setTargetApp" />'
-        xml = xml .. '<radiobutton text="Sel:" checked="' .. tostring(target ~= sim.handle_app) .. '" on-click="setTargetSel" />'
+        xml = xml .. '<radiobutton text="App" checked="' .. tostring(target == sim.app) .. '" on-click="setTargetApp" />'
+        xml = xml .. '<radiobutton text="Sel:" checked="' .. tostring(target ~= sim.app) .. '" on-click="setTargetSel" />'
         xml = xml .. '<combobox id="${ui_combo_selection}" on-change="onSubTargetChanged" stretch="10">'
         xml = xml .. '</combobox>'
         xml = xml .. '</group>'
@@ -742,9 +747,9 @@ function destroyUi()
         uiPos = {simUI.getPosition(ui)}
         uiSize = {simUI.getSize(ui)}
         uiPropsState = simUI.getPropertiesState(ui, ui_table)
-        sim.setTableProperty(sim.handle_app, 'customData.propertyExplorer.uiPos', uiPos)
-        sim.setTableProperty(sim.handle_app, 'customData.propertyExplorer.uiSize', uiSize)
-        sim.setBufferProperty(sim.handle_app, 'customData.propertyExplorer.uiPropsState', uiPropsState)
+        sim.app.customData.propertyExplorer.uiPos = uiPos
+        sim.app.customData.propertyExplorer.uiSize = uiSize
+        sim.app.customData.propertyExplorer.uiPropsState = uiPropsState
         simUI.destroy(ui)
         ui = nil
     end
