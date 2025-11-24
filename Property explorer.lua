@@ -101,7 +101,7 @@ function sysCall_event(events)
     if not ui then return end
     if target == nil or propertiesInfos == nil then return end
 
-    if target ~= sim.app and target ~= sim.scene and not sim.isHandle(target) then
+    if target ~= sim.app and target ~= sim.scene and not sim.isHandle(target.handle) then
         -- target was removed. switch to scene:
         if target ~= sim.app then
             target = sim.scene
@@ -537,7 +537,7 @@ function onContextMenu_copyValue()
 end
 
 function gen_getObject(o)
-    if sim.isHandle(o) then
+    if o.getAlias ~= nil then
         return 'sim.getObject \'' .. o:getAlias(1) .. '\''
     elseif o == sim.scene then
         return 'sim.handle_scene'
