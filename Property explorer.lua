@@ -1,4 +1,4 @@
-local sim = require 'sim'
+local sim = require 'sim-2'
 local simUI
 local cbor
 
@@ -399,13 +399,12 @@ function onTargetChanged()
         local superTarget = target
         local objectType = sim.getStringProperty(target, 'objectType')
         if objectType == 'mesh' then
-            superTarget = sim.getIntProperty(target, 'shapeUid')
-            superTarget = sim.getObjectFromUid(superTarget)
+            superTarget = sim.getHandleProperty(target, 'shape')
         end
         table.insert(comboLabels, sim.getObjectAlias(superTarget, 1))
         table.insert(comboHandles, superTarget)
         if objectType == 'shape' or objectType == 'mesh' then
-            local meshes = sim.getIntArrayProperty(superTarget, 'meshes')
+            local meshes = sim.getHandleArrayProperty(superTarget, 'meshes')
             for i, mesh in ipairs(meshes) do
                 table.insert(comboLabels, '    Mesh ' .. i)
                 table.insert(comboHandles, mesh)
