@@ -539,12 +539,12 @@ end
 function gen_getObject(o)
     if sim.isHandle(o) then
         return 'sim.getObject \'' .. o:getAlias(1) .. '\''
-    elseif handle == sim.scene then
+    elseif o == sim.scene then
         return 'sim.handle_scene'
-    elseif handle == sim.app then
+    elseif o == sim.app then
         return 'sim.handle_app'
     else
-        return tostring(handle)
+        return tostring(o.handle)
     end
 end
 
