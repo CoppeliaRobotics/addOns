@@ -349,6 +349,28 @@ function readTargetProperties()
     generateTree(matchingPropertiesNames)
 end
 
+function toSimpleString(v, pname)
+    if v == nil then return '' end
+    local impr = sim.app.customData.propertyExplorer.impr ~= false
+    local ptype = propertiesInfos[pname].type
+    if ptype == sim.propertytype_handle then
+        v = v.handle
+    elseif ptype == sim.propertytype_handlearray then
+        v = map(function(x) return x.handle end, v)
+    elseif table.find({sim.propertytype_color, sim.propertytype_vector3, sim.propertytype_matrix, sim.propertytype_quaternion, sim.propertytype_pose}, ptype) then
+        v = v:data()
+    elseif impr and pname:endswith 'Time' and (ptype == sim.propertytype_float or ptype == sim.propertytype_int) then
+        local seconds = math.floor(v)
+        local milliseconds = math.floor((v - seconds) * 1000)
+        if seconds > 60 * 60 * 24 then
+            v = os.date("%Y-%m-%d %H:%M:%S", seconds) .. string.format(".%03d", milliseconds)
+        else
+            v = string.format("%02d:%02d:%02d.%03d", seconds // 3600, (seconds // 60) % 60, seconds % 60, milliseconds)
+        end
+    end
+    return _S.anyToString(v, {omitQuotes = true})
+end
+
 function updateTableRow(i, updateSingle)
     local pname = tableRows.pname[i]
     if tableRows.type[i] == 'classHeader' then
@@ -393,19 +415,8 @@ function updateTableRow(i, updateSingle)
             tableRows.pdisplayv[i] = flags.writable and '<write-only>' or '<not readable>'
             tableRows.pflags[i] = -3
         else
-            tableRows.pdisplayv[i] = _S.anyToString(propertiesValues[pname], {omitQuotes = true})
+            tableRows.pdisplayv[i] = toSimpleString(propertiesValues[pname], pname)
             tableRows.pdisplayv[i] = string.elide(tableRows.pdisplayv[i], 30, {truncateAtNewLine=true})
-
-            local impr = sim.app.customData.propertyExplorer.impr ~= false
-            if impr and pname:endswith 'Time' and (ptype == sim.propertytype_float or ptype == sim.propertytype_int) then
-                local seconds = math.floor(propertiesValues[pname])
-                local milliseconds = math.floor((propertiesValues[pname] - seconds) * 1000)
-                if seconds > 60 * 60 * 24 then
-                    tableRows.pdisplayv[i] = os.date("%Y-%m-%d %H:%M:%S", seconds) .. string.format(".%03d", milliseconds)
-                else
-                    tableRows.pdisplayv[i] = string.format("%02d:%02d:%02d.%03d", seconds // 3600, (seconds // 60) % 60, seconds % 60, milliseconds)
-                end
-            end
         end
     end
     if updateSingle then
