@@ -180,7 +180,11 @@ function sysCall_event(events)
 end
 
 function getSubObjects(obj)
-    if obj.objectType == 'shape' then
+    if obj == sim.app then
+        return sim.app.addOns
+    elseif obj == sim.scene then
+        return table.add(sim.scene.collections, sim.scene.drawingObjects)
+    elseif obj.objectType == 'shape' then
         return obj.meshes
     elseif obj.objectType == 'script' then
         return {obj.detachedScript}
@@ -188,9 +192,14 @@ function getSubObjects(obj)
 end
 
 function getSuperObject(obj)
-    if obj.objectType == 'mesh' then
+    if obj.objectType == 'collection' or obj.objectType == 'drawingObject' then
+        return sim.scene
+    elseif obj.objectType == 'mesh' then
         return obj.shape
     elseif obj.objectType == 'detachedScript' then
+        if table.find(sim.app.addOns, obj) then
+            return sim.app
+        end
         for _, obj1 in ipairs(sim.scene.objects) do
             if obj1.objectType == 'script' and obj1.detachedScript == obj then
                 return obj1
@@ -429,6 +438,7 @@ function onTargetChanged()
     comboLabels, comboHandles = {}, {}
     local comboIdx = 0
     sim.app.customData.propertyExplorer.uiTargetRadio = target == sim.app and 1 or 2
+    local superTarget = target
     if target == sim.app then
         table.insert(comboLabels, 'sim.app')
         table.insert(comboHandles, sim.app)
@@ -436,15 +446,21 @@ function onTargetChanged()
         table.insert(comboLabels, 'sim.scene')
         table.insert(comboHandles, sim.scene)
     else
-        local superTarget = getSuperObject(target) or target
-        table.insert(comboLabels, superTarget:getAlias(1))
-        table.insert(comboHandles, superTarget)
-        local subObjects = getSubObjects(superTarget)
-        for i, subObject in ipairs(subObjects or {}) do
-            table.insert(comboLabels, '    ' .. subObject.objectType .. ' ' .. i)
-            table.insert(comboHandles, subObject.handle)
-            if subObject == sim.Object:toobject(target) then comboIdx = i end
+        superTarget = getSuperObject(target) or target
+        local alias
+        if superTarget.getAlias ~= nil then
+            alias = superTarget:getAlias(1)
+        else
+            alias = superTarget.objectType .. ' ' .. superTarget.handle
         end
+        table.insert(comboLabels, alias)
+        table.insert(comboHandles, superTarget)
+    end
+    local subObjects = getSubObjects(superTarget)
+    for i, subObject in ipairs(subObjects or {}) do
+        table.insert(comboLabels, '    ' .. subObject.objectType .. ' ' .. subObject.handle)
+        table.insert(comboHandles, subObject.handle)
+        if subObject == sim.Object:toobject(target) then comboIdx = i end
     end
     simUI.setComboboxItems(ui, ui_combo_selection, comboLabels, comboIdx)
     simUI.setEnabled(ui, ui_combo_selection, #comboLabels > 1)
