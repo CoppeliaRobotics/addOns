@@ -402,7 +402,7 @@ function updateTableRow(i, updateSingle)
         ptypeStr = ptypeStr:gsub('array$', '[]')
         tableRows.ptype[i] = ptypeStr
         tableRows.pvalue[i] = sim.convertPropertyValue(propertiesValues[pname], propertiesInfos[pname].type, sim.propertytype_string)
-        tableRows.description[i] = propertiesInfos[pname].descr
+        tableRows.description[i] = propertiesInfos[pname].descr or ''
         if tableRows.pvalue[i] == nil then tableRows.pvalue[i] = '' end
         tableRows.pflags[i] = flags.value
         if flags.large then
