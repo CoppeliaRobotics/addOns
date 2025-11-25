@@ -85,8 +85,8 @@ function sysCall_sensing()
 end
 
 function sysCall_selChange(inData)
-    if target == sim.app then
-        -- if app selected, object selection won't switch target
+    if superTarget == sim.app then
+        -- if app (or some app's sub-object) selected, object selection won't switch target
         return
     elseif #inData.sel == 0 then
         -- scene if empty selection
@@ -438,7 +438,7 @@ function onTargetChanged()
     comboLabels, comboHandles = {}, {}
     local comboIdx = 0
     sim.app.customData.propertyExplorer.uiTargetRadio = target == sim.app and 1 or 2
-    local superTarget = target
+    superTarget = target
     if target == sim.app then
         table.insert(comboLabels, 'sim.app')
         table.insert(comboHandles, sim.app)
