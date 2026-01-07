@@ -58,6 +58,8 @@ function processEvent(e)
 
     if not testFilter(e) then return end
 
+    if p('stripData') then e.data = nil end
+
     return _S.tableToString(e, {indent = true}, 99)
 end
 
@@ -76,6 +78,7 @@ function onFilterChanged()
         excludeMsgDispatchTime = ui_chkExcludeMsgDispatchTime,
         excludeSelectionEvents = ui_chkExcludeSelectionEvents,
         excludeCollapseEvents = ui_chkExcludeCollapseEvents,
+        stripData = ui_chkStripData,
     } do
         local checkboxValue = simUI.getCheckboxValue(ui, ui_ctrl) > 0
         sim.setBoolProperty(sim.handle_app, 'customData.eventViewer.' .. pname, checkboxValue)
@@ -125,6 +128,13 @@ function createUi()
                     <checkbox id="${ui_chkExcludeMsgDispatchTime}" text="msgDispatchTime" checked="true" on-change="onFilterChanged" />
                     <checkbox id="${ui_chkExcludeSelectionEvents}" text="selection events" checked="true" on-change="onFilterChanged" />
                     <checkbox id="${ui_chkExcludeCollapseEvents}" text="hierarchy collapse events" checked="true" on-change="onFilterChanged" />
+                    <stretch />
+                </group>
+                <br/>
+                <label text="" />
+                <label text="" />
+                <group layout="hbox" content-margins="0,0,0,0" flat="true">
+                    <checkbox id="${ui_chkStripData}" text="strip 'data' field" checked="false" on-change="onFilterChanged" />
                     <stretch />
                 </group>
                 <br/>
