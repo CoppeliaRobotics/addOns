@@ -513,6 +513,17 @@ function updateContextMenuForSelectedProperty()
         addContextMenu('saveValueToFile', 'Save value to file...', canAssign)
         addContextMenu('--', '')
         addContextMenu('remove', 'Remove property', canRemove)
+        local ptypeStr = sim.getPropertyTypeString(propertiesInfos[selectedProperty].type)
+        if ptypeStr == 'handle' or ptypeStr == 'handlearray' then
+            local objects = propertiesValues[selectedProperty]
+            if ptypeStr == 'handle' then objects = {objects} end
+            if #objects > 0 then
+                addContextMenu('--', '')
+            end
+            for _, object in ipairs(objects) do
+                addContextMenu('settarget:' .. object.handle, 'Inspect object ' .. object.handle .. '...')
+            end
+        end
     elseif selectedProperty and selectedProperty:endswith '.' then
         local cando = true
         for pname, pinfo in pairs(propertiesInfos) do
@@ -527,7 +538,16 @@ function updateContextMenuForSelectedProperty()
 end
 
 function onPropertyContextMenuTriggered(ui, id, key)
-    _G['onContextMenu_' .. key]()
+    local args = string.split(key, ':')
+    key = table.remove(args, 1)
+    assert(#args == 0 or #args == 1, 'invalid format')
+    if #args == 1 then
+        local json = require 'dkjson'
+        args = json.decode('[' .. args[1] .. ']')
+    end
+    local func = 'onContextMenu_' .. key
+    assert(_G[func], 'no such function: ' .. func)
+    _G[func](table.unpack(args))
 end
 
 function onContextMenu_printDescr()
@@ -658,6 +678,10 @@ function onContextMenu_removeall()
             end
         end
     end
+end
+
+function onContextMenu_settarget(handle)
+    target = sim.Object:toobject(handle)
 end
 
 function onRowSelected(ui, id, row)
