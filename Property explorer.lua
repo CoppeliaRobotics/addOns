@@ -511,8 +511,6 @@ function updateContextMenuForSelectedProperty()
         addContextMenu('editInCodeEditor', 'Edit in code editor...', canEdit)
         addContextMenu('loadValueFromFile', 'Load value from file...', canEdit)
         addContextMenu('saveValueToFile', 'Save value to file...', canAssign)
-        addContextMenu('--', '')
-        addContextMenu('remove', 'Remove property', canRemove)
         local ptypeStr = sim.getPropertyTypeString(propertiesInfos[selectedProperty].type)
         if ptypeStr == 'handle' or ptypeStr == 'handlearray' then
             local objects = propertiesValues[selectedProperty]
@@ -520,10 +518,17 @@ function updateContextMenuForSelectedProperty()
             if #objects > 0 then
                 addContextMenu('--', '')
             end
+            local prefix = 'settarget_:'
+            if #objects > 1 then
+                addContextMenu('settarget/', 'Inspect subobject')
+                prefix = 'settarget/:'
+            end
             for _, object in ipairs(objects) do
-                addContextMenu('settarget:' .. object.handle, 'Inspect object ' .. object.handle .. '...')
+                addContextMenu(prefix .. object.handle, 'Inspect subobject ' .. object.handle .. '...')
             end
         end
+        addContextMenu('--', '')
+        addContextMenu('remove', 'Remove property', canRemove)
     elseif selectedProperty and selectedProperty:endswith '.' then
         local cando = true
         for pname, pinfo in pairs(propertiesInfos) do
@@ -540,6 +545,7 @@ end
 function onPropertyContextMenuTriggered(ui, id, key)
     local args = string.split(key, ':')
     key = table.remove(args, 1)
+    key = string.gsub(key, '/', '_')
     assert(#args == 0 or #args == 1, 'invalid format')
     if #args == 1 then
         local json = require 'dkjson'
@@ -666,6 +672,10 @@ function onContextMenu_saveValueToFile()
     end
 end
 
+function onContextMenu_settarget_(handle)
+    target = sim.Object:toobject(handle)
+end
+
 function onContextMenu_remove()
     removeSelected()
 end
@@ -678,10 +688,6 @@ function onContextMenu_removeall()
             end
         end
     end
-end
-
-function onContextMenu_settarget(handle)
-    target = sim.Object:toobject(handle)
 end
 
 function onRowSelected(ui, id, row)
