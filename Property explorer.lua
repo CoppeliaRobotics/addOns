@@ -447,13 +447,13 @@ function onTargetChanged()
         table.insert(comboHandles, sim.scene)
     else
         superTarget = getSuperObject(target) or target
-        local alias
-        if superTarget.getAlias ~= nil then
-            alias = superTarget:getAlias(1)
+        local name
+        if superTarget.getName ~= nil then
+            name = superTarget:getName(1)
         else
-            alias = superTarget.objectType .. ' ' .. superTarget.handle
+            name = superTarget.objectType .. ' ' .. superTarget.handle
         end
-        table.insert(comboLabels, alias)
+        table.insert(comboLabels, name)
         table.insert(comboHandles, superTarget)
     end
     local subObjects = getSubObjects(superTarget)
@@ -579,12 +579,12 @@ function onContextMenu_copyValue()
 end
 
 function gen_getObject(o)
-    if o.getAlias ~= nil then
-        return 'sim.getObject \'' .. o:getAlias(1) .. '\''
+    if o.getName ~= nil then
+        return 'sim.scene:getObject \'' .. o:getName(1) .. '\''
     elseif o == sim.scene then
-        return 'sim.handle_scene'
+        return 'sim.scene'
     elseif o == sim.app then
-        return 'sim.handle_app'
+        return 'sim.app'
     else
         return tostring(o.handle)
     end
