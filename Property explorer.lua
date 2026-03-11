@@ -499,7 +499,7 @@ function updateContextMenuForSelectedProperty()
         canAssign = f.readable
         canEdit = f.readable and f.writable
         canRemove = f.removable
-        if propertiesInfos[selectedProperty].label ~= '' then
+        if propertiesInfos[selectedProperty].label then
             addContextMenu('#', propertiesInfos[selectedProperty].label)
             addContextMenu('--', '')
         end
