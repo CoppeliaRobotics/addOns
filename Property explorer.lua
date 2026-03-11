@@ -7,6 +7,11 @@ function sysCall_info()
 end
 
 function sysCall_init()
+    if sim.app.headlessMode > 0 then
+        sim.app:addLog('Property Explorer cannot start in headless mode')
+        return {cmd = 'cleanup'}
+    end
+
     cbor = require 'simCBOR'
     cbor.NULL_VALUE = setmetatable({}, {__tostring = function() return 'null' end})
     cbor.SIMPLE[22] = function(pos) return cbor.NULL_VALUE, pos, 'null' end
