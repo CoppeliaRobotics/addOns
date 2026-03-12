@@ -727,6 +727,13 @@ function onRowDoubleClicked(ui, id, row, col)
     if canAssign then assignValue() end
 end
 
+function onKeyPress(ui, id, key, keystr, mods)
+    if key == simUI.key.F and mods.control then
+        filterVisible = not filterVisible
+        simUI.setWidgetVisibility(ui, ui_filter_grp, filterVisible)
+    end
+end
+
 function onPropertyEdit(ui, id, key, value)
     local newValue, err = sim.convertPropertyValue(value, sim.propertytype_string, propertiesInfos[key].type)
     if err then
@@ -793,12 +800,12 @@ function createUi()
         xml = xml .. '<combobox id="${ui_combo_selection}" on-change="onSubTargetChanged" stretch="10">'
         xml = xml .. '</combobox>'
         xml = xml .. '</group>'
-        xml = xml .. '<group flat="true" layout="hbox" content-margins="0,0,0,0">'
+        xml = xml .. '<group id="${ui_filter_grp}" visible="false" flat="true" layout="hbox" content-margins="0,0,0,0">'
         xml = xml .. '<label text="Filter:" />'
         xml = xml .. '<edit id="${ui_filter}" value="' .. filterMatching .. '" on-change="updateFilter" />'
         xml = xml .. '<checkbox id="${ui_filter_invert}" text="Invert" checked="' .. tostring(filterInvert) .. '" on-change="updateFilter" />'
         xml = xml .. '</group>'
-        xml = xml .. '<properties id="${ui_table}" on-selection-change="onRowSelected" on-double-click="onRowDoubleClicked" on-property-edit="onPropertyEdit" on-context-menu-triggered="onPropertyContextMenuTriggered">'
+        xml = xml .. '<properties id="${ui_table}" on-selection-change="onRowSelected" on-double-click="onRowDoubleClicked" on-property-edit="onPropertyEdit" on-context-menu-triggered="onPropertyContextMenuTriggered" on-key-press="onKeyPress">'
         xml = xml .. '</properties>'
         xml = xml .. '</ui>'
         ui = simUI.create(xml)
