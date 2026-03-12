@@ -186,7 +186,7 @@ function sysCall_event(events)
         table.insert(descriptions, chg.description)
     end
     if #changedIndexes > 0 then
-        simUI.setPropertiesRows(ui, ui_table, changedIndexes, pnames, ptypes, pvalues, pflags, pdisplayk, pdisplayv, icons, descriptions)
+        simUI.setPropertiesRows(ui, ui_properties, changedIndexes, pnames, ptypes, pvalues, pflags, pdisplayk, pdisplayv, icons, descriptions)
     end
 end
 
@@ -350,14 +350,19 @@ function readTargetProperties()
     propertiesInfos = sim.getPropertiesInfos(target)
     propertiesNames = {}
     matchingPropertiesNames = {}
+    methods = {}
     local pat = getFilteringPattern()
     local strFindError
-    for pname, _ in pairs(propertiesInfos) do
+    for pname, pinfo in pairs(propertiesInfos) do
         table.insert(propertiesNames, pname)
         local ok, m = pcall(string.find, pname, pat)
         if ok then
             if (m and not filterInvert) or (not m and filterInvert) then
-                table.insert(matchingPropertiesNames, pname)
+                if pinfo.type == sim.propertytype_method then
+                    table.insert(methods, pname)
+                else
+                    table.insert(matchingPropertiesNames, pname)
+                end
             end
         else
             strFindError = strFindError or m
@@ -366,6 +371,7 @@ function readTargetProperties()
     simUI.setStyleSheet(ui, ui_filter, strFindError and 'border: 1px solid red' or '')
     table.sort(propertiesNames, propertyOrder)
     table.sort(matchingPropertiesNames, propertyOrder)
+    table.sort(methods, propertyOrder)
     generateTree(matchingPropertiesNames)
 end
 
@@ -440,7 +446,7 @@ function updateTableRow(i, updateSingle)
         end
     end
     if updateSingle then
-        simUI.setPropertiesRow(ui, ui_table, i - 1, tableRows.pname[i], tableRows.ptype[i], tableRows.pvalue[i], tableRows.pflags[i], tableRows.pdisplayk[i], tableRows.pdisplayv[i], tableRows.icon[i], tableRows.description[i])
+        simUI.setPropertiesRow(ui, ui_properties, i - 1, tableRows.pname[i], tableRows.ptype[i], tableRows.pvalue[i], tableRows.pflags[i], tableRows.pdisplayk[i], tableRows.pdisplayv[i], tableRows.icon[i], tableRows.description[i])
     end
 end
 
@@ -482,10 +488,15 @@ function onTargetChanged()
         end
         updateTableRow(i)
     end
-    simUI.setProperties(ui, ui_table, tableRows.pname, tableRows.ptype, tableRows.pvalue, tableRows.pflags, tableRows.pdisplayk, tableRows.pdisplayv, tableRows.icon, tableRows.description)
+    simUI.setProperties(ui, ui_properties, tableRows.pname, tableRows.ptype, tableRows.pvalue, tableRows.pflags, tableRows.pdisplayk, tableRows.pdisplayv, tableRows.icon, tableRows.description)
     if selectedRow ~= -1 then
-        simUI.setPropertiesSelection(ui, ui_table, selectedRow - 1, false)
+        simUI.setPropertiesSelection(ui, ui_properties, selectedRow - 1, false)
     end
+
+    simUI.setText(ui, ui_methods, '<ul>' .. table.join(map(
+        function(m) return '<li>' .. m .. '</li>' end,
+        methods)) .. '</ul>')
+
     updateContextMenuForSelectedProperty()
     sim.setEventFilters{[target] = {}}
 end
@@ -550,7 +561,7 @@ function updateContextMenuForSelectedProperty()
         end
         addContextMenu('removeall', 'Remove ' .. selectedProperty .. '*', cando)
     end
-    simUI.setPropertiesContextMenu(ui, ui_table, contextMenuKeys, contextMenuTitles)
+    simUI.setPropertiesContextMenu(ui, ui_properties, contextMenuKeys, contextMenuTitles)
 end
 
 function onPropertyContextMenuTriggered(ui, id, key)
@@ -749,7 +760,7 @@ end
 
 function onClose()
     if selectedRow >= 0 then
-        simUI.setPropertiesSelection(ui, ui_table, -1, false)
+        simUI.setPropertiesSelection(ui, ui_properties, -1, false)
     else
         sim.app.customData.propertyExplorer.autoStart = false
         leaveNow = true
@@ -793,7 +804,7 @@ function createUi()
         if uiSize then
             sz = ' size="' .. uiSize[1] .. ',' .. uiSize[2] .. '"'
         end
-        xml = '<ui title="Property Explorer" activate="false" closeable="true" on-close="onClose" resizable="true"' .. pos .. sz .. '>'
+        xml = '<ui title="Property Explorer" spacing="0" activate="false" closeable="true" on-close="onClose" resizable="true"' .. pos .. sz .. '>'
         xml = xml .. '<group flat="true" layout="hbox" content-margins="0,0,0,0">'
         xml = xml .. '<radiobutton text="App" checked="' .. tostring(target == sim.app) .. '" on-click="setTargetApp" />'
         xml = xml .. '<radiobutton text="Sel:" checked="' .. tostring(target ~= sim.app) .. '" on-click="setTargetSel" />'
@@ -805,12 +816,20 @@ function createUi()
         xml = xml .. '<edit id="${ui_filter}" value="' .. filterMatching .. '" on-change="updateFilter" />'
         xml = xml .. '<checkbox id="${ui_filter_invert}" text="Invert" checked="' .. tostring(filterInvert) .. '" on-change="updateFilter" />'
         xml = xml .. '</group>'
-        xml = xml .. '<properties id="${ui_table}" on-selection-change="onRowSelected" on-double-click="onRowDoubleClicked" on-property-edit="onPropertyEdit" on-context-menu-triggered="onPropertyContextMenuTriggered" on-key-press="onKeyPress">'
+        xml = xml .. '<tabs document-mode="true" tab-position="south">'
+        xml = xml .. '<tab title="Properties" content-margins="0,0,0,0">'
+        xml = xml .. '<properties id="${ui_properties}" on-selection-change="onRowSelected" on-double-click="onRowDoubleClicked" on-property-edit="onPropertyEdit" on-context-menu-triggered="onPropertyContextMenuTriggered" on-key-press="onKeyPress">'
         xml = xml .. '</properties>'
+        xml = xml .. '</tab>'
+        xml = xml .. '<tab title="Methods" content-margins="0,0,0,0">'
+        xml = xml .. '<text-browser id="${ui_methods}">'
+        xml = xml .. '</text-browser>'
+        xml = xml .. '</tab>'
+        xml = xml .. '</tabs>'
         xml = xml .. '</ui>'
         ui = simUI.create(xml)
         if uiPropsState then
-            simUI.setPropertiesState(ui, ui_table, uiPropsState)
+            simUI.setPropertiesState(ui, ui_properties, uiPropsState)
         end
     end
 end
@@ -819,7 +838,7 @@ function destroyUi()
     if ui then
         uiPos = {simUI.getPosition(ui)}
         uiSize = {simUI.getSize(ui)}
-        uiPropsState = simUI.getPropertiesState(ui, ui_table)
+        uiPropsState = simUI.getPropertiesState(ui, ui_properties)
         sim.app.customData.propertyExplorer.uiPos = uiPos
         sim.app.customData.propertyExplorer.uiSize = uiSize
         sim.app.customData.propertyExplorer.uiPropsState = uiPropsState
