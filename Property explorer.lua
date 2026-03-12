@@ -18,22 +18,28 @@ function sysCall_init()
 
     simUI = require 'simUI'
 
-    disableDuringSim = sim.app.customData['propertyExplorer.disableDuringSim']
-    if disableDuringSim == nil then
-        disableDuringSim = false
-        sim.app.customData['propertyExplorer.disableDuringSim'] = disableDuringSim
-    end
+    disableDuringSim = not not sim.app.customData['propertyExplorer.disableDuringSim']
+    sim.app.customData['propertyExplorer.disableDuringSim'] = disableDuringSim
 
     target = sim.scene
     selectedProperty = ''
     filterMatching = '*'
     filterInvert = false
 
-    uiPos = sim.app.customData['propertyExplorer.uiPos']
-    uiSize = sim.app.customData['propertyExplorer.uiSize']
-    uiPropsState = sim.app.customData['propertyExplorer.uiPropsState']
-    uiCollapseProps = sim.app.customData['propertyExplorer.uiCollapseProps'] or {}
-    uiTargetRadio = sim.app.customData['propertyExplorer.uiTargetRadio'] or 1
+    uiCollapseProps = {}
+    uiTargetRadio = 1
+    uiSize = {350, 600}
+
+    local ok, err = pcall(function()
+        uiPos = sim.app.customData['propertyExplorer.uiPos'] or uiPos
+        uiSize = sim.app.customData['propertyExplorer.uiSize'] or uiSize
+        uiPropsState = sim.app.customData['propertyExplorer.uiPropsState'] or uiPropsState
+        uiCollapseProps = sim.app.customData['propertyExplorer.uiCollapseProps'] or uiCollapseProps
+        uiTargetRadio = sim.app.customData['propertyExplorer.uiTargetRadio'] or uiTargetRadio
+    end)
+    if not ok then
+        sim.app:addLog('Failed to restore saved settings: ' .. err, sim.verbosity_errors)
+    end
 
     if uiTargetRadio == 1 then target = sim.app end
 
