@@ -500,12 +500,8 @@ function onTargetChanged()
         simUI.setPropertiesSelection(ui, ui_properties, selectedRow - 1, false)
     end
 
-    local pclass = propertiesValues.objectType
-    local methods_html = ''
-    for _, method in ipairs(methods) do
-        methods_html = methods_html .. getCallTip(pclass, method)
-    end
-    simUI.setText(ui, ui_methods, methods_html)
+    local simCBOR = require 'simCBOR'
+    simUI.setItems(ui, ui_methods_list, simCBOR.encode(map(function(x) return {x, 'object'} end, methods)))
 
     updateContextMenuForSelectedProperty()
     sim.setEventFilters{[target] = {}}
@@ -777,6 +773,12 @@ function onClose()
     end
 end
 
+function onMethodSelected(ui, id, methodIndex)
+    local methodName = methods[methodIndex + 1]
+    local pclass = propertiesValues.objectType
+    simUI.setText(ui, ui_methods, getCallTip(pclass, methodName))
+end
+
 function setFilter(flt, inv)
     simUI.setEditValue(ui, ui_filter, flt)
     simUI.setCheckboxValue(ui, ui_filter_invert, inv and 2 or 0)
@@ -832,6 +834,9 @@ function createUi()
         xml = xml .. '</properties>'
         xml = xml .. '</tab>'
         xml = xml .. '<tab title="Methods" content-margins="0,0,0,0">'
+        xml = xml .. '<table id="${ui_methods_list}" selection-mode="row" show-horizontal-header="false" on-selection-change="onMethodSelected">'
+        xml = xml .. '<header><item>Method</item><item>Class</item></header>'
+        xml = xml .. '</table>'
         xml = xml .. '<text-browser id="${ui_methods}">'
         xml = xml .. '</text-browser>'
         xml = xml .. '</tab>'
