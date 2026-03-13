@@ -44,6 +44,8 @@ function sysCall_init()
     if uiTargetRadio == 1 then target = sim.app end
 
     createUi()
+    
+    readObjectXmlInfo()
 end
 
 function sysCall_beforeSimulation()
@@ -373,6 +375,11 @@ function readTargetProperties()
     table.sort(matchingPropertiesNames, propertyOrder)
     table.sort(methods, propertyOrder)
     generateTree(matchingPropertiesNames)
+
+    -- for now we read methods from objectMetaInfo:
+    local json = require 'dkjson'
+    methods = table.keys(json.decode(propertiesValues.objectMetaInfo).methods)
+    table.sort(methods)
 end
 
 function toSimpleString(v, pname)
@@ -493,9 +500,12 @@ function onTargetChanged()
         simUI.setPropertiesSelection(ui, ui_properties, selectedRow - 1, false)
     end
 
-    simUI.setText(ui, ui_methods, '<ul>' .. table.join(map(
-        function(m) return '<li>' .. m .. '</li>' end,
-        methods)) .. '</ul>')
+    local pclass = propertiesValues.objectType
+    local methods_html = ''
+    for _, method in ipairs(methods) do
+        methods_html = methods_html .. getCallTip(pclass, method)
+    end
+    simUI.setText(ui, ui_methods, methods_html)
 
     updateContextMenuForSelectedProperty()
     sim.setEventFilters{[target] = {}}
@@ -845,6 +855,91 @@ function destroyUi()
         simUI.destroy(ui)
         ui = nil
     end
+end
+
+function readObjectXmlInfo()
+    if objclasses then return end
+    local xml = require 'pl.xml'
+    local lfsx = require 'lfsx'
+    local objxmlpath = lfsx.pathjoin(sim.app.resourcePath, 'manual', 'apiDoc', 'objects.xml')
+    local objxmlfile = io.open(objxmlpath, 'r')
+    assert(objxmlfile)
+    local objxml = objxmlfile:read '*a'
+    objxmlfile:close()
+    local objinfo = xml.parse(objxml)
+    objclasses = {}
+    for _, node in ipairs(objinfo) do
+        if node.tag == 'object-class' then
+            local classname = node.attr.name
+            objclasses[classname] = {
+                superclass = node.attr.superclass,
+                methods = {},
+            }
+            for _, metnode in ipairs(node) do
+                if metnode.tag == 'method' then
+                    local methodname = metnode.attr.name
+                    objclasses[classname].methods[methodname] = {params = {}, returns = {}}
+                    for _, sn in ipairs(metnode) do
+                        if sn.tag == 'params' then
+                            for _, pn in ipairs(sn) do
+                                if pn.tag == 'param' then
+                                    table.insert(objclasses[classname].methods[methodname].params, pn.attr)
+                                end
+                            end
+                        elseif sn.tag == 'returns' then
+                            for _, rn in ipairs(sn) do
+                                if rn.tag == 'param' then
+                                    table.insert(objclasses[classname].methods[methodname].returns, rn.attr)
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+function getCallTip(pclass, method)
+    local function getMethod(cn, mn)
+        local c = objclasses[cn]
+        if c == nil then return end
+        local m = c.methods[mn]
+        if m then return m end
+        if c.superclass then
+            return getMethod(c.superclass, mn)
+        end
+    end
+    local html = ''
+    local methodinfo = getMethod(pclass, method)
+    if methodinfo then
+        local x = ''
+        for i, p in ipairs(methodinfo.returns) do
+            if i > 1 then x = x .. ', ' end
+            x = x .. '<span style="color: #00c;">' .. p.type .. '</span> '
+            x = x .. '<span style="color: #999;">' .. p.name .. '</span>'
+        end
+        x = x .. '</span>'
+        if #methodinfo.returns > 0 then
+            x = x .. '<span style="color: #ccc;"> = </span>'
+        end
+        x = x.. method .. '('
+        x = x .. '<span style="color: #ddd;">'
+        for i, p in ipairs(methodinfo.params) do
+            if i > 1 then x = x .. ', ' end
+            x = x .. '<span style="color: #00c;">' .. p.type .. '</span> '
+            x = x .. '<span style="color: #999;">' .. p.name .. '</span>'
+            if p.default then
+                x = x .. '<span style="color: #ccc;">=' .. p.default .. '</span>'
+            end
+        end
+        x = x .. '</span>'
+        x = x .. ')'
+        html = html .. x
+    else
+        html = html .. method
+    end
+    return html .. '<br/><br/>'
 end
 
 require('addOns.autoStart').setup{ns = 'propertyExplorer'}
