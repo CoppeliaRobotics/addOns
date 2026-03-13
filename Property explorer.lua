@@ -776,7 +776,15 @@ end
 function onMethodSelected(ui, id, methodIndex)
     local methodName = methods[methodIndex + 1]
     local pclass = propertiesValues.objectType
-    simUI.setText(ui, ui_methods, getCallTip(pclass, methodName))
+    local methodinfo = getMethodInfo(pclass, methodName)
+    local info = methodName
+    if methodinfo then
+        info = getCallTip(methodinfo)
+        if methodinfo.description then
+            info = info .. '<hr/>' .. methodinfo.description
+        end
+    end
+    simUI.setText(ui, ui_methods, info)
 end
 
 function setFilter(flt, inv)
@@ -882,69 +890,80 @@ function readObjectXmlInfo()
             }
             for _, metnode in ipairs(node) do
                 if metnode.tag == 'method' then
-                    local methodname = metnode.attr.name
-                    objclasses[classname].methods[methodname] = {params = {}, returns = {}}
+                    local metinfo = {params = {}, returns = {}}
+                    metinfo.name = metnode.attr.name
                     for _, sn in ipairs(metnode) do
                         if sn.tag == 'params' then
                             for _, pn in ipairs(sn) do
                                 if pn.tag == 'param' then
-                                    table.insert(objclasses[classname].methods[methodname].params, pn.attr)
+                                    table.insert(metinfo.params, pn.attr)
                                 end
                             end
                         elseif sn.tag == 'returns' then
                             for _, rn in ipairs(sn) do
                                 if rn.tag == 'param' then
-                                    table.insert(objclasses[classname].methods[methodname].returns, rn.attr)
+                                    table.insert(metinfo.returns, rn.attr)
                                 end
                             end
+                        elseif sn.tag == 'description' then
+                            metinfo.description = getChildrenXML(xml, sn)
                         end
                     end
+                    objclasses[classname].methods[metinfo.name] = metinfo
                 end
             end
         end
     end
 end
 
-function getCallTip(pclass, method)
-    local function getMethod(cn, mn)
-        local c = objclasses[cn]
-        if c == nil then return end
-        local m = c.methods[mn]
-        if m then return m end
-        if c.superclass then
-            return getMethod(c.superclass, mn)
+function getChildrenXML(xml, root)
+    local children_xml = {}
+    for i = 1, #root do
+        local child = root[i]
+        if type(child) == "table" then
+            children_xml[#children_xml+1] = xml.tostring(child)
+        else
+            children_xml[#children_xml+1] = tostring(child) -- text node
         end
     end
-    local html = ''
-    local methodinfo = getMethod(pclass, method)
-    if methodinfo then
-        local x = ''
-        for i, p in ipairs(methodinfo.returns) do
-            if i > 1 then x = x .. ', ' end
-            x = x .. '<span style="color: #00c;">' .. p.type .. '</span> '
-            x = x .. '<span style="color: #999;">' .. p.name .. '</span>'
-        end
-        x = x .. '</span>'
-        if #methodinfo.returns > 0 then
-            x = x .. '<span style="color: #ccc;"> = </span>'
-        end
-        x = x.. method .. '('
-        x = x .. '<span style="color: #ddd;">'
-        for i, p in ipairs(methodinfo.params) do
-            if i > 1 then x = x .. ', ' end
-            x = x .. '<span style="color: #00c;">' .. p.type .. '</span> '
-            x = x .. '<span style="color: #999;">' .. p.name .. '</span>'
-            if p.default then
-                x = x .. '<span style="color: #ccc;">=' .. p.default .. '</span>'
-            end
-        end
-        x = x .. '</span>'
-        x = x .. ')'
-        html = html .. x
-    else
-        html = html .. method
+    return table.concat(children_xml)
+end
+
+function getMethodInfo(pclass, method)
+    local c = objclasses[pclass]
+    if c == nil then return end
+    local m = c.methods[method]
+    if m then return m end
+    if c.superclass then
+        return getMethodInfo(c.superclass, method)
     end
-    return html .. '<br/><br/>'
+end
+
+function getCallTip(methodinfo)
+    if not methodinfo then return end
+    local x = ''
+    for i, p in ipairs(methodinfo.returns) do
+        if i > 1 then x = x .. ', ' end
+        x = x .. '<span style="color: #00c;">' .. p.type .. '</span> '
+        x = x .. '<span style="color: #999;">' .. p.name .. '</span>'
+    end
+    x = x .. '</span>'
+    if #methodinfo.returns > 0 then
+        x = x .. '<span style="color: #ccc;"> = </span>'
+    end
+    x = x.. methodinfo.name .. '('
+    x = x .. '<span style="color: #ddd;">'
+    for i, p in ipairs(methodinfo.params) do
+        if i > 1 then x = x .. ', ' end
+        x = x .. '<span style="color: #00c;">' .. p.type .. '</span> '
+        x = x .. '<span style="color: #999;">' .. p.name .. '</span>'
+        if p.default then
+            x = x .. '<span style="color: #ccc;">=' .. p.default .. '</span>'
+        end
+    end
+    x = x .. '</span>'
+    x = x .. ')'
+    return x
 end
 
 require('addOns.autoStart').setup{ns = 'propertyExplorer'}
