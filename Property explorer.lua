@@ -783,6 +783,14 @@ function onMethodSelected(ui, id, methodIndex)
         if methodinfo.description then
             info = info .. '<hr/>' .. methodinfo.description
         end
+        local p = getParamsDoc(methodinfo.params)
+        if p and p ~= '' then
+            info = info .. '<hr/>Params:<br/>' .. p
+        end
+        local r = getParamsDoc(methodinfo.returns)
+        if r and r ~= '' then
+            info = info .. '<hr/>Return value(s):<br/>' .. r
+        end
     end
     simUI.setText(ui, ui_methods, info)
 end
@@ -896,13 +904,25 @@ function readObjectXmlInfo()
                         if sn.tag == 'params' then
                             for _, pn in ipairs(sn) do
                                 if pn.tag == 'param' then
-                                    table.insert(metinfo.params, pn.attr)
+                                    local parinfo = pn.attr
+                                    for _, d in ipairs(pn) do
+                                        if d.tag == 'description' then
+                                            parinfo.description = getChildrenXML(xml, d)
+                                        end
+                                    end
+                                    table.insert(metinfo.params, parinfo)
                                 end
                             end
                         elseif sn.tag == 'returns' then
-                            for _, rn in ipairs(sn) do
-                                if rn.tag == 'param' then
-                                    table.insert(metinfo.returns, rn.attr)
+                            for _, pn in ipairs(sn) do
+                                if pn.tag == 'param' then
+                                    local parinfo = pn.attr
+                                    for _, d in ipairs(pn) do
+                                        if d.tag == 'description' then
+                                            parinfo.description = getChildrenXML(xml, d)
+                                        end
+                                    end
+                                    table.insert(metinfo.returns, parinfo)
                                 end
                             end
                         elseif sn.tag == 'description' then
@@ -921,9 +941,9 @@ function getChildrenXML(xml, root)
     for i = 1, #root do
         local child = root[i]
         if type(child) == "table" then
-            children_xml[#children_xml+1] = xml.tostring(child)
+            table.insert(children_xml, xml.tostring(child))
         else
-            children_xml[#children_xml+1] = tostring(child) -- text node
+            table.insert(children_xml, tostring(child)) -- text node
         end
     end
     return table.concat(children_xml)
@@ -939,23 +959,27 @@ function getMethodInfo(pclass, method)
     end
 end
 
-function getCallTip(methodinfo)
+function getCallTip(methodinfo, types)
     if not methodinfo then return end
     local x = ''
     for i, p in ipairs(methodinfo.returns) do
         if i > 1 then x = x .. ', ' end
-        x = x .. '<span style="color: #00c;">' .. p.type .. '</span> '
+        if types then
+            x = x .. '<span style="color: #00c;">' .. p.type .. '</span> '
+        end
         x = x .. '<span style="color: #999;">' .. p.name .. '</span>'
     end
     x = x .. '</span>'
     if #methodinfo.returns > 0 then
         x = x .. '<span style="color: #ccc;"> = </span>'
     end
-    x = x.. methodinfo.name .. '('
+    x = x .. '<b>' .. methodinfo.name .. '</b>('
     x = x .. '<span style="color: #ddd;">'
     for i, p in ipairs(methodinfo.params) do
         if i > 1 then x = x .. ', ' end
-        x = x .. '<span style="color: #00c;">' .. p.type .. '</span> '
+        if types then
+            x = x .. '<span style="color: #00c;">' .. p.type .. '</span> '
+        end
         x = x .. '<span style="color: #999;">' .. p.name .. '</span>'
         if p.default then
             x = x .. '<span style="color: #ccc;">=' .. p.default .. '</span>'
@@ -963,6 +987,25 @@ function getCallTip(methodinfo)
     end
     x = x .. '</span>'
     x = x .. ')'
+    return x
+end
+
+function getParamsDoc(params)
+    local x = '<ul>'
+    for i, p in ipairs(params) do
+        x = x .. '<li>'
+        x = x .. '<b>' .. p.name .. '</b>'
+        x = x .. ' (<span style="color: #00c;">' .. p.type .. '</span>'
+        if p.default then
+            x = x .. ', <span style="color: #ccc;">default: ' .. p.default .. '</span>'
+        end
+        x = x .. ')'
+        if p.description then
+            x = x .. ': ' .. p.description
+        end
+        x = x .. '</li>'
+    end
+    x = x .. '</ul>'
     return x
 end
 
