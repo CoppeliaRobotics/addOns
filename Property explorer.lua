@@ -45,7 +45,7 @@ function sysCall_init()
 
     createUi()
     
-    readObjectXmlInfo()
+    apidoc_classes = require('sim.apidoc').ClassesInfo()
 end
 
 function sysCall_beforeSimulation()
@@ -776,18 +776,18 @@ end
 function onMethodSelected(ui, id, methodIndex)
     local methodName = methods[methodIndex + 1]
     local pclass = propertiesValues.objectType
-    local methodinfo = getMethodInfo(pclass, methodName)
+    local methodinfo = apidoc_classes:getMethod(pclass, methodName)
     local info = methodName
     if methodinfo then
-        info = getCallTip(methodinfo)
+        info = methodinfo:getCallTip()
         if methodinfo.description then
             info = info .. '<hr/>' .. methodinfo.description
         end
-        local p = getParamsDoc(methodinfo.params)
+        local p = methodinfo:getParamsDoc(methodinfo.params)
         if p and p ~= '' then
             info = info .. '<hr/>Params:<br/>' .. p
         end
-        local r = getParamsDoc(methodinfo.returns)
+        local r = methodinfo:getParamsDoc(methodinfo.returns)
         if r and r ~= '' then
             info = info .. '<hr/>Return value(s):<br/>' .. r
         end
@@ -876,137 +876,6 @@ function destroyUi()
         simUI.destroy(ui)
         ui = nil
     end
-end
-
-function readObjectXmlInfo()
-    if objclasses then return end
-    local xml = require 'pl.xml'
-    local lfsx = require 'lfsx'
-    local objxmlpath = lfsx.pathjoin(sim.app.resourcePath, 'manual', 'apiDoc', 'objects.xml')
-    local objxmlfile = io.open(objxmlpath, 'r')
-    assert(objxmlfile)
-    local objxml = objxmlfile:read '*a'
-    objxmlfile:close()
-    local objinfo = xml.parse(objxml)
-    objclasses = {}
-    for _, node in ipairs(objinfo) do
-        if node.tag == 'object-class' then
-            local classname = node.attr.name
-            objclasses[classname] = {
-                superclass = node.attr.superclass,
-                methods = {},
-            }
-            for _, metnode in ipairs(node) do
-                if metnode.tag == 'method' then
-                    local metinfo = {params = {}, returns = {}}
-                    metinfo.name = metnode.attr.name
-                    for _, sn in ipairs(metnode) do
-                        if sn.tag == 'params' then
-                            for _, pn in ipairs(sn) do
-                                if pn.tag == 'param' then
-                                    local parinfo = pn.attr
-                                    for _, d in ipairs(pn) do
-                                        if d.tag == 'description' then
-                                            parinfo.description = getChildrenXML(xml, d)
-                                        end
-                                    end
-                                    table.insert(metinfo.params, parinfo)
-                                end
-                            end
-                        elseif sn.tag == 'returns' then
-                            for _, pn in ipairs(sn) do
-                                if pn.tag == 'param' then
-                                    local parinfo = pn.attr
-                                    for _, d in ipairs(pn) do
-                                        if d.tag == 'description' then
-                                            parinfo.description = getChildrenXML(xml, d)
-                                        end
-                                    end
-                                    table.insert(metinfo.returns, parinfo)
-                                end
-                            end
-                        elseif sn.tag == 'description' then
-                            metinfo.description = getChildrenXML(xml, sn)
-                        end
-                    end
-                    objclasses[classname].methods[metinfo.name] = metinfo
-                end
-            end
-        end
-    end
-end
-
-function getChildrenXML(xml, root)
-    local children_xml = {}
-    for i = 1, #root do
-        local child = root[i]
-        if type(child) == "table" then
-            table.insert(children_xml, xml.tostring(child))
-        else
-            table.insert(children_xml, tostring(child)) -- text node
-        end
-    end
-    return table.concat(children_xml)
-end
-
-function getMethodInfo(pclass, method)
-    local c = objclasses[pclass]
-    if c == nil then return end
-    local m = c.methods[method]
-    if m then return m end
-    if c.superclass then
-        return getMethodInfo(c.superclass, method)
-    end
-end
-
-function getCallTip(methodinfo, types)
-    if not methodinfo then return end
-    local x = ''
-    for i, p in ipairs(methodinfo.returns) do
-        if i > 1 then x = x .. ', ' end
-        if types then
-            x = x .. '<span style="color: #00c;">' .. p.type .. '</span> '
-        end
-        x = x .. '<span style="color: #999;">' .. p.name .. '</span>'
-    end
-    x = x .. '</span>'
-    if #methodinfo.returns > 0 then
-        x = x .. '<span style="color: #ccc;"> = </span>'
-    end
-    x = x .. '<b>' .. methodinfo.name .. '</b>('
-    x = x .. '<span style="color: #ddd;">'
-    for i, p in ipairs(methodinfo.params) do
-        if i > 1 then x = x .. ', ' end
-        if types then
-            x = x .. '<span style="color: #00c;">' .. p.type .. '</span> '
-        end
-        x = x .. '<span style="color: #999;">' .. p.name .. '</span>'
-        if p.default then
-            x = x .. '<span style="color: #ccc;">=' .. p.default .. '</span>'
-        end
-    end
-    x = x .. '</span>'
-    x = x .. ')'
-    return x
-end
-
-function getParamsDoc(params)
-    local x = '<ul>'
-    for i, p in ipairs(params) do
-        x = x .. '<li>'
-        x = x .. '<b>' .. p.name .. '</b>'
-        x = x .. ' (<span style="color: #00c;">' .. p.type .. '</span>'
-        if p.default then
-            x = x .. ', <span style="color: #ccc;">default: ' .. p.default .. '</span>'
-        end
-        x = x .. ')'
-        if p.description then
-            x = x .. ': ' .. p.description
-        end
-        x = x .. '</li>'
-    end
-    x = x .. '</ul>'
-    return x
 end
 
 require('addOns.autoStart').setup{ns = 'propertyExplorer'}
