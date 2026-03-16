@@ -501,7 +501,14 @@ function onTargetChanged()
     end
 
     local simCBOR = require 'simCBOR'
-    simUI.setItems(ui, ui_methods_list, simCBOR.encode(map(function(x) return {x, 'object'} end, methods)))
+    local methodListItems = {}
+    for i, method in ipairs(methods) do
+        local className = 'N/A'
+        local m = apidoc_classes:getMethod(target.objectType, method)
+        if m and m.classInfo then className = m.classInfo.className end
+        table.insert(methodListItems, {method, className})
+    end
+    simUI.setItems(ui, ui_methods_list, simCBOR.encode(methodListItems))
 
     updateContextMenuForSelectedProperty()
     sim.setEventFilters{[target] = {}}
