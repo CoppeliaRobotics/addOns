@@ -372,8 +372,7 @@ function readTargetProperties()
     simUI.setStyleSheet(ui, ui_filter, strFindError and 'border: 1px solid red' or '')
     table.sort(propertiesNames, propertyOrder)
     table.sort(matchingPropertiesNames, propertyOrder)
-    --table.sort(methods, propertyOrder)
-    table.sort(methods)
+    table.sort(methods, propertyOrder)
     generateTree(matchingPropertiesNames)
 end
 
@@ -498,9 +497,7 @@ function onTargetChanged()
     local simCBOR = require 'simCBOR'
     local methodListItems = {}
     for i, method in ipairs(methods) do
-        local className = 'N/A'
-        local m = apidoc_classes:getMethod(target.objectType, method)
-        if m and m.classInfo then className = m.classInfo.className end
+        local className = propertiesInfos[method].class or 'N/A'
         table.insert(methodListItems, {method, className})
     end
     simUI.setItems(ui, ui_methods_list, simCBOR.encode(methodListItems))
