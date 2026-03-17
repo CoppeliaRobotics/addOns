@@ -98,7 +98,7 @@ function sysCall_sensing()
 end
 
 function sysCall_selChange(inData)
-    if superTarget == sim.app then
+    if getSuperObject(target) == sim.app then
         -- if app (or some app's sub-object) selected, object selection won't switch target
         return
     elseif #inData.sel == 0 then
@@ -218,9 +218,8 @@ function getSuperObject(obj)
                 return obj1
             end
         end
-    else
-        return nil
     end
+    return obj
 end
 
 function checkTargetChanged()
@@ -458,7 +457,7 @@ function onTargetChanged()
     comboLabels, comboHandles = {}, {}
     local comboIdx = 0
     sim.app.customData.propertyExplorer.uiTargetRadio = target == sim.app and 1 or 2
-    superTarget = target
+    local superTarget = target
     if target == sim.app then
         table.insert(comboLabels, 'sim.app')
         table.insert(comboHandles, sim.app)
@@ -466,7 +465,7 @@ function onTargetChanged()
         table.insert(comboLabels, 'sim.scene')
         table.insert(comboHandles, sim.scene)
     else
-        superTarget = getSuperObject(target) or target
+        superTarget = getSuperObject(target)
         local name
         if superTarget.getName ~= nil then
             name = superTarget:getName(1)
@@ -835,10 +834,11 @@ function createUi()
         if uiSize then
             sz = ' size="' .. uiSize[1] .. ',' .. uiSize[2] .. '"'
         end
+        local superTarget = getSuperObject(target)
         xml = '<ui title="Property Explorer" spacing="0" activate="false" closeable="true" on-close="onClose" resizable="true"' .. pos .. sz .. '>'
         xml = xml .. '<group flat="true" layout="hbox" content-margins="0,0,0,0">'
-        xml = xml .. '<radiobutton text="App" checked="' .. tostring(target == sim.app) .. '" on-click="setTargetApp" />'
-        xml = xml .. '<radiobutton text="Sel:" checked="' .. tostring(target ~= sim.app) .. '" on-click="setTargetSel" />'
+        xml = xml .. '<radiobutton text="App" checked="' .. tostring(superTarget == sim.app) .. '" on-click="setTargetApp" />'
+        xml = xml .. '<radiobutton text="Sel:" checked="' .. tostring(superTarget ~= sim.app) .. '" on-click="setTargetSel" />'
         xml = xml .. '<combobox id="${ui_combo_selection}" on-change="onSubTargetChanged" stretch="10">'
         xml = xml .. '</combobox>'
         xml = xml .. '</group>'
