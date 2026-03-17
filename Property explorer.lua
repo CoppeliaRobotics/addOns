@@ -373,13 +373,9 @@ function readTargetProperties()
     simUI.setStyleSheet(ui, ui_filter, strFindError and 'border: 1px solid red' or '')
     table.sort(propertiesNames, propertyOrder)
     table.sort(matchingPropertiesNames, propertyOrder)
-    table.sort(methods, propertyOrder)
-    generateTree(matchingPropertiesNames)
-
-    -- for now we read methods from objectMetaInfo:
-    local json = require 'dkjson'
-    methods = table.keys(json.decode(propertiesValues.objectMetaInfo).methods)
+    --table.sort(methods, propertyOrder)
     table.sort(methods)
+    generateTree(matchingPropertiesNames)
 end
 
 function toSimpleString(v, pname)
