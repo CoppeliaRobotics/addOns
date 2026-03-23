@@ -45,7 +45,7 @@ function sysCall_init()
 
     createUi()
     
-    apidoc_classes = require('sim.apidoc').ClassesInfo()
+    apidoc = require('sim.apidoc').APIDoc()
 end
 
 function sysCall_beforeSimulation()
@@ -775,7 +775,7 @@ end
 function onMethodSelected(ui, id, methodIndex)
     local methodName = methods[methodIndex + 1]
     local pclass = propertiesValues.objectType
-    local methodinfo = apidoc_classes:getMethod(pclass, methodName)
+    local methodinfo = apidoc:getMethod(pclass, methodName)
     local info = methodName
     if methodinfo then
         info = methodinfo:getCallTip()
