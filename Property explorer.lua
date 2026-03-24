@@ -8,7 +8,7 @@ end
 
 function sysCall_init()
     if sim.app.headlessMode > 0 then
-        sim.app:addLog('Property Explorer cannot start in headless mode')
+        sim.app:logWarn('Property Explorer cannot start in headless mode')
         return {cmd = 'cleanup'}
     end
 
@@ -38,7 +38,7 @@ function sysCall_init()
         uiTargetRadio = sim.app.customData['propertyExplorer.uiTargetRadio'] or uiTargetRadio
     end)
     if not ok then
-        sim.app:addLog('Failed to restore saved settings: ' .. err, sim.verbosity_errors)
+        sim.app:logError('Failed to restore saved settings: ' .. err)
     end
 
     if uiTargetRadio == 1 then target = sim.app end
