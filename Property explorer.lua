@@ -869,7 +869,7 @@ function destroyUi()
     if ui then
         uiPos = {simUI.getPosition(ui)}
         uiSize = {simUI.getSize(ui)}
-        uiPropsState = tobuffer(simUI.getPropertiesState(ui, ui_properties)) -- need conv to buffer or will fail to write properly
+        uiPropsState = simUI.getPropertiesState(ui, ui_properties)
         sim.app.customData.propertyExplorer.uiPos = uiPos
         sim.app.customData.propertyExplorer.uiSize = uiSize
         sim.app.customData.propertyExplorer.uiPropsState = uiPropsState
