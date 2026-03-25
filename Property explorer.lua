@@ -380,10 +380,8 @@ function toSimpleString(v, pname)
     if v == nil then return '' end
     local impr = sim.app.customData.propertyExplorer.impr ~= false
     local ptype = propertiesInfos[pname].type
-    if ptype == sim.propertytype_handle then
+    if ptype == sim.propertytype_handle or ptype == sim.propertytype_handlearray then
         v = v.handle
-    elseif ptype == sim.propertytype_handlearray then
-        v = map(function(x) return x.handle end, v)
     elseif table.find({sim.propertytype_color, sim.propertytype_vector3, sim.propertytype_matrix, sim.propertytype_quaternion, sim.propertytype_pose}, ptype) then
         v = v:data()
     elseif impr and pname:endswith 'Time' and (ptype == sim.propertytype_float or ptype == sim.propertytype_int) then
