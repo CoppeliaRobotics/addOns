@@ -382,7 +382,16 @@ function toSimpleString(v, pname)
     local ptype = propertiesInfos[pname].type
     if ptype == sim.propertytype_handle or ptype == sim.propertytype_handlearray then
         v = v.handle
-    elseif table.find({sim.propertytype_color, sim.propertytype_vector3, sim.propertytype_matrix, sim.propertytype_quaternion, sim.propertytype_pose}, ptype) then
+    elseif table.find({
+            sim.propertytype_color,
+            sim.propertytype_vector2,
+            sim.propertytype_vector3,
+            sim.propertytype_matrix3x3,
+            sim.propertytype_matrix4x4,
+            sim.propertytype_matrix,
+            sim.propertytype_quaternion,
+            sim.propertytype_pose
+    }, ptype) then
         v = v:data()
     elseif impr and pname:endswith 'Time' and (ptype == sim.propertytype_float or ptype == sim.propertytype_int) then
         local seconds = math.floor(v)
