@@ -545,7 +545,9 @@ function updateContextMenuForSelectedProperty()
         addContextMenu('copyGetter', '    Copy get code to clipboard', canAssign)
         addContextMenu('copySetter', '    Copy set code to clipboard', canAssign)
         addContextMenu('assign', '    Assign value to variable', canAssign)
-        addContextMenu('editInCodeEditor', '    Edit in code editor...', canEdit)
+        if canAssign then
+            addContextMenu('editInCodeEditor', '    ' .. (canEdit and 'Edit' or 'View') .. ' in code editor...', true)
+        end
         addContextMenu('loadValueFromFile', '    Load value from file...', canEdit)
         addContextMenu('saveValueToFile', '    Save value to file...', canAssign)
         local ptypeStr = sim.getPropertyTypeString(propertiesInfos[selectedProperty].type)
