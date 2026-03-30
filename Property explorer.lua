@@ -452,6 +452,9 @@ function updateTableRow(i, updateSingle)
             tableRows.pdisplayv[i] = toSimpleString(propertiesValues[pname], pname)
             tableRows.pdisplayv[i] = string.elide(tableRows.pdisplayv[i], 30, {truncateAtNewLine=true})
         end
+        if ptypeStr == 'buffer' and tableRows.pflags[i] >= 0 then
+            tableRows.pflags[i] = -3
+        end
     end
     if updateSingle then
         simUI.setPropertiesRow(ui, ui_properties, i - 1, tableRows.pname[i], tableRows.ptype[i], tableRows.pvalue[i], tableRows.pflags[i], tableRows.pdisplayk[i], tableRows.pdisplayv[i], tableRows.icon[i], tableRows.description[i])
@@ -526,7 +529,7 @@ function updateContextMenuForSelectedProperty()
     if selectedProperty and propertiesInfos[selectedProperty] and selectedProperty:sub(1, 1) ~= '#' then
         local f = propertiesInfos[selectedProperty].flags
         canAssign = f.readable
-        canEdit = f.readable and f.writable
+        canEdit = f.readable and f.writable and propertiesInfos[selectedProperty].type ~= sim.propertytype_buffer
         canRemove = f.removable
         if propertiesInfos[selectedProperty].label then
             addContextMenu('#', propertiesInfos[selectedProperty].label)
