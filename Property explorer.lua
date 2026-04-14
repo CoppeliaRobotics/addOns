@@ -74,6 +74,7 @@ function sysCall_cleanup()
 end
 
 function sysCall_afterInstanceSwitch()
+    target = sim.scene -- otherwise we get a crash
     sysCall_selChange {sel = sim.scene.selection}
 
     -- force a target change event, otherwise switching scene where the same
