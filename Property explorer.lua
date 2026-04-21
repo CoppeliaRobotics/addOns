@@ -58,7 +58,7 @@ end
 
 function sysCall_afterSimulation()
     if restoreAfterSimulation then
-        target = restoreAfterSimulation.target
+        setTarget(restoreAfterSimulation.target, 'afterSimulation')
         createUi()
         onTargetChanged()
         restoreAfterSimulation = nil
@@ -74,7 +74,7 @@ function sysCall_cleanup()
 end
 
 function sysCall_afterInstanceSwitch()
-    target = sim.scene -- otherwise we get a crash
+    setTarget(sim.scene, 'afterInstanceSwitch') -- otherwise we get a crash
     sysCall_selChange {sel = sim.scene.selection}
 
     -- force a target change event, otherwise switching scene where the same
@@ -104,10 +104,11 @@ function sysCall_selChange(inData)
         return
     elseif #inData.sel == 0 then
         -- scene if empty selection
-        target = sim.scene
+        setTarget(sim.scene, 'selChange')
     else
         -- otherwise currently selected object
-        target = sim.Object:toobject(inData.sel[#inData.sel])
+        local obj = sim.Object:toobject(inData.sel[#inData.sel])
+        setTarget(obj, 'selChange')
     end
 end
 
@@ -115,10 +116,10 @@ function sysCall_event(events)
     if not ui then return end
     if target == nil or propertiesInfos == nil then return end
 
-    if target ~= sim.app and target ~= sim.scene and not sim.isHandle(target.handle) then
+    if not target:isValid() then
         -- target was removed. switch to scene:
         if target ~= sim.app then
-            target = sim.scene
+            setTarget(sim.scene, 'sysCall_event:removed')
             onTargetChanged()
         end
         return
@@ -195,9 +196,19 @@ end
 
 function getSubObjects(obj)
     if obj == sim.app then
-        return sim.app.addOns
+        return table.add(
+            sim.app.addOns,
+            sim.app.customClasses,
+            sim.app.customObjects
+        )
     elseif obj == sim.scene then
-        return table.add(sim.scene.collections, sim.scene.drawingObjects)
+        return table.add(
+            {mainScript},
+            sim.scene.collections,
+            sim.app.customClasses,
+            sim.app.customObjects,
+            sim.scene.drawingObjects
+        )
     elseif obj.objectType == 'shape' then
         return obj.meshes
     elseif obj.objectType == 'script' then
@@ -230,21 +241,26 @@ function checkTargetChanged()
     end
 end
 
+function setTarget(t)
+    target = t
+end
+
 function setTargetApp()
-    target = sim.app
+    setTarget(sim.app, 'setTargetApp')
 end
 
 function setTargetSel()
     local sel = sim.scene.selection
     if #sel == 0 then
-        target = sim.scene
+        setTarget(sim.scene, 'setTargetSel')
     else
-        target = sim.Object:toobject(sel[#sel])
+        setTarget(sel[#sel], 'setTargetSel')
     end
 end
 
 function onSubTargetChanged(ui, id, i)
-    target = sim.Object:toobject(comboHandles[i + 1])
+    local obj = sim.Object:toobject(comboHandles[i + 1])
+    setTarget(obj, 'onSubTargetChanged')
 end
 
 function getFilteringPattern()
@@ -713,7 +729,8 @@ function onContextMenu_saveValueToFile()
 end
 
 function onContextMenu_settarget_(handle)
-    target = sim.Object:toobject(handle)
+    local obj = sim.Object:toobject(handle)
+    setTarget(obj, 'onContextMenu_settarget_')
 end
 
 function onContextMenu_remove()
