@@ -205,8 +205,7 @@ function getSubObjects(obj)
         return table.add(
             {mainScript},
             sim.scene.collections,
-            sim.app.customClasses,
-            sim.app.customObjects,
+            sim.scene.customObjects,
             sim.scene.drawingObjects
         )
     elseif obj.objectType == 'shape' then
