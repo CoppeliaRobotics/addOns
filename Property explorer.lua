@@ -781,6 +781,9 @@ function onKeyPress(ui, id, key, keystr, mods)
     if key == simUI.key.F and mods.control then
         filterVisible = not filterVisible
         simUI.setWidgetVisibility(ui, ui_filter_grp, filterVisible)
+        if filterVisible then
+            simUI.setCurrentEditWidget(ui, ui_filter)
+        end
     end
 end
 
