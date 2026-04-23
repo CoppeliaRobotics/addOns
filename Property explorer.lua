@@ -452,7 +452,7 @@ function updateTableRow(i, updateSingle)
         ptypeStr = ptypeStr:gsub('array$', '[]')
         tableRows.ptype[i] = ptypeStr
         tableRows.pvalue[i] = sim.convertPropertyValue(propertiesValues[pname], propertiesInfos[pname].type, sim.propertytype_string)
-        tableRows.description[i] = propertiesInfos[pname].descr or ''
+        tableRows.description[i] = propertiesInfos[pname].description or ''
         if tableRows.pvalue[i] == nil then tableRows.pvalue[i] = '' end
         tableRows.pflags[i] = flags.value
         if flags.large then
@@ -554,7 +554,7 @@ function updateContextMenuForSelectedProperty()
         addContextMenu('#', 'Name:')
         addContextMenu('#', '    ' .. selectedProperty)
         addContextMenu('copy', '    Copy name to clipboard')
-        addContextMenu('printDescr', '    Print description to console', propertiesInfos[selectedProperty].descr ~= '')
+        addContextMenu('printDescription', '    Print description to console', (propertiesInfos[selectedProperty].description or '') ~= '')
         addContextMenu('--', '')
         addContextMenu('#', 'Value:')
         addContextMenu('copyValue', '    Copy value to clipboard', canAssign)
@@ -611,8 +611,8 @@ function onPropertyContextMenuTriggered(ui, id, key)
     _G[func](table.unpack(args))
 end
 
-function onContextMenu_printDescr()
-    print(propertiesInfos[selectedProperty].descr)
+function onContextMenu_printDescription()
+    print(propertiesInfos[selectedProperty].description)
 end
 
 function onContextMenu_assign()
