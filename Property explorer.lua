@@ -555,6 +555,7 @@ function updateContextMenuForSelectedProperty()
         addContextMenu('#', '    ' .. selectedProperty)
         addContextMenu('copy', '    Copy name to clipboard')
         addContextMenu('printDescription', '    Print description to console', (propertiesInfos[selectedProperty].description or '') ~= '')
+        addContextMenu('printInfo', '    Print info to console', true)
         addContextMenu('--', '')
         addContextMenu('#', 'Value:')
         addContextMenu('copyValue', '    Copy value to clipboard', canAssign)
@@ -613,6 +614,10 @@ end
 
 function onContextMenu_printDescription()
     print(propertiesInfos[selectedProperty].description)
+end
+
+function onContextMenu_printInfo()
+    print(propertiesInfos[selectedProperty])
 end
 
 function onContextMenu_assign()
