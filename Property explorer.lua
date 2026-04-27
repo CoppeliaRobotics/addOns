@@ -120,10 +120,9 @@ function sysCall_event(events)
 
     if not target:isValid() then
         -- target was removed. switch to superTarget:
-        if superTarget then
-            setTarget(superTarget, 'sysCall_event:removed')
-            onTargetChanged()
-        end
+        if superTarget == target then superTarget = sim.scene end
+        setTarget(superTarget, 'sysCall_event:removed')
+        onTargetChanged()
         return
     end
 
