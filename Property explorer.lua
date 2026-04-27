@@ -22,6 +22,8 @@ function sysCall_init()
     sim.app.customData['propertyExplorer.disableDuringSim'] = disableDuringSim
 
     target = sim.scene
+    superTarget = target
+
     selectedProperty = ''
     filterMatching = '*'
     filterInvert = false
@@ -117,9 +119,9 @@ function sysCall_event(events)
     if target == nil or propertiesInfos == nil then return end
 
     if not target:isValid() then
-        -- target was removed. switch to scene:
-        if target ~= sim.app then
-            setTarget(sim.scene, 'sysCall_event:removed')
+        -- target was removed. switch to superTarget:
+        if superTarget then
+            setTarget(superTarget, 'sysCall_event:removed')
             onTargetChanged()
         end
         return
@@ -199,7 +201,8 @@ function getSubObjects(obj)
         return table.add(
             sim.app.addOns,
             sim.app.customClasses,
-            sim.app.customObjects
+            sim.app.customObjects,
+            sim.app.customSceneObjectClasses
         )
     elseif obj == sim.scene then
         return table.add(
@@ -229,6 +232,14 @@ function getSuperObject(obj)
                 return obj1
             end
         end
+    elseif table.find(sim.app.customClasses, obj) then
+        return sim.app
+    elseif table.find(sim.app.customObjects, obj) then
+        return sim.app
+    elseif table.find(sim.app.customSceneObjectClasses, obj) then
+        return sim.app
+    elseif table.find(sim.scene.customObjects, obj) then
+        return sim.scene
     end
     return obj
 end
@@ -242,6 +253,7 @@ end
 
 function setTarget(t)
     target = t
+    superTarget = getSuperObject(t)
 end
 
 function setTargetApp()
