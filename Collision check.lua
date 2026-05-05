@@ -88,7 +88,7 @@ function coll(ui, id)
             sim.addItemToCollection(entity2, sim.handle_single, obj2, 0)
         end
     else
-        if id == 2 then
+        if id == 2 or id == 3 then
             sim.addItemToCollection(entity2, sim.handle_tree, obj1, 0)
         else
             sim.addItemToCollection(entity2, sim.handle_all, -1, 0)
@@ -104,7 +104,7 @@ function coll(ui, id)
     sim.destroyCollection(entity1)
     sim.destroyCollection(entity2)
 
-    restoreData = {dummy = -1, origs = {}, origLayers = {}, origsMap = {}}
+    restoreData = {dummy = -1, origsMap = {}}
     local allCollisions = {}
     local colors = {
         {1, 0, 0}, {0, 1, 0}, {0, 0.5, 1}, {1, 1, 0}, {1, 0, 1}, {0, 1, 0.5}, {0.5, 0, 0},
@@ -151,10 +151,10 @@ function coll(ui, id)
                                                objPair[2],
                                                sim.objintparam_collection_self_collision_indicator
                                            )
-                            if math.abs(indic1 - indic2) ~= 1 and math.abs(indic1 - indic2) ~= 10 and
+                            if id ~= 2 or (math.abs(indic1 - indic2) ~= 1 and math.abs(indic1 - indic2) ~= 10 and
                                 math.abs(indic1 - indic2) ~= 100 and math.abs(indic1 - indic2) ~=
                                 1000 and math.abs(indic1 - indic2) ~= 10000 and
-                                math.abs(indic1 - indic2) ~= 100000 then
+                                math.abs(indic1 - indic2) ~= 100000) then
                                 local r, collPair = sim.checkCollision(objPair[1], objPair[2])
                                 if r > 0 then
                                     sim.addLog(
@@ -177,14 +177,6 @@ function coll(ui, id)
                                     for i = 1, 2, 1 do
                                         if restoreData.origsMap[objPair[i]] == nil then
                                             restoreData.origsMap[objPair[i]] = true
-                                            restoreData.origs[#restoreData.origs + 1] = objPair[i]
-                                            restoreData.origLayers[#restoreData.origLayers + 1] =
-                                                sim.getObjectInt32Param(
-                                                    objPair[i], sim.objintparam_visibility_layer
-                                                )
-                                            sim.setObjectInt32Param(
-                                                objPair[i], sim.objintparam_visibility_layer, 0
-                                            )
                                             local copy
                                             if t[i] == sim.sceneobject_dummy then
                                                 copy = sim.createDummy(0.01, getCol(i))
@@ -229,6 +221,7 @@ function coll(ui, id)
                                                     getCol(i, true)
                                                 )
                                             end
+                                            sim.scaleObject(copy, 1.05, 1.05, 1.05)
                                             sim.setObjectSpecialProperty(copy, 0)
                                             sim.setObjectProperty(copy, 0)
                                             sim.setObjectInt32Param(
@@ -305,6 +298,9 @@ function showDlg()
         if txt2 then
             xml = xml .. '<button text="' .. txt2 ..
                       '" on-click="coll" style="* {min-width: 300px; min-height: 50px;}" id="2"/>'
+            txt2 = txt2 .. "\n(ignore collection self-collision indicators)"
+            xml = xml .. '<button text="' .. txt2 ..
+                      '" on-click="coll" style="* {min-width: 300px; min-height: 50px;}" id="3"/>'
         end
         xml = xml .. '</ui>'
         ui = simUI.create(xml)
@@ -326,14 +322,6 @@ end
 function restoreScene(selfCollEntity)
     if restoreData then
         if sim.isHandle(restoreData.dummy) then sim.removeModel(restoreData.dummy) end
-        for i = 1, #restoreData.origs, 1 do
-            if sim.isHandle(restoreData.origs[i]) then
-                sim.setObjectInt32Param(
-                    restoreData.origs[i], sim.objintparam_visibility_layer,
-                    restoreData.origLayers[i]
-                )
-            end
-        end
         restoreData = nil
         if selfCollEntity and sim.isHandle(selfCollEntity) then
             local txt = "The model " .. sim.getObjectAlias(selfCollEntity, 5) ..
@@ -348,10 +336,11 @@ function restoreScene(selfCollEntity)
 end
 
 function sysCall_sensing()
-    return update()
+    update()
 end
 
 function sysCall_nonSimulation()
+    update()
     if leaveNow then return {cmd = 'cleanup'} end
 end
 
