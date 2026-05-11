@@ -504,7 +504,7 @@ function onTargetChanged()
         superTarget = getSuperObject(target)
         local name
         if superTarget.getName ~= nil then
-            name = superTarget:getName(1)
+            name = superTarget:getName('shortPath')
         else
             name = superTarget.objectType .. ' ' .. superTarget.handle
         end
