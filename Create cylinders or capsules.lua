@@ -9,25 +9,20 @@ function sysCall_init()
     sim = require 'sim-2'
     simUI = require 'simUI'
 
-    if #sim.scene.selection < 2 then
-        simUI.msgBox(simUI.msgbox_type.info, simUI.msgbox_buttons.ok, sim.self.addOnMenuPath, 'At least 2 objects must be selected.')
-        return {cmd = 'cleanup'}
-    end
-
     ui = simUI.create([[
-        <ui title="]] .. sim.self.addOnMenuPath .. [[" closeable="true" on-close="onClose" resizable="true" modal="true" layout="grid">
+        <ui title="]] .. sim.self.addOnMenuPath .. [[" closeable="true" on-close="onClose" resizable="true" modal="false" layout="grid">
             <label id="10" text="Shape:" />
             <group id="11" flat="true" content-margins="0,0,0,0" layout="hbox">
                 <radiobutton id="12" text="cylinder" checked="true" on-click="updateUi" />
-                <radiobutton id="13" text="capsule" checked="false" on-click="updateUi" />
-                <checkbox id="14" text="tangent" enabled="false" checked="false" />
+                <radiobutton id="13" text="capsule" on-click="updateUi" />
+                <checkbox id="14" text="tangent" />
             </group>
             <br/>
             <label id="20" text="Diameter:" />
-            <spinbox id="21" float="true" minimum="0.0001" maximum="1000.0000" step="0.0001" value="0.01" decimals="6" suffix=" [m]" />
+            <spinbox id="21" float="true" minimum="0.0001" maximum="1000.0000" step="0.01" value="0.01" decimals="6" suffix=" [m]" />
             <br/>
             <label id="30" text="" />
-            <checkbox id="31" text="Group shapes" checked="true" />
+            <checkbox id="31" text="Group shapes" />
             <br/>
             <label id="40" text="" />
             <checkbox id="41" text="Dynamic shape" checked="true" />
@@ -36,9 +31,17 @@ function sysCall_init()
             <checkbox id="51" text="Respondable shape" checked="true" />
             <br/>
             <label id="60" text="" />
-            <button id="61" on-click="execute" text="Create" />
+            <label id="61" enabled="false" visible="false" text="(Select at least 2 points)" />
+            <br/>
+            <label id="70" text="" />
+            <button id="71" on-click="execute" text="Create" />
         </ui>
     ]])
+    updateUi()
+end
+
+function sysCall_selChange()
+    updateUi()
 end
 
 function onClose()
@@ -47,11 +50,14 @@ end
 
 function updateUi()
     simUI.setEnabled(ui, 14, simUI.getRadiobuttonValue(ui, 13) > 0)
+    simUI.setEnabled(ui, 31, #sim.scene.selection > 2)
+    simUI.setWidgetVisibility(ui, 61, #sim.scene.selection < 2)
+    simUI.setEnabled(ui, 71, #sim.scene.selection >= 2)
 end
 
 function execute()
-    local cylinder = simUI.getRadiobuttonValue(ui, 12)
-    local capsule = simUI.getRadiobuttonValue(ui, 13)
+    local cylinder = simUI.getRadiobuttonValue(ui, 12) > 0
+    local capsule = simUI.getRadiobuttonValue(ui, 13) > 0
     local tangent = simUI.getCheckboxValue(ui, 14) > 0
     local diameter = simUI.getSpinboxValue(ui, 21)
     local groupShapes = simUI.getCheckboxValue(ui, 31) > 0
@@ -84,7 +90,6 @@ function execute()
         shape.dynamic = dynamicShape
         shape.respondable = respondableShape
     end
-    leaveNow = true
 end
 
 function sysCall_nonSimulation()
