@@ -651,7 +651,7 @@ end
 
 function gen_getObject(o)
     if o.getName ~= nil then
-        return 'sim.scene:getObject \'' .. o:getName(1) .. '\''
+        return 'sim.scene:getObject \'' .. o:getName('fullPath') .. '\''
     elseif o == sim.scene then
         return 'sim.scene'
     elseif o == sim.app then
