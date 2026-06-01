@@ -379,13 +379,11 @@ end
 function readTargetProperties()
     propertiesValues = sim.getProperties(target, {skipLarge = true})
     propertiesInfos = sim.getPropertiesInfos(target)
-    propertiesNames = {}
     matchingPropertiesNames = {}
     methods = {}
     local pat = getFilteringPattern()
     local strFindError
     for pname, pinfo in pairs(propertiesInfos) do
-        table.insert(propertiesNames, pname)
         local ok, m = pcall(string.find, pname, pat)
         if ok then
             if (m and not filterInvert) or (not m and filterInvert) then
@@ -400,7 +398,6 @@ function readTargetProperties()
         end
     end
     simUI.setStyleSheet(ui, ui_filter, strFindError and 'border: 1px solid red' or '')
-    table.sort(propertiesNames, propertyOrder)
     table.sort(matchingPropertiesNames, propertyOrder)
     table.sort(methods, propertyOrder)
     generateTree(matchingPropertiesNames)
