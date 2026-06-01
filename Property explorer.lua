@@ -572,9 +572,7 @@ function updateContextMenuForSelectedProperty()
         addContextMenu('--', '')
         addContextMenu('#', 'Value:')
         addContextMenu('copyValue', '    Copy value to clipboard', canAssign)
-        addContextMenu('copyGetter', '    Copy get code to clipboard', canAssign)
-        addContextMenu('copySetter', '    Copy set code to clipboard', canAssign)
-        addContextMenu('assign', '    Assign value to variable', canAssign)
+        addContextMenu('printValue', '    Print value', canAssign)
         if canAssign then
             addContextMenu('editInCodeEditor', '    ' .. (canEdit and 'Edit' or 'View') .. ' in code editor...', true)
         end
@@ -626,19 +624,27 @@ function onPropertyContextMenuTriggered(ui, id, key)
 end
 
 function onContextMenu_printDescription()
-    print(propertiesInfos[selectedProperty].description)
+    local targetStr = gen_getObject(target)
+    local code = string.format('({%s:getPropertyInfo(\'%s\')})[3]',
+        targetStr,
+        selectedProperty
+    )
+    local simCmd = require 'simCmd'
+    simCmd.exec('lua', code)
 end
 
 function onContextMenu_printInfo()
-    print(propertiesInfos[selectedProperty])
+    local targetStr = gen_getObject(target)
+    local code = string.format('%s:getPropertyInfos(\'%s\')',
+        targetStr,
+        selectedProperty
+    )
+    local simCmd = require 'simCmd'
+    simCmd.exec('lua', code)
 end
 
-function onContextMenu_assign()
-    assignValue()
-end
-
-function onContextMenu_print()
-    print('not implemented yet')
+function onContextMenu_printValue()
+    printValue()
 end
 
 function onContextMenu_copy()
@@ -653,31 +659,14 @@ end
 
 function gen_getObject(o)
     if o.getName ~= nil then
-        return 'sim.scene:getObject \'' .. o:getName('fullPath') .. '\''
+        return string.format('scene:getObject(\'%s\')', o:getName('fullPath'))
     elseif o == sim.scene then
-        return 'sim.scene'
+        return 'scene'
     elseif o == sim.app then
-        return 'sim.app'
+        return 'app'
     else
-        return tostring(o.handle)
+        return string.format('sim.Object(%d)', o.handle)
     end
-end
-
-function onContextMenu_copyGetter()
-    local targetStr = gen_getObject(target)
-    local code = string.format('sim.%s(%s, \'%s\')',
-        sim.getPropertyGetter(propertiesInfos[selectedProperty].type, true),
-        targetStr, selectedProperty)
-    simUI.setClipboardText(code)
-end
-
-function onContextMenu_copySetter()
-    local targetStr = gen_getObject(target)
-    local valueStr = _S.anyToString(sim.getProperty(target, selectedProperty))
-    local code = string.format('sim.%s(%s, \'%s\', %s)',
-        sim.getPropertySetter(propertiesInfos[selectedProperty].type, true),
-        targetStr, selectedProperty, valueStr)
-    simUI.setClipboardText(code)
 end
 
 function onContextMenu_editInCodeEditor()
@@ -751,17 +740,32 @@ function onContextMenu_settarget_(handle)
 end
 
 function onContextMenu_remove()
-    removeSelected()
+    if not selectedProperty then return end
+    if not propertiesInfos[selectedProperty] then return end
+    if not propertiesInfos[selectedProperty].flags.removable then return end
+    local targetStr = gen_getObject(target)
+    local code = string.format('%s:removeProperty(\'%s\')',
+        targetStr,
+        selectedProperty
+    )
+    local simCmd = require 'simCmd'
+    simCmd.exec('lua', code)
 end
 
 function onContextMenu_removeall()
-    if selectedProperty:endswith('.') then
-        for pname, pvalue in pairs(sim.getProperties(target)) do
-            if string.startswith(pname, selectedProperty) and propertiesInfos[pname].flags.removable then
-                sim.removeProperty(target, pname)
-            end
-        end
-    end
+    if not selectedProperty:endswith('.') then return end
+    local targetStr = gen_getObject(target)
+    local code = string.format(
+        'while true do\n' ..
+        '    n = %s:getPropertyName(0, {prefix = \'%s\'})\n' ..
+        '    if n then %s:removeProperty(n) else break end\n' ..
+        'end',
+        targetStr,
+        selectedProperty,
+        targetStr
+    )
+    local simCmd = require 'simCmd'
+    simCmd.exec('lua', code)
 end
 
 function onRowSelected(ui, id, row)
@@ -787,7 +791,7 @@ function onRowDoubleClicked(ui, id, row, col)
         return
     end
 
-    if canAssign then assignValue() end
+    if canAssign then printValue() end
 end
 
 function onKeyPress(ui, id, key, keystr, mods)
@@ -856,20 +860,11 @@ function updateFilter()
     onTargetChanged()
 end
 
-function assignValue()
+function printValue()
     local simCmd = require 'simCmd'
     local targetStr = gen_getObject(target)
-    local code = string.format('value = sim.getProperty(%s, \'%s\')', targetStr, selectedProperty)
+    local code = string.format('%s.%s', targetStr, selectedProperty)
     simCmd.exec('lua', code)
-    simCmd.exec('lua', 'value')
-end
-
-function removeSelected()
-    if not selectedProperty then return end
-    if not propertiesInfos[selectedProperty] then return end
-    if propertiesInfos[selectedProperty].flags.removable then
-        sim.removeProperty(target, selectedProperty)
-    end
 end
 
 function createUi()
