@@ -333,7 +333,7 @@ function generateTree(pnames)
     local lastPClass = nil
     local prefix, prefixa = '', {}
     local newPrefix, newPrefixa
-    for _, pname in ipairs(matchingPropertiesNames) do
+    for _, pname in ipairs(pnames) do
         local pnamea = string.split(pname, '%.')
 
         -- insert header at class break:
