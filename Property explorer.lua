@@ -387,7 +387,9 @@ function readTargetProperties()
         local ok, m = pcall(string.find, pname, pat)
         if ok then
             if (m and not filterInvert) or (not m and filterInvert) then
-                if pinfo.type == sim.propertytype_method then
+                if pinfo.type == sim.propertytype_group then
+                    -- groups are deduced from properties names; ignored
+                elseif pinfo.type == sim.propertytype_method then
                     table.insert(methods, pname)
                 else
                     table.insert(matchingPropertiesNames, pname)
