@@ -1,6 +1,7 @@
 local sim = require 'sim-2'
 local simUI
 local cbor
+local settings
 
 function sysCall_info()
     return {menu = 'Developer tools\nProperty explorer'}
@@ -16,10 +17,12 @@ function sysCall_init()
     cbor.NULL_VALUE = setmetatable({}, {__tostring = function() return 'null' end})
     cbor.SIMPLE[22] = function(pos) return cbor.NULL_VALUE, pos, 'null' end
 
+    settings = sim.PropertyGroup(sim.app, {prefix = 'customData.propertyExplorer'})
+
     simUI = require 'simUI'
 
-    disableDuringSim = not not sim.app.customData['propertyExplorer.disableDuringSim']
-    sim.app.customData['propertyExplorer.disableDuringSim'] = disableDuringSim
+    disableDuringSim = not not settings.disableDuringSim
+    settings.disableDuringSim = disableDuringSim
 
     target = sim.scene
     superTarget = target
@@ -33,11 +36,11 @@ function sysCall_init()
     uiSize = {350, 600}
 
     local ok, err = pcall(function()
-        uiPos = sim.app.customData['propertyExplorer.uiPos'] or uiPos
-        uiSize = sim.app.customData['propertyExplorer.uiSize'] or uiSize
-        uiPropsState = sim.app.customData['propertyExplorer.uiPropsState'] or uiPropsState
-        uiCollapseProps = sim.app.customData['propertyExplorer.uiCollapseProps'] or uiCollapseProps
-        uiTargetRadio = sim.app.customData['propertyExplorer.uiTargetRadio'] or uiTargetRadio
+        uiPos = settings.uiPos or uiPos
+        uiSize = settings.uiSize or uiSize
+        uiPropsState = settings.uiPropsState or uiPropsState
+        uiCollapseProps = settings.uiCollapseProps or uiCollapseProps
+        uiTargetRadio = settings.uiTargetRadio or uiTargetRadio
     end)
     if not ok then
         sim.app:logError('Failed to restore saved settings: ' .. err)
@@ -46,12 +49,12 @@ function sysCall_init()
     if uiTargetRadio == 1 then target = sim.app end
 
     createUi()
-    
+
     apidoc = require('sim.apidoc').APIDoc()
 end
 
 function sysCall_beforeSimulation()
-    disableDuringSim = sim.app.customData['propertyExplorer.disableDuringSim'] == true
+    disableDuringSim = settings.disableDuringSim == true
     if disableDuringSim then
         restoreAfterSimulation = {target = target}
         destroyUi()
@@ -405,7 +408,7 @@ end
 
 function toSimpleString(v, pname)
     if v == nil then return '' end
-    local impr = sim.app.customData.propertyExplorer.impr ~= false
+    local impr = settings.impr ~= false
     local ptype = propertiesInfos[pname].type
     if ptype == sim.propertytype_handle or ptype == sim.propertytype_handlearray then
         v = v.handle
@@ -492,7 +495,7 @@ function onTargetChanged()
     readTargetProperties()
     comboLabels, comboHandles = {}, {}
     local comboIdx = 0
-    sim.app.customData.propertyExplorer.uiTargetRadio = target == sim.app and 1 or 2
+    settings.uiTargetRadio = target == sim.app and 1 or 2
     local superTarget = target
     if target == sim.app then
         table.insert(comboLabels, 'sim.app')
@@ -780,7 +783,7 @@ function onRowDoubleClicked(ui, id, row, col)
         else
             uiCollapseProps[selectedProperty] = true
         end
-        sim.app.customData.propertyExplorer.uiCollapseProps = uiCollapseProps
+        settings.uiCollapseProps = uiCollapseProps
         onTargetChanged()
         return
     end
@@ -815,7 +818,7 @@ function onClose()
     if selectedRow >= 0 then
         simUI.setPropertiesSelection(ui, ui_properties, -1, false)
     else
-        sim.app.customData.propertyExplorer.autoStart = false
+        settings.autoStart = false
         leaveNow = true
     end
 end
@@ -918,9 +921,9 @@ function destroyUi()
         uiPos = {simUI.getPosition(ui)}
         uiSize = {simUI.getSize(ui)}
         uiPropsState = simUI.getPropertiesState(ui, ui_properties)
-        sim.app.customData.propertyExplorer.uiPos = uiPos
-        sim.app.customData.propertyExplorer.uiSize = uiSize
-        sim.app.customData.propertyExplorer.uiPropsState = uiPropsState
+        settings.uiPos = uiPos
+        settings.uiSize = uiSize
+        settings.uiPropsState = uiPropsState
         simUI.destroy(ui)
         ui = nil
     end
