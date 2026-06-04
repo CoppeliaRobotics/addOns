@@ -625,7 +625,7 @@ end
 
 function onContextMenu_printDescription()
     local targetStr = gen_getObject(target)
-    local code = string.format('({%s:getPropertyInfo(\'%s\')})[3]',
+    local code = string.format('%s:getPropertyInfos(\'%s\').description',
         targetStr,
         selectedProperty
     )
