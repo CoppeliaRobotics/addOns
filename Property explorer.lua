@@ -213,24 +213,24 @@ function getSubObjects(obj)
             sim.scene.customObjects,
             sim.scene.drawingObjects
         )
-    elseif obj.objectType == 'shape' then
+    elseif obj.type == 'shape' then
         return obj.meshes
-    elseif obj.objectType == 'script' then
+    elseif obj.type == 'script' then
         return {obj.detachedScript}
     end
 end
 
 function getSuperObject(obj)
-    if obj.objectType == 'collection' or obj.objectType == 'drawingObject' then
+    if obj.type == 'collection' or obj.type == 'drawingObject' then
         return sim.scene
-    elseif obj.objectType == 'mesh' then
+    elseif obj.type == 'mesh' then
         return obj.shape
-    elseif obj.objectType == 'detachedScript' then
+    elseif obj.type == 'detachedScript' then
         if table.find(sim.app.addOns, obj) then
             return sim.app
         end
         for _, obj1 in ipairs(sim.scene.objects) do
-            if obj1.objectType == 'script' and obj1.detachedScript == obj then
+            if obj1.type == 'script' and obj1.detachedScript == obj then
                 return obj1
             end
         end
@@ -508,14 +508,14 @@ function onTargetChanged()
         if superTarget.getName ~= nil then
             name = superTarget:getName('shortPath')
         else
-            name = superTarget.objectType .. ' ' .. superTarget.handle
+            name = superTarget.type .. ' ' .. superTarget.handle
         end
         table.insert(comboLabels, name)
         table.insert(comboHandles, superTarget)
     end
     local subObjects = getSubObjects(superTarget)
     for i, subObject in ipairs(subObjects or {}) do
-        table.insert(comboLabels, '    ' .. subObject.objectType .. ' ' .. subObject.handle)
+        table.insert(comboLabels, '    ' .. subObject.type .. ' ' .. subObject.handle)
         table.insert(comboHandles, subObject.handle)
         if subObject == sim.Object:toobject(target) then comboIdx = i end
     end
@@ -828,7 +828,7 @@ end
 
 function onMethodSelected(ui, id, methodIndex)
     local methodName = methods[methodIndex + 1]
-    local pclass = propertiesValues.objectType
+    local pclass = propertiesValues.type
     local methodinfo = apidoc.getMethod(pclass, methodName)
     local info = methodName
     if methodinfo then
