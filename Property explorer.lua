@@ -412,6 +412,8 @@ function toSimpleString(v, pname)
     local ptype = propertiesInfos[pname].type
     if ptype == sim.propertytype_handle or ptype == sim.propertytype_handlearray then
         v = v.handle
+    elseif ptype == sim.propertytype_enum then
+        v = string.format('%d (%s)', target:getIntProperty(pname), target:getStringProperty(pname))
     elseif table.find({
             sim.propertytype_color,
             sim.propertytype_vector2,
