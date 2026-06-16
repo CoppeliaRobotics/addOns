@@ -8,8 +8,7 @@ function sysCall_info()
 end
 
 function sysCall_init()
-    --if sim.app.headlessMode ~= sim.headlessMode.disabled then
-    if sim.app:getIntProperty('headlessMode') ~= 0 then
+    if sim.app.headlessMode ~= sim.headlessMode.disabled then
         sim.app:logWarn('Property Explorer cannot start in headless mode')
         return {cmd = 'cleanup'}
     end
