@@ -377,8 +377,8 @@ function generateTree(pnames)
 end
 
 function readTargetProperties()
-    propertiesValues = sim.getProperties(target, {skipLarge = true})
-    propertiesInfos = sim.getPropertiesInfos(target)
+    propertiesValues = target:getProperties{skipLarge = true}
+    propertiesInfos = target:getPropertiesInfos()
     matchingPropertiesNames = {}
     methods = {}
     local pat = getFilteringPattern()
@@ -436,6 +436,24 @@ function toSimpleString(v, pname)
     return _S.anyToString(v, {omitQuotes = true})
 end
 
+function convertPropertyValue(value, fromType, toType)
+    if fromType == toType then
+        return value
+    elseif fromType == sim.propertytype_string then
+        local fn, err = loadstring(
+            'local sim = require "sim-2"; ' ..
+            'local simEigen = require "simEigen"; ' ..
+            'return ' .. value
+        )
+        if not fn then return nil, err end
+        local ok, val = pcall(fn)
+        if ok then return val, nil else return nil, val end
+    elseif toType == sim.propertytype_string then
+        return _S.anyToString(value)
+    end
+    error 'unsupported type of conversion'
+end
+
 function updateTableRow(i, updateSingle)
     local pname = tableRows.pname[i]
     if tableRows.type[i] == 'classHeader' then
@@ -455,18 +473,18 @@ function updateTableRow(i, updateSingle)
         tableRows.description[i] = ''
     elseif tableRows.type[i] == 'property' then
         -- normal row
-        propertiesInfos[pname] = sim.getPropertyInfos(target, pname, {label=true})
+        propertiesInfos[pname] = target:getPropertyInfos(pname, {label=true})
         local flags = propertiesInfos[pname].flags
         if flags.readable then
             if not flags.large then
-                propertiesValues[pname] = sim.getProperty(target, pname)
+                propertiesValues[pname] = target:getProperty(pname)
             end
         end
-        local ptypeStr = sim.getPropertyTypeString(propertiesInfos[pname].type)
+        local ptypeStr = sim.app:getPropertyTypeString(propertiesInfos[pname].type)
         ptypeStr = ptypeStr:gsub('array(%d+)$', '[%1]')
         ptypeStr = ptypeStr:gsub('array$', '[]')
         tableRows.ptype[i] = ptypeStr
-        tableRows.pvalue[i] = sim.convertPropertyValue(propertiesValues[pname], propertiesInfos[pname].type, sim.propertytype_string)
+        tableRows.pvalue[i] = convertPropertyValue(propertiesValues[pname], propertiesInfos[pname].type, sim.propertytype_string)
         tableRows.description[i] = propertiesInfos[pname].description or ''
         if tableRows.pvalue[i] == nil then tableRows.pvalue[i] = '' end
         tableRows.pflags[i] = flags.value
@@ -544,7 +562,7 @@ function onTargetChanged()
     simUI.setItems(ui, ui_methods_list, simCBOR.encode(methodListItems))
 
     updateContextMenuForSelectedProperty()
-    sim.setEventFilters{[target] = {}}
+    sim.self:setEventFilters{[target] = {}}
 end
 
 function updateContextMenuForSelectedProperty()
@@ -580,7 +598,7 @@ function updateContextMenuForSelectedProperty()
         end
         addContextMenu('loadValueFromFile', '    Load value from file...', canEdit)
         addContextMenu('saveValueToFile', '    Save value to file...', canAssign)
-        local ptypeStr = sim.getPropertyTypeString(propertiesInfos[selectedProperty].type)
+        local ptypeStr = sim.app:getPropertyTypeString(propertiesInfos[selectedProperty].type)
         if ptypeStr == 'handle' or ptypeStr == 'handlearray' then
             local objects = propertiesValues[selectedProperty]
             if ptypeStr == 'handle' then objects = {objects} end
@@ -654,8 +672,8 @@ function onContextMenu_copy()
 end
 
 function onContextMenu_copyValue()
-    local pvalue = sim.getProperty(target, selectedProperty)
-    pvalue = sim.convertPropertyValue(pvalue, propertiesInfos[selectedProperty].type, sim.propertytype_string)
+    local pvalue = target:getProperty(selectedProperty)
+    pvalue = convertPropertyValue(pvalue, propertiesInfos[selectedProperty].type, sim.propertytype_string)
     simUI.setClipboardText(pvalue)
 end
 
@@ -672,8 +690,8 @@ function gen_getObject(o)
 end
 
 function onContextMenu_editInCodeEditor()
-    propertiesValues[selectedProperty] = sim.getProperty(target, selectedProperty)
-    initialEditorContent = sim.convertPropertyValue(propertiesValues[selectedProperty], propertiesInfos[selectedProperty].type, sim.propertytype_string)
+    propertiesValues[selectedProperty] = target:getProperty(selectedProperty)
+    initialEditorContent = convertPropertyValue(propertiesValues[selectedProperty], propertiesInfos[selectedProperty].type, sim.propertytype_string)
     local sz = 2 * math.min(500, #initialEditorContent)
     local w = math.max(200, math.min(800, 60 * math.log(sz) + 85.21))
     local h = math.max(40, math.min(1200, 50 * math.pow(sz, 0.353)))
@@ -684,15 +702,11 @@ function editValueFinished()
     if editorHandle then
         local newValue, err = sim.textEditorGetInfo(editorHandle), nil
         if newValue ~= initialEditorContent then
-            newValue, err = sim.convertPropertyValue(newValue, sim.propertytype_string, propertiesInfos[selectedProperty].type)
+            newValue, err = convertPropertyValue(newValue, sim.propertytype_string, propertiesInfos[selectedProperty].type)
             if err then
                 simUI.msgBox(simUI.msgbox_type.critical, simUI.msgbox_buttons.ok, 'Error', 'Failed to convert value: ' .. err)
             elseif propertiesInfos[selectedProperty].flags.writable then
-                if propertiesInfos[selectedProperty].type == sim.propertytype_color then
-                    sim.setColorProperty(target, selectedProperty, newValue)
-                else
-                    sim.setProperty(target, selectedProperty, newValue)
-                end
+                target:setProperty(selectedProperty, newValue)
             end
         end
         sim.textEditorClose(editorHandle)
@@ -709,22 +723,18 @@ function onContextMenu_loadValueFromFile()
         local file = io.open(result[1], 'r')
         local newValue = file:read('*all')
         file:close()
-        newValue, err = sim.convertPropertyValue(newValue, sim.propertytype_string, propertiesInfos[selectedProperty].type)
+        newValue, err = convertPropertyValue(newValue, sim.propertytype_string, propertiesInfos[selectedProperty].type)
         if err then
             simUI.msgBox(simUI.msgbox_type.critical, simUI.msgbox_buttons.ok, 'Error', 'Failed to convert value: ' .. err)
         elseif propertiesInfos[selectedProperty].flags.writable then
-            if propertiesInfos[selectedProperty].type == sim.propertytype_color then
-                sim.setColorProperty(target, selectedProperty, newValue)
-            else
-                sim.setProperty(target, selectedProperty, newValue)
-            end
+            target:setProperty(selectedProperty, newValue)
         end
     end
 end
 
 function onContextMenu_saveValueToFile()
-    propertiesValues[selectedProperty] = sim.getProperty(target, selectedProperty)
-    local value = sim.convertPropertyValue(propertiesValues[selectedProperty], propertiesInfos[selectedProperty].type, sim.propertytype_string)
+    propertiesValues[selectedProperty] = target:getProperty(selectedProperty)
+    local value = convertPropertyValue(propertiesValues[selectedProperty], propertiesInfos[selectedProperty].type, sim.propertytype_string)
     local lfsx = require 'lfsx'
     local sceneDir = lfsx.dirname(sim.scene.scenePath)
     local result = simUI.fileDialog(simUI.filedialog_type.save, 'Save file', sceneDir, '', '', '', true)
@@ -807,15 +817,11 @@ function onKeyPress(ui, id, key, keystr, mods)
 end
 
 function onPropertyEdit(ui, id, key, value)
-    local newValue, err = sim.convertPropertyValue(value, sim.propertytype_string, propertiesInfos[key].type)
+    local newValue, err = convertPropertyValue(value, sim.propertytype_string, propertiesInfos[key].type)
     if err then
         simUI.msgBox(simUI.msgbox_type.critical, simUI.msgbox_buttons.ok, 'Error', 'Failed to convert value: ' .. err)
     elseif propertiesInfos[selectedProperty].flags.writable then
-        if propertiesInfos[selectedProperty].type == sim.propertytype_color then
-            sim.setColorProperty(target, selectedProperty, newValue)
-        else
-            sim.setProperty(target, selectedProperty, newValue)
-        end
+        target:setProperty(selectedProperty, newValue)
     end
 end
 
