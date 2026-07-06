@@ -838,21 +838,7 @@ function onMethodSelected(ui, id, methodIndex)
     local methodName = methods[methodIndex + 1]
     local pclass = propertiesValues.type
     local methodinfo = apidoc.getMethod(pclass, methodName)
-    local info = methodName
-    if methodinfo then
-        info = methodinfo:getCallTip()
-        if methodinfo.description then
-            info = info .. '<hr/>' .. methodinfo.description
-        end
-        local p = methodinfo:getParamsDoc(methodinfo.params)
-        if p and p ~= '' then
-            info = info .. '<hr/>Params:<br/>' .. p
-        end
-        local r = methodinfo:getParamsDoc(methodinfo.returns)
-        if r and r ~= '' then
-            info = info .. '<hr/>Return value(s):<br/>' .. r
-        end
-    end
+    local info = methodinfo and methodinfo:getDoc() or methodName
     simUI.setText(ui, ui_methods, info)
 end
 
