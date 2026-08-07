@@ -52,7 +52,7 @@ function processEvent(e)
     if p('excludeMsgDispatchTime') and e.event == 'msgDispatchTime' then return end
     local ks = table.keys(e.data)
     table.sort(ks)
-    if p('excludeSelectionEvents') and e.event == 'objectChanged' and e.handle == sim.handle_scene and table.eq(ks, {'selectionHandles'}) then return end
+    if p('excludeSelectionEvents') and e.event == 'objectChanged' and e.handle == sim.handle_scene and table.eq(ks, {'selection'}) then return end
     if p('excludeSelectionEvents') and e.event == 'objectChanged' and e.handle ~= sim.handle_scene and table.eq(ks, {'selected'}) then return end
     if p('excludeCollapseEvents') and e.event == 'objectChanged' and table.eq(ks, {'collapsed', 'objectPropertyFlags'}) then return end
 
