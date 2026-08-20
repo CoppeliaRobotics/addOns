@@ -24,9 +24,9 @@ function sysCall_addOnScriptSuspend()
     return {cmd = 'cleanup'}
 end
 
-function sysCall_event(event)
+function sysCall_event(events)
     local txt = ''
-    for _, e in ipairs(cbor.decode(tostring(event))) do
+    for _, e in ipairs(cbor.decode(events)) do
         local ret = processEvent(e)
         if ret then
             txt = txt .. (sep or '') .. ret .. ','
@@ -58,7 +58,15 @@ function processEvent(e)
 
     if not testFilter(e) then return end
 
-    if p('stripData') then e.data = nil end
+    if filterFieldsEnabled then
+        for k in pairs(e.data) do
+            if not testFilterField(k) then
+                e.data[k] = nil
+            end
+        end
+        
+        if filterNonEmptyData and next(e.data) == nil then return end
+    end
 
     return _S.tableToString(e, {indent = true}, 99)
 end
@@ -71,6 +79,21 @@ function testFilter(e)
     return ret
 end
 
+function testFilterField(f)
+    for _, filterField in ipairs(filterFieldsList) do
+        if filterField:endswith '*' then
+            filterField = filterField:sub(1, #filterField - 1)
+            if f:startswith(filterField) then
+                return true
+            end
+        else
+            if f == filterField then
+                return true
+            end
+        end
+    end
+end
+
 function onFilterChanged()
     for pname, ui_ctrl in pairs {
         filterEnabled = ui_chkFilter,
@@ -79,6 +102,8 @@ function onFilterChanged()
         excludeSelectionEvents = ui_chkExcludeSelectionEvents,
         excludeCollapseEvents = ui_chkExcludeCollapseEvents,
         stripData = ui_chkStripData,
+        filterFieldsEnabled = ui_chkFilterFields,
+        filterNonEmptyData = ui_chkFilterNonEmpty,
     } do
         local checkboxValue = simUI.getCheckboxValue(ui, ui_ctrl) > 0
         sim.setBoolProperty(sim.handle_app, 'customData.eventViewer.' .. pname, checkboxValue)
@@ -98,6 +123,20 @@ function onFilterChanged()
             or sim.getBoolProperty(sim.handle_app, 'customData.eventViewer.excludeSelectionEvents')
             or sim.getBoolProperty(sim.handle_app, 'customData.eventViewer.excludeCollapseEvents')
         ) and 2 or 0)
+
+    local filterFieldsStr = simUI.getEditValue(ui, ui_txtFilterFields)
+    filterFieldsStr = string.trim(filterFieldsStr)
+    if filterFieldsStr == '' then
+        filterFieldsList = {}
+    else
+        filterFieldsList = string.split(filterFieldsStr, '[ ,;]+')
+    end
+    sim.setStringProperty(sim.handle_app, 'customData.eventViewer.filterFields', filterFieldsStr)
+
+    filterFieldsEnabled = sim.getBoolProperty(sim.handle_app, 'customData.eventViewer.filterFieldsEnabled')
+    simUI.setEnabled(ui, ui_txtFilterFields, filterFieldsEnabled)
+    
+    filterNonEmptyData = sim.getBoolProperty(sim.handle_app, 'customData.eventViewer.filterNonEmptyData')
 end
 
 function onClose()
@@ -131,16 +170,17 @@ function createUi()
                     <stretch />
                 </group>
                 <br/>
-                <label text="" />
-                <label text="" />
-                <group layout="hbox" content-margins="0,0,0,0" flat="true">
-                    <checkbox id="${ui_chkStripData}" text="strip 'data' field" checked="false" on-change="onFilterChanged" />
-                    <stretch />
-                </group>
-                <br/>
                 <checkbox id="${ui_chkFilter}" text="" on-change="onFilterChanged" />
                 <label text="Filter:" />
                 <edit id="${ui_txtFilter}" value="e.handle == sim.handle_scene" enabled="false" on-change="onFilterChanged" />
+                <br/>
+                <checkbox id="${ui_chkFilterFields}" text="" on-change="onFilterChanged" />
+                <label text="Filter data fields:" />
+                <edit id="${ui_txtFilterFields}" value="parent, children, name" enabled="false" on-change="onFilterChanged" />
+                <br/>
+                <label text="" />
+                <label text="" />
+                <checkbox id="${ui_chkFilterNonEmpty}" text="Discard events whose fields filter results in empty data" on-change="onFilterChanged" />
             </group>
             <text-browser id="${ui_txtLog}" type="plain" word-wrap="false" read-only="false" style="QTextBrowser { font-family: Courier New; }" />
         </ui>]])
@@ -151,6 +191,8 @@ function createUi()
             excludeMsgDispatchTime = ui_chkExcludeMsgDispatchTime,
             excludeSelectionEvents = ui_chkExcludeSelectionEvents,
             excludeCollapseEvents = ui_chkExcludeCollapseEvents,
+            filterFieldsEnabled = ui_chkFilterFields,
+            filterNonEmptyData = ui_chkFilterNonEmpty,
         } do
             local pvalue = sim.getBoolProperty(sim.handle_app, 'customData.eventViewer.' .. pname, {noError = true})
             if pvalue ~= nil then
@@ -158,9 +200,14 @@ function createUi()
             end
         end
 
-        local ff = sim.getStringProperty(sim.handle_app, 'customData.eventViewer.filterFunc', {noError = true})
-        if ff ~= nil then
-            simUI.setEditValue(ui, ui_txtFilter, ff)
+        for pname, ui_ctrl in pairs {
+            filterFunc = ui_txtFilter,
+            filterFields = ui_txtFilterFields,
+        } do
+            local s = sim.getStringProperty(sim.handle_app, 'customData.eventViewer.' .. pname, {noError = true})
+            if s ~= nil then
+                simUI.setEditValue(ui, ui_ctrl, s)
+            end
         end
 
         onFilterChanged()
