@@ -135,6 +135,7 @@ function onFilterChanged()
 
     filterFieldsEnabled = sim.getBoolProperty(sim.handle_app, 'customData.eventViewer.filterFieldsEnabled')
     simUI.setEnabled(ui, ui_txtFilterFields, filterFieldsEnabled)
+    simUI.setEnabled(ui, ui_chkFilterNonEmpty, filterFieldsEnabled)
     
     filterNonEmptyData = sim.getBoolProperty(sim.handle_app, 'customData.eventViewer.filterNonEmptyData')
 end
