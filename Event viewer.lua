@@ -1,6 +1,7 @@
 local sim = require 'sim'
 local simUI
 local cbor
+local fnmatch
 
 function sysCall_info()
     return {menu = 'Developer tools\nEvent viewer'}
@@ -12,6 +13,7 @@ function sysCall_init()
     cbor.SIMPLE[22] = function(pos) return cbor.NULL_VALUE, pos, 'null' end
 
     simUI = require 'simUI'
+    fnmatch = require 'fnmatch'
 
     createUi()
 end
@@ -81,15 +83,8 @@ end
 
 function testFilterField(f)
     for _, filterField in ipairs(filterFieldsList) do
-        if filterField:endswith '*' then
-            filterField = filterField:sub(1, #filterField - 1)
-            if f:startswith(filterField) then
-                return true
-            end
-        else
-            if f == filterField then
-                return true
-            end
+        if fnmatch.fnmatch(f, filterField) then
+            return true
         end
     end
 end
