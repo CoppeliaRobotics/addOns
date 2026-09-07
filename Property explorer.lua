@@ -79,8 +79,7 @@ function sysCall_cleanup()
 end
 
 function sysCall_afterInstanceSwitch()
-    setTarget(sim.scene, 'afterInstanceSwitch') -- otherwise we get a crash
-    sysCall_selChange {sel = sim.scene.selection}
+    setTarget(sim.scene, 'afterInstanceSwitch') -- otherwise we get a crash (is it still needed after the change to sim.app.current?)
 
     -- force a target change event, otherwise switching scene where the same
     -- handle is selected won't trigger a target change:
@@ -103,22 +102,9 @@ function sysCall_sensing()
     checkTargetChanged()
 end
 
-function sysCall_selChange(inData)
-    if getSuperObject(target) == sim.app then
-        -- if app (or some app's sub-object) selected, object selection won't switch target
-        return
-    elseif #inData.sel == 0 then
-        -- scene if empty selection
-        setTarget(sim.scene, 'selChange')
-    else
-        -- otherwise currently selected object
-        local obj = sim.Object:toobject(inData.sel[#inData.sel])
-        setTarget(obj, 'selChange')
-    end
-end
-
 function sysCall_event(events)
     if not ui then return end
+
     if target == nil or propertiesInfos == nil then return end
 
     if not target:isValid() then
@@ -198,6 +184,26 @@ function sysCall_event(events)
     end
 end
 
+function getObjectName(o)
+    if o.name then
+        return o.name
+    elseif o.scriptName then
+        return o.scriptName
+    end
+end
+
+function getTitle()
+    local t = 'Property Explorer'
+    if target then
+        t = t .. ': ' .. target.type .. ' ' .. target.handle
+        local n = getObjectName(target)
+        if n then
+            t = t .. ' (' .. n .. ')'
+        end
+    end
+    return t
+end
+
 function getSubObjects(obj)
     if obj == sim.app then
         return table.add(
@@ -247,6 +253,7 @@ function getSuperObject(obj)
 end
 
 function checkTargetChanged()
+    target = sim.app.current
     if target ~= oldTarget then
         onTargetChanged()
         oldTarget = target
@@ -256,19 +263,6 @@ end
 function setTarget(t)
     target = t
     superTarget = getSuperObject(t)
-end
-
-function setTargetApp()
-    setTarget(sim.app, 'setTargetApp')
-end
-
-function setTargetSel()
-    local sel = sim.scene.selection
-    if #sel == 0 then
-        setTarget(sim.scene, 'setTargetSel')
-    else
-        setTarget(sel[#sel], 'setTargetSel')
-    end
 end
 
 function onSubTargetChanged(ui, id, i)
@@ -512,35 +506,9 @@ end
 
 function onTargetChanged()
     readTargetProperties()
-    comboLabels, comboHandles = {}, {}
-    local comboIdx = 0
-    settings.uiTargetRadio = target == sim.app and 1 or 2
-    local superTarget = target
-    if target == sim.app then
-        table.insert(comboLabels, 'sim.app')
-        table.insert(comboHandles, sim.app)
-    elseif target == sim.scene then
-        table.insert(comboLabels, 'sim.scene')
-        table.insert(comboHandles, sim.scene)
-    else
-        superTarget = getSuperObject(target)
-        local name
-        if superTarget.getName ~= nil then
-            name = superTarget:getName('shortPath')
-        else
-            name = superTarget.type .. ' ' .. superTarget.handle
-        end
-        table.insert(comboLabels, name)
-        table.insert(comboHandles, superTarget)
-    end
-    local subObjects = getSubObjects(superTarget)
-    for i, subObject in ipairs(subObjects or {}) do
-        table.insert(comboLabels, '    ' .. subObject.type .. ' ' .. subObject.handle)
-        table.insert(comboHandles, subObject.handle)
-        if subObject == sim.Object:toobject(target) then comboIdx = i end
-    end
-    simUI.setComboboxItems(ui, ui_combo_selection, comboLabels, comboIdx)
-    simUI.setEnabled(ui, ui_combo_selection, #comboLabels > 1)
+    
+    simUI.setTitle(ui, getTitle())
+
     selectedRow = -1
     for i, pname in ipairs(tableRows.pname) do
         if selectedProperty == pname then
@@ -611,7 +579,9 @@ function updateContextMenuForSelectedProperty()
                 prefix = 'settarget/:'
             end
             for _, object in ipairs(objects) do
-                addContextMenu(prefix .. object.handle, 'Inspect subobject ' .. object.handle .. '...')
+                local n = getObjectName(object)
+                n = n and (' (' .. n .. ')') or ''
+                addContextMenu(prefix .. object.handle, 'Inspect subobject ' .. object.handle .. n .. '...')
             end
         end
         addContextMenu('--', '')
@@ -747,8 +717,7 @@ function onContextMenu_saveValueToFile()
 end
 
 function onContextMenu_settarget_(handle)
-    local obj = sim.Object:toobject(handle)
-    setTarget(obj, 'onContextMenu_settarget_')
+    sim.app.current = handle
 end
 
 function onContextMenu_remove()
@@ -870,14 +839,7 @@ function createUi()
         if uiSize then
             sz = ' size="' .. uiSize[1] .. ',' .. uiSize[2] .. '"'
         end
-        local superTarget = getSuperObject(target)
         xml = '<ui title="Property Explorer" spacing="0" activate="false" closeable="true" on-close="onClose" resizable="true"' .. pos .. sz .. '>'
-        xml = xml .. '<group flat="true" layout="hbox" content-margins="0,0,0,0">'
-        xml = xml .. '<radiobutton text="App" checked="' .. tostring(superTarget == sim.app) .. '" on-click="setTargetApp" />'
-        xml = xml .. '<radiobutton text="Sel:" checked="' .. tostring(superTarget ~= sim.app) .. '" on-click="setTargetSel" />'
-        xml = xml .. '<combobox id="${ui_combo_selection}" on-change="onSubTargetChanged" stretch="10">'
-        xml = xml .. '</combobox>'
-        xml = xml .. '</group>'
         xml = xml .. '<group id="${ui_filter_grp}" visible="false" flat="true" layout="hbox" content-margins="0,0,0,0">'
         xml = xml .. '<label text="Filter:" />'
         xml = xml .. '<edit id="${ui_filter}" value="' .. filterMatching .. '" on-change="updateFilter" />'
