@@ -138,24 +138,28 @@ function close_callback()
 end
 
 function update(generateNew)
-    local s = sim.getObjectSel()
-    local parentDummy
-    if #s == 1 then
-        local data = sim.readCustomTableData(s[1], '__info__')
-        if data.type == '3dText' then parentDummy = s[1] end
-    end
-    local doNothing
-    if generateNew then
-        parentDummy = nil
+    if config.text == nil or #config.text == 0 then
+        return
     else
-        doNothing = (parentDummy == nil)
-    end
-    if not doNothing then
-        local textUtils = require 'textUtils'
-        local h = textUtils.generateTextShape(config.text, config.color, config.height, config.centered, nil, parentDummy)
-        sim.writeCustomTableData(h, '__info__', {type = '3dText'})
-        sim.writeCustomTableData(h, '__config__', config)
-        sim.announceSceneContentChange()
+        local s = sim.getObjectSel()
+        local parentDummy
+        if #s == 1 then
+            local data = sim.readCustomTableData(s[1], '__info__')
+            if data.type == '3dText' then parentDummy = s[1] end
+        end
+        local doNothing
+        if generateNew then
+            parentDummy = nil
+        else
+            doNothing = (parentDummy == nil)
+        end
+        if not doNothing then
+            local textUtils = require 'textUtils'
+            local h = textUtils.generateTextShape(config.text, config.color, config.height, config.centered, nil, parentDummy)
+            sim.writeCustomTableData(h, '__info__', {type = '3dText'})
+            sim.writeCustomTableData(h, '__config__', config)
+            sim.announceSceneContentChange()
+        end
     end
 end
 
