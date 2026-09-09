@@ -59,7 +59,7 @@ function sysCall_init()
         scriptText = scriptText .. string.format(...) .. '\n'
     end
 
-    appendLine("require 'models.jointGroup_customization'")
+    appendLine("require 'models.jointGroup_customization-2'")
 
     local jointGroupScript = sim.createScript(sim.scripttype_customization, scriptText)
     sim.setReferencedHandles(jointGroupScript, joints, 'joints')
