@@ -1,4 +1,4 @@
-local sim = require 'sim'
+local sim = require 'sim-1'
 local simUI
 local cbor
 local fnmatch
@@ -66,7 +66,7 @@ function processEvent(e)
                 e.data[k] = nil
             end
         end
-        
+
         if filterNonEmptyData and next(e.data) == nil then return end
     end
 
@@ -131,7 +131,7 @@ function onFilterChanged()
     filterFieldsEnabled = sim.getBoolProperty(sim.handle_app, 'customData.eventViewer.filterFieldsEnabled')
     simUI.setEnabled(ui, ui_txtFilterFields, filterFieldsEnabled)
     simUI.setEnabled(ui, ui_chkFilterNonEmpty, filterFieldsEnabled)
-    
+
     filterNonEmptyData = sim.getBoolProperty(sim.handle_app, 'customData.eventViewer.filterNonEmptyData')
 end
 

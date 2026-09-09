@@ -3,7 +3,7 @@ function sysCall_info()
 end
 
 function sysCall_init()
-    local sim = require 'sim'
+    local sim = require 'sim-1'
     local simUI = require 'simUI'
     local scenePath = sim.getStringProperty(sim.handle_scene, 'scenePath')
     if scenePath == '' then

@@ -1,4 +1,4 @@
-local sim = require 'sim'
+local sim = require 'sim-1'
 local extModel = require 'addOns.extModel'
 
 function sysCall_info()

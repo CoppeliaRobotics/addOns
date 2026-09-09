@@ -1,4 +1,4 @@
-local sim = require 'sim'
+local sim = require 'sim-1'
 
 require 'functional'
 
@@ -326,7 +326,7 @@ function generate()
         scriptText = scriptText .. string.format(...) .. '\n'
     end
 
-    appendLine("sim = require 'sim'")
+    appendLine("sim = require 'sim-1'")
     appendLine("simIK = require 'simIK'")
     appendLine("")
     appendLine("function sysCall_init()")

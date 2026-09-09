@@ -1,5 +1,5 @@
 -- this add-on function is a minimalistic scene content exporter, meant as an example.
-local sim = require 'sim'
+local sim = require 'sim-1'
 local simUI
 local lfs
 

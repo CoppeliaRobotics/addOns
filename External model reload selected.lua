@@ -3,7 +3,7 @@ function sysCall_info()
 end
 
 function sysCall_init()
-    local sim = require 'sim'
+    local sim = require 'sim-1'
     local extModel = require 'addOns.extModel'
     local sel = sim.getObjectSel()
     if #sel == 0 then

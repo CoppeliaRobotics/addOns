@@ -1,5 +1,8 @@
-local sim = require 'sim'
+local sim = require 'sim-1'
 local simUI
+local m = require 'matrix-2'
+local Matrix = m.Matrix
+local Vector = m.Vector
 
 function sysCall_info()
     return {autoStart = false, menu = 'Kinematics\nDenavit-Hartenberg Extractor'}

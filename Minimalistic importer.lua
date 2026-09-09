@@ -1,5 +1,5 @@
 -- this add-on function is a minimalistic scene content importer, meant as an example.
-local sim = require 'sim'
+local sim = require 'sim-1'
 local simUI
 
 function sysCall_info()

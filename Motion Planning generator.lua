@@ -1,4 +1,4 @@
-local sim = require 'sim'
+local sim = require 'sim-1'
 local jointGroup = require 'addOns.jointGroup'
 local simUI
 local simOMPL
@@ -153,7 +153,7 @@ function generate()
     local function appendLine(...)
         scriptText = scriptText .. string.format(...) .. '\n'
     end
-    appendLine("sim = require 'sim'")
+    appendLine("sim = require 'sim-1'")
     appendLine("simOMPL = require 'simOMPL'")
     appendLine("robotConfigPath = require 'models.robotConfigPath-3'")
     appendLine("")
@@ -198,6 +198,9 @@ function generate()
     appendLine("end")
     appendLine("")
     appendLine("function compute()")
+    appendLine("    local m = require 'matrix-2'")
+    appendLine("    local Matrix = m.Matrix")
+    appendLine("    local Vector = m.Vector")
     appendLine("    setStartState(startState:getConfig())")
     appendLine("    setGoalState(goalState:getConfig())")
     appendLine("    setup()")
