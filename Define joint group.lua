@@ -62,7 +62,7 @@ function sysCall_init()
     appendLine("require 'models.jointGroup_customization'")
 
     local jointGroupScript = sim.createScript(sim.scripttype_customization, scriptText)
-    sim.setReferencedHandles(jointGroupScript, joints)
+    sim.setReferencedHandles(jointGroupScript, joints, 'jointGroup')
     sim.setObjectAlias(jointGroupScript, name)
     sim.setObjectParent(jointGroupScript, modelHandle, false)
     sim.setObjectPose(jointGroupScript, {0, 0, 0, 0, 0, 0, 1}, modelHandle)
