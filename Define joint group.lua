@@ -47,7 +47,7 @@ function sysCall_init()
             'Enter a name for the joint group which will contain the following joints:\n\n' ..
             table.join(map(function(h) return ' - ' .. sim.getObjectAlias(h, 7) end, table.slice(joints, 1, 10)), '\n') ..
             (#joints > 10 and string.format('\n (and %d more)', #joints - 10) or '') ..
-            '\n\nNote: to specify a different set of joints or a different order, select exactly the intended joints.' ..
+            '\n\nNote: to specify a different set of joints or a different order, select exactly the intended joints.'
         )
     end
     if name == nil then return {cmd = 'cleanup'} end
