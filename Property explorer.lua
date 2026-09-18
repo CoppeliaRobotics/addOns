@@ -221,8 +221,8 @@ function getSubObjects(obj)
         )
     elseif obj.type == 'shape' then
         return obj.meshes
-    elseif obj.type == 'script' then
-        return {obj.detachedScript}
+    elseif obj.type == 'scriptObject' then
+        return {obj.script}
     end
 end
 
@@ -231,12 +231,12 @@ function getSuperObject(obj)
         return sim.scene
     elseif obj.type == 'mesh' then
         return obj.shape
-    elseif obj.type == 'detachedScript' then
+    elseif obj.type == 'script' then
         if table.find(sim.app.addOns, obj) then
             return sim.app
         end
         for _, obj1 in ipairs(sim.scene.objects) do
-            if obj1.type == 'script' and obj1.detachedScript == obj then
+            if obj1.type == 'scriptObject' and obj1.script == obj then
                 return obj1
             end
         end
@@ -506,7 +506,7 @@ end
 
 function onTargetChanged()
     readTargetProperties()
-    
+
     simUI.setTitle(ui, getTitle())
 
     selectedRow = -1
