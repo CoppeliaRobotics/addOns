@@ -649,7 +649,7 @@ end
 
 function gen_getObject(o)
     if o.getName ~= nil then
-        return string.format('scene:getObject(\'%s\')', o:getName('fullPath'))
+        return string.format('scene:getObject(\'%s\')', o:getName{mode = 'fullPath'})
     elseif o == sim.scene then
         return 'scene'
     elseif o == sim.app then
