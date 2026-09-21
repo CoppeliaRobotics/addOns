@@ -561,6 +561,9 @@ function updateContextMenuForSelectedProperty()
         addContextMenu('#', 'Value:')
         addContextMenu('copyValue', '    Copy value to clipboard', canAssign)
         addContextMenu('printValue', '    Print value', canAssign)
+        if propertiesInfos[selectedProperty].type == sim.propertytype_buffer then
+            addContextMenu('printValueHexDump', '    Print value as hexdump', canAssign)
+        end
         if canAssign then
             addContextMenu('editInCodeEditor', '    ' .. (canEdit and 'Edit' or 'View') .. ' in code editor...', true)
         end
@@ -635,6 +638,10 @@ end
 
 function onContextMenu_printValue()
     printValue()
+end
+
+function onContextMenu_printValueHexDump()
+    printValueHexDump()
 end
 
 function onContextMenu_copy()
@@ -827,6 +834,13 @@ function printValue()
     local simCmd = require 'simCmd'
     local targetStr = gen_getObject(target)
     local code = string.format('%s.%s', targetStr, selectedProperty)
+    simCmd.exec('lua', code)
+end
+
+function printValueHexDump()
+    local simCmd = require 'simCmd'
+    local targetStr = gen_getObject(target)
+    local code = string.format('utils.hexdump(%s.%s)', targetStr, selectedProperty)
     simCmd.exec('lua', code)
 end
 
