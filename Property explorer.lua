@@ -427,7 +427,7 @@ function toSimpleString(v, pname)
             v = string.format("%02d:%02d:%02d.%03d", seconds // 3600, (seconds // 60) % 60, seconds % 60, milliseconds)
         end
     end
-    return _S.anyToString(v, {omitQuotes = true})
+    return string.anytostring(v, {omitQuotes = true})
 end
 
 function convertPropertyValue(value, fromType, toType)
@@ -443,7 +443,7 @@ function convertPropertyValue(value, fromType, toType)
         local ok, val = pcall(fn)
         if ok then return val, nil else return nil, val end
     elseif toType == sim.propertytype_string then
-        return _S.anyToString(value)
+        return string.anytostring(value)
     end
     error 'unsupported type of conversion'
 end
@@ -672,7 +672,7 @@ function onContextMenu_editInCodeEditor()
     local sz = 2 * math.min(500, #initialEditorContent)
     local w = math.max(200, math.min(800, 60 * math.log(sz) + 85.21))
     local h = math.max(40, math.min(1200, 50 * math.pow(sz, 0.353)))
-    editorHandle = sim.textEditorOpen(initialEditorContent, '<editor title="' .. (propertiesInfos[selectedProperty].flags.writable and 'Edit' or 'View') .. ' &quot;' .. selectedProperty .. '&quot; value" editable="' .. _S.anyToString(propertiesInfos[selectedProperty].flags.writable) .. '" searchable="true" tab-width="4" toolbar="false" statusbar="false" resizable="true" modal="true" on-close="editValueFinished" closeable="true" size="' .. math.floor(w) .. ' ' .. math.floor(h) .. '" placement="center" activate="true" line-numbers="false"></editor>')
+    editorHandle = sim.textEditorOpen(initialEditorContent, '<editor title="' .. (propertiesInfos[selectedProperty].flags.writable and 'Edit' or 'View') .. ' &quot;' .. selectedProperty .. '&quot; value" editable="' .. tostring(propertiesInfos[selectedProperty].flags.writable) .. '" searchable="true" tab-width="4" toolbar="false" statusbar="false" resizable="true" modal="true" on-close="editValueFinished" closeable="true" size="' .. math.floor(w) .. ' ' .. math.floor(h) .. '" placement="center" activate="true" line-numbers="false"></editor>')
 end
 
 function editValueFinished()
