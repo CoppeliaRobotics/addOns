@@ -70,7 +70,7 @@ function processEvent(e)
         if filterNonEmptyData and next(e.data) == nil then return end
     end
 
-    return _S.tableToString(e, {indent = true}, 99)
+    return table.tostring(e, {indent = true}, 99)
 end
 
 function testFilter(e)

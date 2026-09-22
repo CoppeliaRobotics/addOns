@@ -17,5 +17,5 @@ function sysCall_cleanup()
 end
 
 function sysCall_msg(event)
-    sim.auxiliaryConsolePrint(consoleHandle, _S.tableToString(event, {}, 99) .. '\n')
+    sim.auxiliaryConsolePrint(consoleHandle, table.tostring(event, {}, 99) .. '\n')
 end
