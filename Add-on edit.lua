@@ -12,6 +12,7 @@ function selectedAddonChanged()
 end
 
 function edit()
+    if addOn_editor[selectedAddOn.handle] then return end
     local lang = 'none'
     for l, ext in pairs{python = '.py', lua = '.lua'} do
         if selectedAddOn.addOnPath:endswith(ext) then lang = l end
@@ -26,9 +27,9 @@ function edit()
         on-close="onCodeEditorClose"
         on-restart="onCodeEditorRestart"
     />]]
-    editorData = editorData or {}
     local editorHandle = simCodeEditor.openFile(selectedAddOn.addOnPath, opts)
-    editorData[editorHandle] = {addOn = selectedAddOn}
+    addOn_editor[selectedAddOn.handle] = editorHandle
+    editor_addOn[editorHandle] = selectedAddOn.handle
 end
 
 function reload()
@@ -36,26 +37,27 @@ function reload()
     selectedAddOn:init()
 end
 
-function onCodeEditorClose(handle, event)
-    simCodeEditor.close(handle)
-    editorData[handle] = nil
+function onCodeEditorClose(editorHandle, event)
+    simCodeEditor.close(editorHandle)
+    local addOn = editor_addOn[editorHandle]
+    if not addOn then return end
+    addOn_editor[addOn.handle] = nil
+    editor_addOn[editorHandle] = nil
 end
 
-function onCodeEditorRestart(handle, event)
-    if editorData[handle] then
-        local addOn = editorData[handle].addOn
-        --local code, pos = simCodeEditor.getText(handle) -- doesn't work
-        local file, err = io.open(addOn.addOnPath, 'r')
-        if file then
-            local code = file:read('*a')
-            file:close()
-            addOn.code = code
-        else
-            sim.app:logError('error reading ' .. addOn.addOnPath .. ': ' .. err)
-        end
-        addOn:reset()
-        addOn:init()
+function onCodeEditorRestart(editorHandle, event)
+    local addOn = editor_addOn[editorHandle]
+    if not addOn then return end
+    local file, err = io.open(addOn.addOnPath, 'r')
+    if file then
+        local code = file:read('*a')
+        file:close()
+        addOn.code = code
+    else
+        sim.app:logError('error reading ' .. addOn.addOnPath .. ': ' .. err)
     end
+    addOn:reset()
+    addOn:init()
 end
 
 function sysCall_info()
@@ -78,6 +80,9 @@ function sysCall_init()
         addonsCbItems = addonsCbItems .. '<item>' .. addOn.addOnMenuPath .. '</item>\n'
     end
 
+    addOn_editor = {}
+    editor_addOn = {}
+
     ui = simUI.create([[<ui title="Add-on editor" closeable="true" on-close="closeUi" resizable="false">
         <combobox id="${ui_combo}" on-change="selectedAddonChanged">]] .. addonsCbItems .. [[</combobox>
         <button id="${ui_btnEdit}" text="Edit selected add-on" on-click="edit" />
@@ -90,7 +95,7 @@ function sysCall_nonSimulation()
 end
 
 function sysCall_cleanup()
-    for editorHandle, info in pairs(editorData) do
+    for editorHandle, addOn in pairs(editor_addOn) do
         simCodeEditor.close(editorHandle)
     end
 end
