@@ -23,13 +23,40 @@ function edit()
         title="Editing addon: ]].. selectedAddOn.addOnMenuPath ..[["
         line-numbers="true"
         lang="]] .. lang .. [["
+        script-handle="]] .. sim.self.handle .. [["
+        on-close="onCodeEditorClose"
+        on-restart="onCodeEditorRestart"
     />]]
-    simCodeEditor.openFile(selectedAddOn.addOnPath, opts)
+    editorData = editorData or {}
+    local editorHandle = simCodeEditor.openFile(selectedAddOn.addOnPath, opts)
+    editorData[editorHandle] = {addOn = selectedAddOn}
 end
 
 function reload()
     selectedAddOn:reset()
     selectedAddOn:init()
+end
+
+function onCodeEditorClose(handle, event)
+    simCodeEditor.close(handle)
+    editorData[handle] = nil
+end
+
+function onCodeEditorRestart(handle, event)
+    if editorData[handle] then
+        local addOn = editorData[handle].addOn
+        --local code, pos = simCodeEditor.getText(handle) -- doesn't work
+        local file, err = io.open(addOn.addOnPath, 'r')
+        if file then
+            local code = file:read('*a')
+            file:close()
+            addOn.code = code
+        else
+            sim.app:logError('error reading ' .. addOn.addOnPath .. ': ' .. err)
+        end
+        addOn:reset()
+        addOn:init()
+    end
 end
 
 function sysCall_info()
@@ -62,4 +89,10 @@ end
 
 function sysCall_nonSimulation()
     if leaveNow then return {cmd = 'cleanup'} end
+end
+
+function sysCall_cleanup()
+    for editorHandle, info in pairs(editorData) do
+        simCodeEditor.close(editorHandle)
+    end
 end
