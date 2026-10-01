@@ -18,7 +18,6 @@ function edit()
     end
     local opts = [[<editor
         toolbar="true"
-        statusbar="true"
         can-restart="true"
         title="Editing addon: ]].. selectedAddOn.addOnMenuPath ..[["
         line-numbers="true"
@@ -80,7 +79,6 @@ function sysCall_init()
     end
 
     ui = simUI.create([[<ui title="Add-on editor" closeable="true" on-close="closeUi" resizable="false">
-        <label text="Select an add-on to edit and click Edit; it will be loaded into a customization script. When finished, click Save to save it back to the original add-on script file." word-wrap="true" />
         <combobox id="${ui_combo}" on-change="selectedAddonChanged">]] .. addonsCbItems .. [[</combobox>
         <button id="${ui_btnEdit}" text="Edit selected add-on" on-click="edit" />
         <button id="${ui_btnReload}" text="Restart selected add-on" on-click="reload" />
