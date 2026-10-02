@@ -1,4 +1,4 @@
-local sim = require 'sim-1'
+local sim = require 'sim-2'
 local simUI
 
 function sysCall_info()
@@ -6,20 +6,17 @@ function sysCall_info()
 end
 
 function sysCall_addOnScriptSuspend()
-    return {cmd = 'cleanup'}
+    sim.self:reset()
 end
 
 function sysCall_init()
     simUI = require 'simUI'
-    sim.addLog(
-        sim.verbosity_scriptinfos,
-        "When simulation starts, you will be able to manually trigger individual simulation steps."
-    )
+    sim.app:logInfo("When simulation starts, you will be able to manually trigger individual simulation steps.")
 end
 
 function stop_callback()
     haltMainScript = false -- enable the main script
-    sim.stopSimulation()
+    sim.scene.simulation:stop()
     stepping = false
 end
 
@@ -71,7 +68,9 @@ end
 
 function sysCall_beforeMainScript()
     local retVal = {doNotRunMainScript = haltMainScript}
-    if leaveNow then retVal.cmd = 'cleanup' end
+    if leaveNow then
+        sim.self:reset()
+    end
     return retVal
 end
 
