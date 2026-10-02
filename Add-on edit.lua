@@ -29,7 +29,7 @@ function edit()
     />]]
     local editorHandle = simCodeEditor.openFile(selectedAddOn.addOnPath, opts)
     addOn_editor[selectedAddOn.handle] = editorHandle
-    editor_addOn[editorHandle] = selectedAddOn.handle
+    editor_addOn[editorHandle] = selectedAddOn
 end
 
 function reload()
