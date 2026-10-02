@@ -33,7 +33,6 @@ function edit()
 end
 
 function reload()
-    selectedAddOn:reset()
     selectedAddOn:init()
 end
 
@@ -56,7 +55,6 @@ function onCodeEditorRestart(editorHandle, event)
     else
         sim.app:logError('error reading ' .. addOn.addOnPath .. ': ' .. err)
     end
-    addOn:reset()
     addOn:init()
 end
 
