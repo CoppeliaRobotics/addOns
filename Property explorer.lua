@@ -623,7 +623,7 @@ function onContextMenu_printDescription()
         selectedProperty
     )
     local simCmd = require 'simCmd'
-    simCmd.exec('lua', code)
+    simCmd.exec(code)
 end
 
 function onContextMenu_printInfo()
@@ -633,7 +633,7 @@ function onContextMenu_printInfo()
         selectedProperty
     )
     local simCmd = require 'simCmd'
-    simCmd.exec('lua', code)
+    simCmd.exec(code)
 end
 
 function onContextMenu_printValue()
@@ -737,7 +737,7 @@ function onContextMenu_remove()
         selectedProperty
     )
     local simCmd = require 'simCmd'
-    simCmd.exec('lua', code)
+    simCmd.exec(code)
 end
 
 function onContextMenu_removeall()
@@ -753,7 +753,7 @@ function onContextMenu_removeall()
         targetStr
     )
     local simCmd = require 'simCmd'
-    simCmd.exec('lua', code)
+    simCmd.exec(code)
 end
 
 function onRowSelected(ui, id, row)
@@ -834,14 +834,14 @@ function printValue()
     local simCmd = require 'simCmd'
     local targetStr = gen_getObject(target)
     local code = string.format('%s.%s', targetStr, selectedProperty)
-    simCmd.exec('lua', code)
+    simCmd.exec(code)
 end
 
 function printValueHexDump()
     local simCmd = require 'simCmd'
     local targetStr = gen_getObject(target)
     local code = string.format('utils.hexdump(%s.%s)', targetStr, selectedProperty)
-    simCmd.exec('lua', code)
+    simCmd.exec(code)
 end
 
 function createUi()
