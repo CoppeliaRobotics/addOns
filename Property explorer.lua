@@ -13,7 +13,7 @@ function sysCall_init()
         return {cmd = 'cleanup'}
     end
 
-    cbor = require 'simCBOR'
+    cbor = require 'sim.cbor'
     cbor.NULL_VALUE = setmetatable({}, {__tostring = function() return 'null' end})
     cbor.SIMPLE[22] = function(pos) return cbor.NULL_VALUE, pos, 'null' end
 
@@ -521,13 +521,13 @@ function onTargetChanged()
         simUI.setPropertiesSelection(ui, ui_properties, selectedRow - 1, false)
     end
 
-    local simCBOR = require 'simCBOR'
+    local sim_cbor = require 'sim.cbor'
     local methodListItems = {}
     for i, method in ipairs(methods) do
         local className = propertiesInfos[method].class or 'N/A'
         table.insert(methodListItems, {method, className})
     end
-    simUI.setItems(ui, ui_methods_list, simCBOR.encode(methodListItems))
+    simUI.setItems(ui, ui_methods_list, sim_cbor.encode(methodListItems))
 
     updateContextMenuForSelectedProperty()
     sim.self:setEventFilters{[target] = {}}
