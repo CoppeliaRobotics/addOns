@@ -381,9 +381,9 @@ function readTargetProperties()
         local ok, m = pcall(string.find, pname, pat)
         if ok then
             if (m and not filterInvert) or (not m and filterInvert) then
-                if pinfo.type == sim.propertytype_group then
+                if pinfo.type == sim.propertyType.group then
                     -- groups are deduced from properties names; ignored
-                elseif pinfo.type == sim.propertytype_method then
+                elseif pinfo.type == sim.propertyType.method then
                     table.insert(methods, pname)
                 else
                     table.insert(matchingPropertiesNames, pname)
@@ -403,22 +403,20 @@ function toSimpleString(v, pname)
     if v == nil then return '' end
     local impr = settings.impr ~= false
     local ptype = propertiesInfos[pname].type
-    if ptype == sim.propertytype_handle or ptype == sim.propertytype_handlearray then
+    if ptype == sim.propertyType.handle or ptype == sim.propertyType.handleArray then
         v = v.handle
-    elseif ptype == sim.propertytype_enum then
+    elseif ptype == sim.propertyType.enumeration then
         v = string.format('%d (%s)', target:getIntProperty(pname), target:getStringProperty(pname))
     elseif table.find({
-            sim.propertytype_color,
-            sim.propertytype_vector2,
-            sim.propertytype_vector3,
-            sim.propertytype_matrix3x3,
-            sim.propertytype_matrix4x4,
-            sim.propertytype_matrix,
-            sim.propertytype_quaternion,
-            sim.propertytype_pose
+            sim.propertyType.color,
+            sim.propertyType.vector2,
+            sim.propertyType.vector3,
+            sim.propertyType.matrix,
+            sim.propertyType.quaternion,
+            sim.propertyType.pose
     }, ptype) then
         v = v:data()
-    elseif impr and pname:endswith 'Time' and (ptype == sim.propertytype_float or ptype == sim.propertytype_int) then
+    elseif impr and pname:endswith 'Time' and (ptype == sim.propertyType.real or ptype == sim.propertyType.integer) then
         local seconds = math.floor(v)
         local milliseconds = math.floor((v - seconds) * 1000)
         if seconds > 60 * 60 * 24 then
@@ -433,7 +431,7 @@ end
 function convertPropertyValue(value, fromType, toType)
     if fromType == toType then
         return value
-    elseif fromType == sim.propertytype_string then
+    elseif fromType == sim.propertyType.string then
         local fn, err = loadstring(
             'local sim = require "sim-2"; ' ..
             'local simEigen = require "simEigen"; ' ..
@@ -442,7 +440,7 @@ function convertPropertyValue(value, fromType, toType)
         if not fn then return nil, err end
         local ok, val = pcall(fn)
         if ok then return val, nil else return nil, val end
-    elseif toType == sim.propertytype_string then
+    elseif toType == sim.propertyType.string then
         return string.anytostring(value)
     end
     error 'unsupported type of conversion'
@@ -478,7 +476,7 @@ function updateTableRow(i, updateSingle)
         ptypeStr = ptypeStr:gsub('array(%d+)$', '[%1]')
         ptypeStr = ptypeStr:gsub('array$', '[]')
         tableRows.ptype[i] = ptypeStr
-        tableRows.pvalue[i] = convertPropertyValue(propertiesValues[pname], propertiesInfos[pname].type, sim.propertytype_string)
+        tableRows.pvalue[i] = convertPropertyValue(propertiesValues[pname], propertiesInfos[pname].type, sim.propertyType.string)
         tableRows.description[i] = propertiesInfos[pname].description or ''
         if tableRows.pvalue[i] == nil then tableRows.pvalue[i] = '' end
         tableRows.pflags[i] = flags.value
@@ -546,7 +544,7 @@ function updateContextMenuForSelectedProperty()
     if selectedProperty and propertiesInfos[selectedProperty] and selectedProperty:sub(1, 1) ~= '#' then
         local f = propertiesInfos[selectedProperty].flags
         canAssign = f.readable
-        canEdit = f.readable and f.writable and propertiesInfos[selectedProperty].type ~= sim.propertytype_buffer
+        canEdit = f.readable and f.writable and propertiesInfos[selectedProperty].type ~= sim.propertyType.buffer
         canRemove = f.removable
         if propertiesInfos[selectedProperty].label then
             addContextMenu('#', propertiesInfos[selectedProperty].label)
@@ -561,7 +559,7 @@ function updateContextMenuForSelectedProperty()
         addContextMenu('#', 'Value:')
         addContextMenu('copyValue', '    Copy value to clipboard', canAssign)
         addContextMenu('printValue', '    Print value', canAssign)
-        if propertiesInfos[selectedProperty].type == sim.propertytype_buffer then
+        if propertiesInfos[selectedProperty].type == sim.propertyType.buffer then
             addContextMenu('printValueHexDump', '    Print value as hexdump', canAssign)
         end
         if canAssign then
@@ -650,7 +648,7 @@ end
 
 function onContextMenu_copyValue()
     local pvalue = target:getProperty(selectedProperty)
-    pvalue = convertPropertyValue(pvalue, propertiesInfos[selectedProperty].type, sim.propertytype_string)
+    pvalue = convertPropertyValue(pvalue, propertiesInfos[selectedProperty].type, sim.propertyType.string)
     simUI.setClipboardText(pvalue)
 end
 
@@ -668,7 +666,7 @@ end
 
 function onContextMenu_editInCodeEditor()
     propertiesValues[selectedProperty] = target:getProperty(selectedProperty)
-    initialEditorContent = convertPropertyValue(propertiesValues[selectedProperty], propertiesInfos[selectedProperty].type, sim.propertytype_string)
+    initialEditorContent = convertPropertyValue(propertiesValues[selectedProperty], propertiesInfos[selectedProperty].type, sim.propertyType.string)
     local sz = 2 * math.min(500, #initialEditorContent)
     local w = math.max(200, math.min(800, 60 * math.log(sz) + 85.21))
     local h = math.max(40, math.min(1200, 50 * math.pow(sz, 0.353)))
@@ -679,7 +677,7 @@ function editValueFinished()
     if editorHandle then
         local newValue, err = sim.textEditorGetInfo(editorHandle), nil
         if newValue ~= initialEditorContent then
-            newValue, err = convertPropertyValue(newValue, sim.propertytype_string, propertiesInfos[selectedProperty].type)
+            newValue, err = convertPropertyValue(newValue, sim.propertyType.string, propertiesInfos[selectedProperty].type)
             if err then
                 simUI.msgBox(simUI.msgbox_type.critical, simUI.msgbox_buttons.ok, 'Error', 'Failed to convert value: ' .. err)
             elseif propertiesInfos[selectedProperty].flags.writable then
@@ -700,7 +698,7 @@ function onContextMenu_loadValueFromFile()
         local file = io.open(result[1], 'r')
         local newValue = file:read('*all')
         file:close()
-        newValue, err = convertPropertyValue(newValue, sim.propertytype_string, propertiesInfos[selectedProperty].type)
+        newValue, err = convertPropertyValue(newValue, sim.propertyType.string, propertiesInfos[selectedProperty].type)
         if err then
             simUI.msgBox(simUI.msgbox_type.critical, simUI.msgbox_buttons.ok, 'Error', 'Failed to convert value: ' .. err)
         elseif propertiesInfos[selectedProperty].flags.writable then
@@ -711,7 +709,7 @@ end
 
 function onContextMenu_saveValueToFile()
     propertiesValues[selectedProperty] = target:getProperty(selectedProperty)
-    local value = convertPropertyValue(propertiesValues[selectedProperty], propertiesInfos[selectedProperty].type, sim.propertytype_string)
+    local value = convertPropertyValue(propertiesValues[selectedProperty], propertiesInfos[selectedProperty].type, sim.propertyType.string)
     local lfsx = require 'lfsx'
     local sceneDir = lfsx.dirname(sim.scene.scenePath)
     local result = simUI.fileDialog(simUI.filedialog_type.save, 'Save file', sceneDir, '', '', '', true)
@@ -793,7 +791,7 @@ function onKeyPress(ui, id, key, keystr, mods)
 end
 
 function onPropertyEdit(ui, id, key, value)
-    local newValue, err = convertPropertyValue(value, sim.propertytype_string, propertiesInfos[key].type)
+    local newValue, err = convertPropertyValue(value, sim.propertyType.string, propertiesInfos[key].type)
     if err then
         simUI.msgBox(simUI.msgbox_type.critical, simUI.msgbox_buttons.ok, 'Error', 'Failed to convert value: ' .. err)
     elseif propertiesInfos[selectedProperty].flags.writable then
